@@ -1,8 +1,10 @@
 # DEX Dataset Research — CEX-Correlated Collection Plan
 
 **Date:** June 24, 2026  
-**Status:** Collector implemented on `feat/dex-dataset`; **60h production run in progress**  
-**Active run:** `data/dex/20260624_101824` (started 2026-06-24 17:18 UTC)  
+**Status:** **96h production run in progress** (`20260626_105517`)  
+**Active run:** `data/dex/20260626_105517` (started 2026-06-26 ~17:55 UTC)  
+**Parquet export:** `data/exports/dex_96h_20260626/` (after collection)  
+**Prior run (stopped, not uploaded):** `data/dex/20260624_101824` (~snapshot 2916 / 3600)  
 **Related:** `experiments/collect_dex_data.py`, CEX runs in `data/statarb/`, HF `SFU-fintech-AI/statarb-crypto-research`
 
 ---
@@ -50,6 +52,14 @@ python experiments/collect_dex_data.py \
 Expected completion: ~2026-06-27 05:18 UTC (60h from start). Check `_state.json` → `last_snapshot` for progress.
 
 **Post-processing — drop snapshots 0–9:** The collector was resumed at snapshot 10 after fixing the WIF `$WIF` symbol filter. Snapshots **0 through 9** are missing WIF pools and should be **excluded** from export, Parquet builds, and CEX↔DEX joins. Use `snapshot_idx >= 10` when filtering this run.
+
+**Post-processing — dedupe snapshots 11–1980:** Two collector processes ran in parallel from 2026-06-24 10:28 UTC until 2026-06-26 (Windows restarts / duplicate `Start-Process`). Each snapshot in that range had ~2× pool/spread rows (exact duplicate keys). Rows were deduped in place on 2026-06-26; backups at `*.pre_dedupe.bak`. Re-run if needed:
+
+```bash
+python experiments/dedupe_dex_jsonl.py data/dex/20260624_101824
+```
+
+From snapshot **1981** onward, a single collector is writing (~233 pools / ~15 spreads per snapshot).
 
 ```python
 # Example filter for export / analysis
@@ -107,7 +117,7 @@ Planned join output stream: `cex_dex_spread` (CEX ticker mid vs best DEX pool pe
 |---------|------|
 | `SFU-fintech-AI/statarb-crypto-research` | Primary CEX multi-signal dataset (paper) |
 | `SFU-fintech-AI/statarb-crypto-stablecoins` | Auxiliary stablecoin window (accidental resume) |
-| `SFU-fintech-AI/statarb-crypto-dex` *(planned)* | Separate DEX Parquet export mirroring CEX subset layout |
+| `SFU-fintech-AI/statarb-crypto-dex` | DEX Parquet export — **live** at https://huggingface.co/datasets/SFU-fintech-AI/statarb-crypto-dex (96h run in progress; re-upload on completion) |
 
 Export path after collection: `experiments/export_run_to_parquet.py` → HF dataset card (same pattern as CEX `test/` publish). DEX data stays out of git (`data/dex/` in `.gitignore`).
 
@@ -209,6 +219,29 @@ Validated 2026-06-24 after ~8 minutes / 8 snapshots. Compared to prior test `202
 - **WIF** — fixed locally: strip `$` from DexScreener base symbols (e.g. `$WIF` → WIF). Resume run to pick up ~3+ Orca/Raydium pools per snapshot.
 
 **CEX 16-coin overlap:** 15 present; TIA intentionally skipped. Extras in DEX run: FLOKI, WLD, SEI, ENA.
+
+---
+
+## DEX depth collector (separate from pool collector)
+
+`experiments/collect_dex_depth_data.py` — **does not modify** `collect_dex_data.py`.  
+Output: `data/dex_depth/{run_id}/`
+
+| Stream | Source | CEX analog | Notes |
+|--------|--------|------------|-------|
+| `dex_quotes` | Jupiter lite (Solana), Paraswap / 1inch (EVM) | `ticker` + slippage | No keys required (lite + Paraswap); optional `JUPITER_API_KEY` / `ONEINCH_API_KEY` |
+| `dex_gas` | Public RPC | (no CEX equivalent) | `eth_gasPrice` + Solana priority fees |
+| `perp_funding` | Hyperliquid | `funding_rate` + `open_interest` | No API key |
+
+```bash
+# 96h run aligned with pool collector cadence
+python -m experiments.collect_dex_depth_data --interval 60 --hours 96
+
+# Export
+python -m experiments.export_dex_depth_to_parquet \
+  --run-dir data/dex_depth/{run_id} \
+  --out-dir data/exports/dex_depth_{run_id}
+```
 
 ---
 
