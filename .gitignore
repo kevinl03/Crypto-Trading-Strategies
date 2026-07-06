@@ -25,6 +25,9 @@ data/logs/
 data/historical/
 data/ohlcv_live/
 
+# Parquet files (large data files)
+*.parquet
+
 # LaTeX build artifacts & downloaded class files
 paper/*.pdf
 paper/*.aux
