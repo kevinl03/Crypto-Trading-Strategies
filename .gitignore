@@ -24,9 +24,10 @@ data/exports/
 data/logs/
 data/historical/
 data/ohlcv_live/
-
-# Parquet files (large data files)
 *.parquet
+
+# HuggingFace datasets (large files)
+datasets/
 
 # LaTeX build artifacts & downloaded class files
 paper/*.pdf

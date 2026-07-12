@@ -12,3 +12,7 @@ huggingface_hub>=0.25   # publishing collected datasets to the Hub
 openpyxl>=3.1          # experiments/export_to_excel.py
 statsmodels>=0.14      # experiments/robustness_test.py (ADF test)
 lightgbm>=4.0          # experiments/train_spread_model.py
+
+# Paper / LaTeX tooling
+pylatex>=1.4           # LaTeX document generation
+pylatexenc>=2.10       # LaTeX encoding utilities
