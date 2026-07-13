@@ -1,0 +1,1516 @@
+{
+  "provenance": {
+    "generated_utc": "2026-07-13T17:42:14+00:00",
+    "git_sha": "3aafe494ed2d223c9423f4207534b10d31e2b918",
+    "script": "experiments/significance.py",
+    "method": "day-block bootstrap B=10000, seed=7; BH q=0.05 across 100 pair-models"
+  },
+  "summary": {
+    "evaluated": 100,
+    "profitable": 43,
+    "ci_lower_positive": 39,
+    "bh_significant": 38
+  },
+  "results": [
+    {
+      "asset": "CRV",
+      "ex1": "cryptocom",
+      "ex2": "htx",
+      "model": "ou",
+      "n_trades": 1806,
+      "n_days": 31,
+      "net_bps": -18342.9,
+      "ci95": [
+        -33503.8,
+        706.5
+      ],
+      "p_one_sided": 0.9709,
+      "bh_significant": false
+    },
+    {
+      "asset": "CRV",
+      "ex1": "cryptocom",
+      "ex2": "htx",
+      "model": "zscore",
+      "n_trades": 876,
+      "n_days": 31,
+      "net_bps": 8743.7,
+      "ci95": [
+        114.6,
+        18878.2
+      ],
+      "p_one_sided": 0.0231,
+      "bh_significant": false
+    },
+    {
+      "asset": "CRV",
+      "ex1": "cryptocom",
+      "ex2": "kucoin",
+      "model": "ou",
+      "n_trades": 1609,
+      "n_days": 31,
+      "net_bps": -19623.7,
+      "ci95": [
+        -24665.8,
+        -14349.7
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "CRV",
+      "ex1": "cryptocom",
+      "ex2": "kucoin",
+      "model": "zscore",
+      "n_trades": 732,
+      "n_days": 31,
+      "net_bps": 7637.8,
+      "ci95": [
+        3805.1,
+        12322.5
+      ],
+      "p_one_sided": 0.0,
+      "bh_significant": true
+    },
+    {
+      "asset": "CRV",
+      "ex1": "bitget",
+      "ex2": "cryptocom",
+      "model": "ou",
+      "n_trades": 1598,
+      "n_days": 30,
+      "net_bps": -16477.7,
+      "ci95": [
+        -21556.8,
+        -11009.3
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "CRV",
+      "ex1": "bitget",
+      "ex2": "cryptocom",
+      "model": "zscore",
+      "n_trades": 753,
+      "n_days": 30,
+      "net_bps": 8174.4,
+      "ci95": [
+        4032.9,
+        13165.7
+      ],
+      "p_one_sided": 0.0,
+      "bh_significant": true
+    },
+    {
+      "asset": "CRV",
+      "ex1": "cryptocom",
+      "ex2": "okx",
+      "model": "ou",
+      "n_trades": 1746,
+      "n_days": 31,
+      "net_bps": -19511.7,
+      "ci95": [
+        -23730.6,
+        -15149.5
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "CRV",
+      "ex1": "cryptocom",
+      "ex2": "okx",
+      "model": "zscore",
+      "n_trades": 787,
+      "n_days": 31,
+      "net_bps": 7480.4,
+      "ci95": [
+        3503.7,
+        12242.0
+      ],
+      "p_one_sided": 0.0,
+      "bh_significant": true
+    },
+    {
+      "asset": "CRV",
+      "ex1": "cryptocom",
+      "ex2": "mexc",
+      "model": "ou",
+      "n_trades": 1832,
+      "n_days": 31,
+      "net_bps": -9409.3,
+      "ci95": [
+        -13840.2,
+        -4591.9
+      ],
+      "p_one_sided": 0.9998,
+      "bh_significant": false
+    },
+    {
+      "asset": "CRV",
+      "ex1": "cryptocom",
+      "ex2": "mexc",
+      "model": "zscore",
+      "n_trades": 832,
+      "n_days": 31,
+      "net_bps": 10612.8,
+      "ci95": [
+        6759.2,
+        15248.4
+      ],
+      "p_one_sided": 0.0,
+      "bh_significant": true
+    },
+    {
+      "asset": "CRV",
+      "ex1": "binance",
+      "ex2": "cryptocom",
+      "model": "ou",
+      "n_trades": 1852,
+      "n_days": 31,
+      "net_bps": -22150.1,
+      "ci95": [
+        -27092.4,
+        -16972.2
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "CRV",
+      "ex1": "binance",
+      "ex2": "cryptocom",
+      "model": "zscore",
+      "n_trades": 827,
+      "n_days": 31,
+      "net_bps": 6359.5,
+      "ci95": [
+        2352.9,
+        11134.5
+      ],
+      "p_one_sided": 0.0002,
+      "bh_significant": true
+    },
+    {
+      "asset": "CRV",
+      "ex1": "bybit",
+      "ex2": "cryptocom",
+      "model": "ou",
+      "n_trades": 1777,
+      "n_days": 31,
+      "net_bps": -18588.6,
+      "ci95": [
+        -23151.8,
+        -13980.6
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "CRV",
+      "ex1": "bybit",
+      "ex2": "cryptocom",
+      "model": "zscore",
+      "n_trades": 803,
+      "n_days": 31,
+      "net_bps": 7425.4,
+      "ci95": [
+        3515.7,
+        12222.3
+      ],
+      "p_one_sided": 0.0,
+      "bh_significant": true
+    },
+    {
+      "asset": "CRV",
+      "ex1": "htx",
+      "ex2": "kucoin",
+      "model": "ou",
+      "n_trades": 2192,
+      "n_days": 31,
+      "net_bps": -2730.7,
+      "ci95": [
+        -16709.3,
+        14675.5
+      ],
+      "p_one_sided": 0.6529,
+      "bh_significant": false
+    },
+    {
+      "asset": "CRV",
+      "ex1": "htx",
+      "ex2": "kucoin",
+      "model": "zscore",
+      "n_trades": 1627,
+      "n_days": 31,
+      "net_bps": 1643.4,
+      "ci95": [
+        -10361.1,
+        16214.0
+      ],
+      "p_one_sided": 0.424,
+      "bh_significant": false
+    },
+    {
+      "asset": "CRV",
+      "ex1": "bitget",
+      "ex2": "htx",
+      "model": "ou",
+      "n_trades": 2125,
+      "n_days": 30,
+      "net_bps": -136.5,
+      "ci95": [
+        -13973.6,
+        17479.8
+      ],
+      "p_one_sided": 0.5371,
+      "bh_significant": false
+    },
+    {
+      "asset": "CRV",
+      "ex1": "bitget",
+      "ex2": "htx",
+      "model": "zscore",
+      "n_trades": 1662,
+      "n_days": 30,
+      "net_bps": 2575.8,
+      "ci95": [
+        -8090.5,
+        16587.6
+      ],
+      "p_one_sided": 0.3694,
+      "bh_significant": false
+    },
+    {
+      "asset": "CRV",
+      "ex1": "bybit",
+      "ex2": "htx",
+      "model": "ou",
+      "n_trades": 2171,
+      "n_days": 31,
+      "net_bps": -7232.9,
+      "ci95": [
+        -21440.0,
+        10929.7
+      ],
+      "p_one_sided": 0.8127,
+      "bh_significant": false
+    },
+    {
+      "asset": "CRV",
+      "ex1": "bybit",
+      "ex2": "htx",
+      "model": "zscore",
+      "n_trades": 1871,
+      "n_days": 31,
+      "net_bps": -6301.5,
+      "ci95": [
+        -17972.9,
+        8165.1
+      ],
+      "p_one_sided": 0.8295,
+      "bh_significant": false
+    },
+    {
+      "asset": "DOGE",
+      "ex1": "htx",
+      "ex2": "okx",
+      "model": "ou",
+      "n_trades": 2364,
+      "n_days": 31,
+      "net_bps": -38255.6,
+      "ci95": [
+        -43164.4,
+        -32300.9
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "DOGE",
+      "ex1": "htx",
+      "ex2": "okx",
+      "model": "zscore",
+      "n_trades": 1974,
+      "n_days": 31,
+      "net_bps": -32209.3,
+      "ci95": [
+        -37330.5,
+        -26542.4
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "DOGE",
+      "ex1": "htx",
+      "ex2": "mexc",
+      "model": "ou",
+      "n_trades": 2323,
+      "n_days": 31,
+      "net_bps": -25719.9,
+      "ci95": [
+        -30194.9,
+        -20384.3
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "DOGE",
+      "ex1": "htx",
+      "ex2": "mexc",
+      "model": "zscore",
+      "n_trades": 1956,
+      "n_days": 31,
+      "net_bps": -21947.6,
+      "ci95": [
+        -26308.6,
+        -16888.4
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "DOGE",
+      "ex1": "bitget",
+      "ex2": "htx",
+      "model": "ou",
+      "n_trades": 2267,
+      "n_days": 30,
+      "net_bps": -37200.9,
+      "ci95": [
+        -42064.8,
+        -31214.2
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "DOGE",
+      "ex1": "bitget",
+      "ex2": "htx",
+      "model": "zscore",
+      "n_trades": 1920,
+      "n_days": 30,
+      "net_bps": -31879.2,
+      "ci95": [
+        -37147.3,
+        -25884.9
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "DOGE",
+      "ex1": "binance",
+      "ex2": "htx",
+      "model": "ou",
+      "n_trades": 2347,
+      "n_days": 31,
+      "net_bps": -37629.3,
+      "ci95": [
+        -42346.2,
+        -31860.7
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "DOGE",
+      "ex1": "binance",
+      "ex2": "htx",
+      "model": "zscore",
+      "n_trades": 1967,
+      "n_days": 31,
+      "net_bps": -31997.6,
+      "ci95": [
+        -37115.0,
+        -26333.5
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "DOGE",
+      "ex1": "cryptocom",
+      "ex2": "htx",
+      "model": "ou",
+      "n_trades": 2230,
+      "n_days": 31,
+      "net_bps": -29457.4,
+      "ci95": [
+        -33813.2,
+        -24275.9
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "DOGE",
+      "ex1": "cryptocom",
+      "ex2": "htx",
+      "model": "zscore",
+      "n_trades": 1851,
+      "n_days": 31,
+      "net_bps": -24614.8,
+      "ci95": [
+        -29073.0,
+        -19672.1
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "DOGE",
+      "ex1": "bybit",
+      "ex2": "htx",
+      "model": "ou",
+      "n_trades": 2347,
+      "n_days": 31,
+      "net_bps": -38653.6,
+      "ci95": [
+        -43651.4,
+        -32770.2
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "DOGE",
+      "ex1": "bybit",
+      "ex2": "htx",
+      "model": "zscore",
+      "n_trades": 1976,
+      "n_days": 31,
+      "net_bps": -32764.2,
+      "ci95": [
+        -37978.1,
+        -26784.7
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "DOGE",
+      "ex1": "htx",
+      "ex2": "kucoin",
+      "model": "ou",
+      "n_trades": 2281,
+      "n_days": 31,
+      "net_bps": -37858.9,
+      "ci95": [
+        -42729.2,
+        -32048.9
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "DOGE",
+      "ex1": "htx",
+      "ex2": "kucoin",
+      "model": "zscore",
+      "n_trades": 1954,
+      "n_days": 31,
+      "net_bps": -33067.9,
+      "ci95": [
+        -38187.0,
+        -27369.0
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "DOGE",
+      "ex1": "cryptocom",
+      "ex2": "mexc",
+      "model": "ou",
+      "n_trades": 2267,
+      "n_days": 31,
+      "net_bps": -5048.2,
+      "ci95": [
+        -6011.9,
+        -4104.0
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "DOGE",
+      "ex1": "cryptocom",
+      "ex2": "mexc",
+      "model": "zscore",
+      "n_trades": 2115,
+      "n_days": 31,
+      "net_bps": -4091.2,
+      "ci95": [
+        -5090.3,
+        -3104.0
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "DOGE",
+      "ex1": "cryptocom",
+      "ex2": "okx",
+      "model": "ou",
+      "n_trades": 2268,
+      "n_days": 31,
+      "net_bps": -16539.6,
+      "ci95": [
+        -17997.6,
+        -14940.4
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "DOGE",
+      "ex1": "cryptocom",
+      "ex2": "okx",
+      "model": "zscore",
+      "n_trades": 2092,
+      "n_days": 31,
+      "net_bps": -14917.4,
+      "ci95": [
+        -16257.6,
+        -13454.5
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "DOGE",
+      "ex1": "binance",
+      "ex2": "cryptocom",
+      "model": "ou",
+      "n_trades": 2294,
+      "n_days": 31,
+      "net_bps": -16607.8,
+      "ci95": [
+        -17992.9,
+        -15022.8
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "DOGE",
+      "ex1": "binance",
+      "ex2": "cryptocom",
+      "model": "zscore",
+      "n_trades": 2157,
+      "n_days": 31,
+      "net_bps": -15420.3,
+      "ci95": [
+        -16808.8,
+        -13915.7
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "PEPE",
+      "ex1": "binance",
+      "ex2": "cryptocom",
+      "model": "ou",
+      "n_trades": 1404,
+      "n_days": 31,
+      "net_bps": 40402.9,
+      "ci95": [
+        36257.8,
+        44242.5
+      ],
+      "p_one_sided": 0.0,
+      "bh_significant": true
+    },
+    {
+      "asset": "PEPE",
+      "ex1": "binance",
+      "ex2": "cryptocom",
+      "model": "zscore",
+      "n_trades": 996,
+      "n_days": 30,
+      "net_bps": 31907.4,
+      "ci95": [
+        29680.6,
+        34112.7
+      ],
+      "p_one_sided": 0.0,
+      "bh_significant": true
+    },
+    {
+      "asset": "PEPE",
+      "ex1": "cryptocom",
+      "ex2": "htx",
+      "model": "ou",
+      "n_trades": 1766,
+      "n_days": 31,
+      "net_bps": -6217.0,
+      "ci95": [
+        -10362.2,
+        -2109.3
+      ],
+      "p_one_sided": 0.9991,
+      "bh_significant": false
+    },
+    {
+      "asset": "PEPE",
+      "ex1": "cryptocom",
+      "ex2": "htx",
+      "model": "zscore",
+      "n_trades": 901,
+      "n_days": 31,
+      "net_bps": 5709.2,
+      "ci95": [
+        3875.1,
+        7673.3
+      ],
+      "p_one_sided": 0.0,
+      "bh_significant": true
+    },
+    {
+      "asset": "PEPE",
+      "ex1": "bitget",
+      "ex2": "cryptocom",
+      "model": "ou",
+      "n_trades": 2018,
+      "n_days": 30,
+      "net_bps": 7894.6,
+      "ci95": [
+        3845.7,
+        12032.3
+      ],
+      "p_one_sided": 0.0002,
+      "bh_significant": true
+    },
+    {
+      "asset": "PEPE",
+      "ex1": "bitget",
+      "ex2": "cryptocom",
+      "model": "zscore",
+      "n_trades": 1009,
+      "n_days": 30,
+      "net_bps": 14244.0,
+      "ci95": [
+        12204.1,
+        16232.1
+      ],
+      "p_one_sided": 0.0,
+      "bh_significant": true
+    },
+    {
+      "asset": "PEPE",
+      "ex1": "bybit",
+      "ex2": "cryptocom",
+      "model": "ou",
+      "n_trades": 2121,
+      "n_days": 31,
+      "net_bps": 8455.3,
+      "ci95": [
+        4292.1,
+        12754.6
+      ],
+      "p_one_sided": 0.0002,
+      "bh_significant": true
+    },
+    {
+      "asset": "PEPE",
+      "ex1": "bybit",
+      "ex2": "cryptocom",
+      "model": "zscore",
+      "n_trades": 1019,
+      "n_days": 30,
+      "net_bps": 14964.1,
+      "ci95": [
+        12851.1,
+        17075.6
+      ],
+      "p_one_sided": 0.0,
+      "bh_significant": true
+    },
+    {
+      "asset": "PEPE",
+      "ex1": "cryptocom",
+      "ex2": "okx",
+      "model": "ou",
+      "n_trades": 2089,
+      "n_days": 31,
+      "net_bps": 8123.6,
+      "ci95": [
+        3904.5,
+        12553.8
+      ],
+      "p_one_sided": 0.0,
+      "bh_significant": true
+    },
+    {
+      "asset": "PEPE",
+      "ex1": "cryptocom",
+      "ex2": "okx",
+      "model": "zscore",
+      "n_trades": 1004,
+      "n_days": 31,
+      "net_bps": 14980.0,
+      "ci95": [
+        12685.9,
+        17249.6
+      ],
+      "p_one_sided": 0.0,
+      "bh_significant": true
+    },
+    {
+      "asset": "PEPE",
+      "ex1": "cryptocom",
+      "ex2": "mexc",
+      "model": "ou",
+      "n_trades": 2088,
+      "n_days": 31,
+      "net_bps": 20666.6,
+      "ci95": [
+        16461.0,
+        24762.0
+      ],
+      "p_one_sided": 0.0,
+      "bh_significant": true
+    },
+    {
+      "asset": "PEPE",
+      "ex1": "cryptocom",
+      "ex2": "mexc",
+      "model": "zscore",
+      "n_trades": 1034,
+      "n_days": 30,
+      "net_bps": 19065.0,
+      "ci95": [
+        16973.6,
+        21132.5
+      ],
+      "p_one_sided": 0.0,
+      "bh_significant": true
+    },
+    {
+      "asset": "PEPE",
+      "ex1": "cryptocom",
+      "ex2": "kucoin",
+      "model": "ou",
+      "n_trades": 2041,
+      "n_days": 31,
+      "net_bps": 7103.0,
+      "ci95": [
+        2515.3,
+        11577.0
+      ],
+      "p_one_sided": 0.0016,
+      "bh_significant": true
+    },
+    {
+      "asset": "PEPE",
+      "ex1": "cryptocom",
+      "ex2": "kucoin",
+      "model": "zscore",
+      "n_trades": 983,
+      "n_days": 30,
+      "net_bps": 13937.6,
+      "ci95": [
+        11999.9,
+        15861.5
+      ],
+      "p_one_sided": 0.0,
+      "bh_significant": true
+    },
+    {
+      "asset": "PEPE",
+      "ex1": "binance",
+      "ex2": "htx",
+      "model": "ou",
+      "n_trades": 1364,
+      "n_days": 31,
+      "net_bps": 16230.3,
+      "ci95": [
+        13095.7,
+        19761.6
+      ],
+      "p_one_sided": 0.0,
+      "bh_significant": true
+    },
+    {
+      "asset": "PEPE",
+      "ex1": "binance",
+      "ex2": "htx",
+      "model": "zscore",
+      "n_trades": 1172,
+      "n_days": 31,
+      "net_bps": 14661.5,
+      "ci95": [
+        12244.4,
+        17316.3
+      ],
+      "p_one_sided": 0.0,
+      "bh_significant": true
+    },
+    {
+      "asset": "PEPE",
+      "ex1": "binance",
+      "ex2": "mexc",
+      "model": "ou",
+      "n_trades": 1035,
+      "n_days": 31,
+      "net_bps": 22190.7,
+      "ci95": [
+        19810.6,
+        24422.5
+      ],
+      "p_one_sided": 0.0,
+      "bh_significant": true
+    },
+    {
+      "asset": "PEPE",
+      "ex1": "binance",
+      "ex2": "mexc",
+      "model": "zscore",
+      "n_trades": 948,
+      "n_days": 31,
+      "net_bps": 20575.2,
+      "ci95": [
+        18262.6,
+        22741.2
+      ],
+      "p_one_sided": 0.0,
+      "bh_significant": true
+    },
+    {
+      "asset": "PEPE",
+      "ex1": "binance",
+      "ex2": "bybit",
+      "model": "ou",
+      "n_trades": 836,
+      "n_days": 30,
+      "net_bps": 11397.3,
+      "ci95": [
+        10035.9,
+        12801.8
+      ],
+      "p_one_sided": 0.0,
+      "bh_significant": true
+    },
+    {
+      "asset": "PEPE",
+      "ex1": "binance",
+      "ex2": "bybit",
+      "model": "zscore",
+      "n_trades": 747,
+      "n_days": 30,
+      "net_bps": 10371.3,
+      "ci95": [
+        9030.1,
+        11725.0
+      ],
+      "p_one_sided": 0.0,
+      "bh_significant": true
+    },
+    {
+      "asset": "SOL",
+      "ex1": "bybit",
+      "ex2": "htx",
+      "model": "ou",
+      "n_trades": 2336,
+      "n_days": 31,
+      "net_bps": -44935.3,
+      "ci95": [
+        -49610.7,
+        -39486.6
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "SOL",
+      "ex1": "bybit",
+      "ex2": "htx",
+      "model": "zscore",
+      "n_trades": 2071,
+      "n_days": 31,
+      "net_bps": -39949.2,
+      "ci95": [
+        -45336.1,
+        -33866.7
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "SOL",
+      "ex1": "bitget",
+      "ex2": "htx",
+      "model": "ou",
+      "n_trades": 2265,
+      "n_days": 30,
+      "net_bps": -44383.0,
+      "ci95": [
+        -48992.0,
+        -39055.9
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "SOL",
+      "ex1": "bitget",
+      "ex2": "htx",
+      "model": "zscore",
+      "n_trades": 2032,
+      "n_days": 30,
+      "net_bps": -39926.1,
+      "ci95": [
+        -45372.8,
+        -33809.2
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "SOL",
+      "ex1": "htx",
+      "ex2": "kucoin",
+      "model": "ou",
+      "n_trades": 2275,
+      "n_days": 31,
+      "net_bps": -44353.1,
+      "ci95": [
+        -48904.0,
+        -39187.4
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "SOL",
+      "ex1": "htx",
+      "ex2": "kucoin",
+      "model": "zscore",
+      "n_trades": 2045,
+      "n_days": 31,
+      "net_bps": -39913.3,
+      "ci95": [
+        -45053.3,
+        -34121.8
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "SOL",
+      "ex1": "binance",
+      "ex2": "htx",
+      "model": "ou",
+      "n_trades": 2329,
+      "n_days": 31,
+      "net_bps": -45227.2,
+      "ci95": [
+        -49803.4,
+        -39829.5
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "SOL",
+      "ex1": "binance",
+      "ex2": "htx",
+      "model": "zscore",
+      "n_trades": 2082,
+      "n_days": 31,
+      "net_bps": -40405.0,
+      "ci95": [
+        -45728.2,
+        -34346.5
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "SOL",
+      "ex1": "htx",
+      "ex2": "okx",
+      "model": "ou",
+      "n_trades": 2368,
+      "n_days": 31,
+      "net_bps": -46433.0,
+      "ci95": [
+        -51005.0,
+        -40929.3
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "SOL",
+      "ex1": "htx",
+      "ex2": "okx",
+      "model": "zscore",
+      "n_trades": 2113,
+      "n_days": 31,
+      "net_bps": -41440.4,
+      "ci95": [
+        -46850.5,
+        -35354.7
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "SOL",
+      "ex1": "cryptocom",
+      "ex2": "htx",
+      "model": "ou",
+      "n_trades": 2260,
+      "n_days": 31,
+      "net_bps": -38125.3,
+      "ci95": [
+        -42333.5,
+        -33403.1
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "SOL",
+      "ex1": "cryptocom",
+      "ex2": "htx",
+      "model": "zscore",
+      "n_trades": 2003,
+      "n_days": 31,
+      "net_bps": -33775.4,
+      "ci95": [
+        -38476.9,
+        -28487.3
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "SOL",
+      "ex1": "htx",
+      "ex2": "mexc",
+      "model": "ou",
+      "n_trades": 2303,
+      "n_days": 31,
+      "net_bps": -33979.0,
+      "ci95": [
+        -38022.8,
+        -29125.2
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "SOL",
+      "ex1": "htx",
+      "ex2": "mexc",
+      "model": "zscore",
+      "n_trades": 2066,
+      "n_days": 31,
+      "net_bps": -30217.0,
+      "ci95": [
+        -34766.1,
+        -24988.8
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "SOL",
+      "ex1": "cryptocom",
+      "ex2": "mexc",
+      "model": "ou",
+      "n_trades": 2113,
+      "n_days": 31,
+      "net_bps": -16632.4,
+      "ci95": [
+        -17670.0,
+        -15229.7
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "SOL",
+      "ex1": "cryptocom",
+      "ex2": "mexc",
+      "model": "zscore",
+      "n_trades": 2037,
+      "n_days": 31,
+      "net_bps": -15969.5,
+      "ci95": [
+        -16933.8,
+        -14667.6
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "SOL",
+      "ex1": "bybit",
+      "ex2": "mexc",
+      "model": "ou",
+      "n_trades": 2080,
+      "n_days": 31,
+      "net_bps": -23702.8,
+      "ci95": [
+        -25054.4,
+        -21881.0
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "SOL",
+      "ex1": "bybit",
+      "ex2": "mexc",
+      "model": "zscore",
+      "n_trades": 1942,
+      "n_days": 31,
+      "net_bps": -22051.3,
+      "ci95": [
+        -23345.8,
+        -20251.2
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "SOL",
+      "ex1": "kucoin",
+      "ex2": "mexc",
+      "model": "ou",
+      "n_trades": 2087,
+      "n_days": 31,
+      "net_bps": -22506.1,
+      "ci95": [
+        -23835.5,
+        -20691.7
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "SOL",
+      "ex1": "kucoin",
+      "ex2": "mexc",
+      "model": "zscore",
+      "n_trades": 1983,
+      "n_days": 31,
+      "net_bps": -21279.2,
+      "ci95": [
+        -22507.9,
+        -19561.8
+      ],
+      "p_one_sided": 1.0,
+      "bh_significant": false
+    },
+    {
+      "asset": "WIF",
+      "ex1": "binance",
+      "ex2": "cryptocom",
+      "model": "ou",
+      "n_trades": 1658,
+      "n_days": 31,
+      "net_bps": 66456.0,
+      "ci95": [
+        57814.9,
+        76146.4
+      ],
+      "p_one_sided": 0.0,
+      "bh_significant": true
+    },
+    {
+      "asset": "WIF",
+      "ex1": "binance",
+      "ex2": "cryptocom",
+      "model": "zscore",
+      "n_trades": 987,
+      "n_days": 31,
+      "net_bps": 47151.9,
+      "ci95": [
+        40380.2,
+        55245.2
+      ],
+      "p_one_sided": 0.0,
+      "bh_significant": true
+    },
+    {
+      "asset": "WIF",
+      "ex1": "bitget",
+      "ex2": "cryptocom",
+      "model": "ou",
+      "n_trades": 1686,
+      "n_days": 30,
+      "net_bps": -9677.5,
+      "ci95": [
+        -17861.3,
+        1654.2
+      ],
+      "p_one_sided": 0.9563,
+      "bh_significant": false
+    },
+    {
+      "asset": "WIF",
+      "ex1": "bitget",
+      "ex2": "cryptocom",
+      "model": "zscore",
+      "n_trades": 738,
+      "n_days": 30,
+      "net_bps": 10608.0,
+      "ci95": [
+        4790.9,
+        18600.9
+      ],
+      "p_one_sided": 0.0,
+      "bh_significant": true
+    },
+    {
+      "asset": "WIF",
+      "ex1": "bybit",
+      "ex2": "cryptocom",
+      "model": "ou",
+      "n_trades": 1890,
+      "n_days": 31,
+      "net_bps": -12304.6,
+      "ci95": [
+        -20565.2,
+        -1113.3
+      ],
+      "p_one_sided": 0.9835,
+      "bh_significant": false
+    },
+    {
+      "asset": "WIF",
+      "ex1": "bybit",
+      "ex2": "cryptocom",
+      "model": "zscore",
+      "n_trades": 828,
+      "n_days": 31,
+      "net_bps": 12044.9,
+      "ci95": [
+        5645.1,
+        21602.0
+      ],
+      "p_one_sided": 0.0,
+      "bh_significant": true
+    },
+    {
+      "asset": "WIF",
+      "ex1": "cryptocom",
+      "ex2": "okx",
+      "model": "ou",
+      "n_trades": 1810,
+      "n_days": 31,
+      "net_bps": -10747.3,
+      "ci95": [
+        -18727.0,
+        534.5
+      ],
+      "p_one_sided": 0.9704,
+      "bh_significant": false
+    },
+    {
+      "asset": "WIF",
+      "ex1": "cryptocom",
+      "ex2": "okx",
+      "model": "zscore",
+      "n_trades": 777,
+      "n_days": 31,
+      "net_bps": 11839.4,
+      "ci95": [
+        5390.5,
+        21174.2
+      ],
+      "p_one_sided": 0.0,
+      "bh_significant": true
+    },
+    {
+      "asset": "WIF",
+      "ex1": "cryptocom",
+      "ex2": "kucoin",
+      "model": "ou",
+      "n_trades": 1859,
+      "n_days": 31,
+      "net_bps": -10112.1,
+      "ci95": [
+        -19037.3,
+        2405.7
+      ],
+      "p_one_sided": 0.953,
+      "bh_significant": false
+    },
+    {
+      "asset": "WIF",
+      "ex1": "cryptocom",
+      "ex2": "kucoin",
+      "model": "zscore",
+      "n_trades": 833,
+      "n_days": 31,
+      "net_bps": 12402.7,
+      "ci95": [
+        5707.9,
+        21980.7
+      ],
+      "p_one_sided": 0.0,
+      "bh_significant": true
+    },
+    {
+      "asset": "WIF",
+      "ex1": "cryptocom",
+      "ex2": "htx",
+      "model": "ou",
+      "n_trades": 1801,
+      "n_days": 31,
+      "net_bps": -25708.2,
+      "ci95": [
+        -35095.4,
+        -14202.9
+      ],
+      "p_one_sided": 0.9998,
+      "bh_significant": false
+    },
+    {
+      "asset": "WIF",
+      "ex1": "cryptocom",
+      "ex2": "htx",
+      "model": "zscore",
+      "n_trades": 835,
+      "n_days": 31,
+      "net_bps": 5575.7,
+      "ci95": [
+        -491.5,
+        14468.2
+      ],
+      "p_one_sided": 0.044,
+      "bh_significant": false
+    },
+    {
+      "asset": "WIF",
+      "ex1": "cryptocom",
+      "ex2": "mexc",
+      "model": "ou",
+      "n_trades": 1876,
+      "n_days": 31,
+      "net_bps": 1019.4,
+      "ci95": [
+        -7726.0,
+        13671.9
+      ],
+      "p_one_sided": 0.4759,
+      "bh_significant": false
+    },
+    {
+      "asset": "WIF",
+      "ex1": "cryptocom",
+      "ex2": "mexc",
+      "model": "zscore",
+      "n_trades": 841,
+      "n_days": 31,
+      "net_bps": 16658.5,
+      "ci95": [
+        9923.4,
+        26480.5
+      ],
+      "p_one_sided": 0.0,
+      "bh_significant": true
+    },
+    {
+      "asset": "WIF",
+      "ex1": "binance",
+      "ex2": "htx",
+      "model": "ou",
+      "n_trades": 1662,
+      "n_days": 30,
+      "net_bps": 42965.3,
+      "ci95": [
+        38338.6,
+        47537.7
+      ],
+      "p_one_sided": 0.0,
+      "bh_significant": true
+    },
+    {
+      "asset": "WIF",
+      "ex1": "binance",
+      "ex2": "htx",
+      "model": "zscore",
+      "n_trades": 1020,
+      "n_days": 30,
+      "net_bps": 28952.0,
+      "ci95": [
+        26040.4,
+        32006.7
+      ],
+      "p_one_sided": 0.0,
+      "bh_significant": true
+    },
+    {
+      "asset": "WIF",
+      "ex1": "binance",
+      "ex2": "mexc",
+      "model": "ou",
+      "n_trades": 1754,
+      "n_days": 30,
+      "net_bps": 68304.7,
+      "ci95": [
+        62859.7,
+        73752.8
+      ],
+      "p_one_sided": 0.0,
+      "bh_significant": true
+    },
+    {
+      "asset": "WIF",
+      "ex1": "binance",
+      "ex2": "mexc",
+      "model": "zscore",
+      "n_trades": 1064,
+      "n_days": 30,
+      "net_bps": 42981.1,
+      "ci95": [
+        39582.9,
+        46595.8
+      ],
+      "p_one_sided": 0.0,
+      "bh_significant": true
+    },
+    {
+      "asset": "WIF",
+      "ex1": "binance",
+      "ex2": "bitget",
+      "model": "ou",
+      "n_trades": 1681,
+      "n_days": 30,
+      "net_bps": 59476.1,
+      "ci95": [
+        52939.4,
+        65657.5
+      ],
+      "p_one_sided": 0.0,
+      "bh_significant": true
+    },
+    {
+      "asset": "WIF",
+      "ex1": "binance",
+      "ex2": "bitget",
+      "model": "zscore",
+      "n_trades": 1006,
+      "n_days": 30,
+      "net_bps": 37522.5,
+      "ci95": [
+        33807.8,
+        41134.5
+      ],
+      "p_one_sided": 0.0,
+      "bh_significant": true
+    }
+  ]
+}

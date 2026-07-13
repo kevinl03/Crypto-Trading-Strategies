@@ -211,6 +211,8 @@ SOL  & 6    & 0/20  & $-15{,}970$ & $-4.57$ & --- \\
 
 The results support a \emph{necessary} viability condition rather than a sharp binary threshold. Bucketing all 100 pair-models by spread standard deviation: 0 of 26 pair-models with $\sigma_{\text{spread}} < 10$~bps are profitable, 4 of 18 in the 10--15~bps transition zone, and 39 of 56 above 15~bps. Below the fee floor, profitability is impossible by construction; above it, profitability additionally depends on model choice and reversion speed (Section~\ref{sec:ou_vs_z}). This yields a simple, interpretable screening criterion for cross-exchange spread-trading viability---necessary, but not sufficient.
 
+The profitable results are statistically robust to both sampling variation and multiple testing: under a day-block bootstrap ($B=10{,}000$), 39 of the 43 profitable pair-models have 95\% CI lower bounds above zero, and 38 survive Benjamini--Hochberg control at $q=0.05$ across all 100 tests. The headline pairs are unambiguous: WIF Binance--MEXC OU net CI $[+62{,}860, +73{,}753]$~bps, PEPE Binance--Crypto.com OU $[+36{,}258, +44{,}242]$, CRV Crypto.com--MEXC z-score $[+6{,}759, +15{,}248]$, all with bootstrap $p < 10^{-4}$.
+
 \subsection{Exchange Latency Structure}\label{sec:latency}
 
 \begin{figure}[h]
@@ -313,7 +315,7 @@ $k$ & \textbf{Trades} & \textbf{Win Rate} & \textbf{Net (bps)} & \textbf{Sharpe}
 \end{tabular}
 \end{table}
 
-Under the idealized fill model, total net P\&L decreases monotonically in $k$: every additional marginal trade is profitable when execution is frictionless, so looser thresholds accumulate more gross profit. Per-trade Sharpe, however, peaks at $k=2.0$, reflecting the declining quality of marginal signals. We use $k=2.0$ as the default because under realistic frictions (Section~\ref{sec:limitations}) marginal trades near the fee boundary flip negative, and per-trade quality, not idealized volume, determines deployable performance.
+Under the idealized fill model net P\&L is monotone in trade count (every marginal trade is profitable when frictionless), while per-trade Sharpe peaks at $k=2.0$. We default to $k=2.0$: under realistic frictions marginal trades near the fee boundary flip negative, so per-trade quality---not idealized volume---determines deployable performance.
 
 \subsubsection{Temporal Stability Across Subperiods}
 
@@ -380,7 +382,7 @@ The DEX side of our corpus provides a test in a venue type with a fundamentally 
 
 \subsection{When OU Outperforms Z-Score}
 
-The cross-exchange setting anchors the equilibrium spread near zero by the Law of One Price, which in principle favors a model that estimates $\theta$ and $\mu$ explicitly. In practice, our results show the advantage is conditional on estimation quality. When tens of reversion cycles fit inside the calibration window (WIF, PEPE; $t_{1/2}/w \approx 0.03$), OU parameter estimates are stable and the model extracts 25--60\% more profit than the z-score baseline. When the half-life approaches the window (CRV; $t_{1/2}/w \approx 0.6$), the OLS regression sees less than one full cycle per window: $\hat\theta$ is noisy, the non-mean-reversion guard discards many bars, and entries arrive late. The z-score's local statistics degrade more gracefully in exactly this regime. A practitioner should therefore select the model by the measured half-life-to-window ratio---or lengthen the OU window for slow spreads, at the cost of slower regime adaptation.
+The Law of One Price anchors the cross-venue equilibrium near zero, which in principle favors a model that estimates $\theta$ and $\mu$ explicitly; in practice the advantage is conditional on estimation quality via the half-life-to-window ratio (mechanism in Section~\ref{sec:ou_vs_z}). A practitioner should select the model by the measured ratio---or lengthen the OU window for slow spreads, at the cost of slower regime adaptation.
 
 \subsection{Exchange Latency as Microstructure}
 
@@ -409,7 +411,7 @@ CRV  & cdc--mexc & 76.7 & 46.2 & 3.1 & stale prints \\
 
 The two instruments agree for Binance--MEXC (7.8 vs.\ 6.9~bps), confirming a genuine quote-level dislocation---our headline WIF result trades a real inefficiency. For every Crypto.com pair, however, print dispersion exceeds quote dispersion by an order of magnitude (up to $26\times$) while Crypto.com's quoted books are only 13--20~bps wide: the large printed spreads are artifacts of an inactive tape, and the corresponding backtest P\&L (Crypto.com legs of Tables~\ref{tab:summary} and~\ref{tab:ou_vs_zscore}) would be largely unrealizable at quoted prices. The 38-minute CRV ``half-life'' is thus better interpreted as the \emph{print-refresh timescale} of a thin market than as an exploitable price lag. Independently, our tick-level robustness suite on quote data finds the Crypto.com spreads stationary with a small residual quote-level edge under maker-fee assumptions---mean reversion exists at the quote level, but at a fraction of the print-implied magnitude.
 
-Two methodological conclusions follow. First, OHLCV-only cross-venue backtests systematically overstate opportunity on thin venues, and the overstatement is silent: prints and quotes cannot be distinguished after the fact. Second, the dual-instrument comparison above is only possible with contemporaneously collected quote snapshots---data that, unlike OHLCV, cannot be backfilled from any public API. The released snapshot corpus (Section~\ref{sec:dataset}) enables this verification for future cross-venue studies.
+Two conclusions follow. First, OHLCV-only cross-venue backtests silently overstate opportunity on thin venues: prints and quotes cannot be distinguished after the fact. Second, this verification requires contemporaneously collected quote snapshots---data that cannot be backfilled from any public API; the released corpus (Section~\ref{sec:dataset}) enables it for future studies.
 
 \subsection{Limitations and Realistic Profit Degradation}\label{sec:limitations}
 
