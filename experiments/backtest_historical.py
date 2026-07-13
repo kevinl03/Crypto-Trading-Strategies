@@ -27,8 +27,10 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import subprocess
 import sys
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -443,6 +445,8 @@ def main():
                         help="Top N pairs by spread std to backtest")
     parser.add_argument("--min-datapoints", type=int, default=500,
                         help="Min overlapping datapoints to consider a pair (default: 500)")
+    parser.add_argument("--exclude-exchanges", type=str, default="",
+                        help="Comma-separated exchanges to exclude (e.g. kraken,coinbase,phemex)")
     args = parser.parse_args()
 
     # Load data
@@ -456,6 +460,12 @@ def main():
     if not data:
         print("No data found.")
         sys.exit(1)
+
+    excluded = {e.strip().lower() for e in args.exclude_exchanges.split(",") if e.strip()}
+    if excluded:
+        for asset in list(data.keys()):
+            data[asset] = {ex: df for ex, df in data[asset].items() if ex.lower() not in excluded}
+        print(f"  Excluded exchanges: {', '.join(sorted(excluded))}")
 
     # Filter to specific asset if requested
     assets = [args.asset] if args.asset else sorted(data.keys())
@@ -622,7 +632,30 @@ def main():
         print(f"    {asset}: {len(asset_results)} pair-models, {n_profitable} profitable, "
               f"best={best_net:+.1f} bps, avg spread std={avg_std:.2f} bps")
 
-    # Save results to JSON
+    # Save results to JSON with a provenance stamp so every number is
+    # traceable to an exact code revision, engine, and parameter set.
+    try:
+        git_sha = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"],
+            cwd=str(Path(__file__).resolve().parent.parent),
+            text=True, stderr=subprocess.DEVNULL,
+        ).strip()
+    except Exception:
+        git_sha = None
+
+    provenance = {
+        "generated_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "git_sha": git_sha,
+        "engine": "cpp" if _USE_CPP else "python",
+        "command": " ".join(sys.argv),
+        "params": vars(args),
+        "versions": {
+            "python": sys.version.split()[0],
+            "numpy": np.__version__,
+            "pandas": pd.__version__,
+        },
+    }
+
     results_path = os.path.join(args.jsonl or args.data_dir, "backtest_results.json")
     results_json = [{
         "asset": r.asset, "ex1": r.ex1, "ex2": r.ex2, "model": r.model,
@@ -639,8 +672,9 @@ def main():
 
     try:
         with open(results_path, "w") as f:
-            json.dump(results_json, f, indent=2)
+            json.dump({"provenance": provenance, "results": results_json}, f, indent=2)
         print(f"\n  Results saved to: {results_path}")
+        print(f"  Provenance: engine={provenance['engine']} git={git_sha[:10] if git_sha else 'n/a'}")
     except Exception:
         pass
 

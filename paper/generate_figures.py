@@ -13,9 +13,11 @@ DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "historical"
 OUT_DIR = Path(__file__).resolve().parent / "figures"
 OUT_DIR.mkdir(exist_ok=True)
 
-# Load backtest results
+# Load backtest results (supports both the legacy flat-list format and the
+# provenance-stamped {"provenance": ..., "results": [...]} format)
 with open(DATA_DIR / "backtest_results.json") as f:
-    results = json.load(f)
+    _payload = json.load(f)
+results = _payload["results"] if isinstance(_payload, dict) else _payload
 
 
 # =========================================================================

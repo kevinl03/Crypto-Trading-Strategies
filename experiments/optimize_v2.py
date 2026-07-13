@@ -17,9 +17,18 @@ from scripts.fees import TRADING_FEES_TAKER
 
 def load_ticks(directory):
     ticks = []
+    skipped = 0
     with open(Path(directory) / "ticks.jsonl") as f:
         for line in f:
-            ticks.append(json.loads(line))
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                ticks.append(json.loads(line))
+            except json.JSONDecodeError:
+                skipped += 1  # truncated/partial writes from live collector crashes
+    if skipped:
+        print(f"  [load_ticks] skipped {skipped} malformed line(s) in {directory}")
 
     exchanges = sorted(set(t["exchange"] for t in ticks))
     ex_a, ex_b = exchanges[0], exchanges[1]
