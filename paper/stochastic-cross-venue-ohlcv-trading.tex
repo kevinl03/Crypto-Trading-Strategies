@@ -114,11 +114,7 @@ Makarov and Schoar~\cite{makarov2020trading} document large, recurrent price dis
 
 \subsection{Lead-Lag Detection in Financial Markets}
 
-The identification of lead-lag relationships is an active area in computational finance. Zhang et al.~\cite{zhang2023dtw} apply dynamic time warping to detect lead-lag relationships in lagged multi-factor models for equities. Shi et al.~\cite{shi2023multireference} propose multireference alignment methods for lead-lag detection in multivariate time series. Both papers appeared at ICAIF~2023 and focus on \emph{cross-asset} lead-lag within a single venue. Our work identifies \emph{cross-venue} lead-lag for the \emph{same} asset---a complementary perspective where the lag is driven by exchange infrastructure rather than information diffusion.
-
-\subsection{ML and RL Extensions}
-
-Ning and Lee~\cite{ning2024advanced} propose model-free RL for spread trading that minimizes empirical mean-reversion time. Carapeto et al.~\cite{carapeto2024deep} combine classical mean-reversion strategies with deep RL across 14~crypto assets. These approaches are complementary to our OU framework and represent potential extensions for dynamic threshold optimization.
+The identification of lead-lag relationships is an active area in computational finance. Zhang et al.~\cite{zhang2023dtw} apply dynamic time warping to detect lead-lag relationships in lagged multi-factor models for equities. Shi et al.~\cite{shi2023multireference} propose multireference alignment methods for lead-lag detection in multivariate time series. Both papers appeared at ICAIF~2023 and focus on \emph{cross-asset} lead-lag within a single venue. Our work identifies \emph{cross-venue} lead-lag for the \emph{same} asset---a complementary perspective where the lag is driven by exchange infrastructure rather than information diffusion. Model-free and deep RL approaches to spread trading~\cite{ning2024advanced, carapeto2024deep} are complementary extensions for dynamic threshold optimization.
 
 % ======================================================================
 %  3. METHODOLOGY
@@ -169,9 +165,9 @@ where $f_i$ and $f_j$ are the taker fees on exchanges $i$ and $j$ respectively.
 % ======================================================================
 \section{Experimental Setup}\label{sec:setup}
 
-\subsection{Data Collection}
+\subsection{Data Collection and Released Dataset}\label{sec:dataset}
 
-We collected 30~days of one-minute OHLCV (Open-High-Low-Close-Volume) candlestick data for each asset on each exchange via REST API, yielding up to 43,200 candles per exchange per asset. Data was stored in Apache Parquet format for efficient columnar access.
+Our evaluation draws on two corpora. First, a \textbf{30-day backtest corpus}: one-minute OHLCV candles for each asset on each exchange via REST API (up to 43{,}200 bars per exchange per asset), stored as Parquet. Second, a \textbf{live multi-signal snapshot corpus} that cannot be reconstructed retroactively: at $\sim$60-second cadence we captured, for 23~assets across 12~centralized venues, nine concurrent signal families---ticker bid/ask, L2 order-book depth, recent trades, funding rates, open interest, withdrawal/exchange status, and a cross-venue spread matrix---over two chronologically separated windows ($\sim$128~hours total), plus decentralized-exchange (DEX) pool prices, spreads, and depth quotes for 12~tokens on Solana and EVM AMMs. Together the release comprises $\sim$8~million rows ($\sim$4~GB uncompressed; 1.2~GB as zstd Parquet) with per-row error tagging and lossless raw payloads, split into train/test by collection window. Public exchange APIs serve historical candles but not historical quotes or depth, so the snapshot corpus is the component that enables the print-vs-quote executability analysis of Section~\ref{sec:executability}---and, to our knowledge, no comparable multi-venue, multi-signal crypto snapshot dataset with chronological splits is publicly available. The joint CEX--DEX coverage further enables cross-venue-type comparisons relevant to decentralized finance, which we outline as future work (Section~\ref{sec:conclusion}).
 
 \subsection{Asset Selection}
 
@@ -182,6 +178,10 @@ Additionally, we tested 7~stablecoins (USDT, USDC, DAI, BUSD, TUSD, USDP, FDUSD)
 \subsection{Exchange Coverage}
 
 Eight exchanges provided $\geq 96$\% data coverage: Binance, KuCoin, Bybit, OKX, and MEXC delivered the full 43{,}200 one-minute rows per asset, while HTX, Crypto.com, and Bitget reached 96--97\% with minor gaps. Exchanges with poor API history depth (Gate.io, Kraken, Coinbase, Phemex, each recovering $<$10\% of the window) were excluded from the backtest; the exclusion is applied programmatically and recorded in the results provenance. For each asset we form all $\binom{8}{2}=28$ exchange pairs with sufficient overlapping data, rank them by spread standard deviation, and backtest the top~10 pairs under both models, yielding 20 pair-model combinations per asset (100 in total).
+
+\subsection{Implementation and Reproducibility}\label{sec:implementation}
+
+Signal computation (OU estimation, rolling z-scores) and the backtest loop are implemented twice: a NumPy reference and a native C++17 engine (pybind11) with a $\sim$160$\times$ speedup on batch operations. The two paths are cross-validated to produce identical trade lists---an earlier silent divergence between them (different estimation windows and bar-inclusion conventions) materially changed backtest results, which we flag as a practical warning: dual-implementation pipelines require behavioral equivalence tests, not just unit tests. The native engine makes the full 100 pair-model sweep, threshold ablations, and 1{,}000-trial Monte Carlo baselines regenerable in minutes on commodity hardware, and every results file embeds its generating code revision, engine, parameters, and library versions. The same engine drives the live paper trader of Section~\ref{sec:live} with sub-millisecond median signal latency (p50 $\approx$ 0.6~ms, p99 $\approx$ 2~ms), ensuring the backtested and live signal paths are the same code.
 
 \subsection{Evaluation Metrics}
 
@@ -438,7 +438,7 @@ CRV  & cdc--mexc & 76.7 & 46.2 & 3.1 & stale prints \\
 
 The two instruments agree for Binance--MEXC (7.8 vs.\ 6.9~bps), confirming a genuine quote-level dislocation---our headline WIF result trades a real inefficiency. For every Crypto.com pair, however, print dispersion exceeds quote dispersion by an order of magnitude (up to $26\times$) while Crypto.com's quoted books are only 13--20~bps wide: the large printed spreads are artifacts of an inactive tape, and the corresponding backtest P\&L (Crypto.com legs of Tables~\ref{tab:summary} and~\ref{tab:ou_vs_zscore}) would be largely unrealizable at quoted prices. The 38-minute CRV ``half-life'' is thus better interpreted as the \emph{print-refresh timescale} of a thin market than as an exploitable price lag. Independently, our tick-level robustness suite on quote data finds the Crypto.com spreads stationary with a small residual quote-level edge under maker-fee assumptions---mean reversion exists at the quote level, but at a fraction of the print-implied magnitude.
 
-Two methodological conclusions follow. First, OHLCV-only cross-venue backtests systematically overstate opportunity on thin venues, and the overstatement is silent: prints and quotes cannot be distinguished after the fact. Second, the dual-instrument comparison above is only possible with contemporaneously collected quote snapshots---data that, unlike OHLCV, cannot be backfilled from any public API. We release our multi-signal snapshot dataset (OHLCV, ticker quotes, L2 depth, trades, funding, and open interest, with chronologically separated train/test splits) to enable this verification for future cross-venue studies.
+Two methodological conclusions follow. First, OHLCV-only cross-venue backtests systematically overstate opportunity on thin venues, and the overstatement is silent: prints and quotes cannot be distinguished after the fact. Second, the dual-instrument comparison above is only possible with contemporaneously collected quote snapshots---data that, unlike OHLCV, cannot be backfilled from any public API. The released snapshot corpus (Section~\ref{sec:dataset}) enables this verification for future cross-venue studies.
 
 \subsection{Limitations and Realistic Profit Degradation}\label{sec:limitations}
 
@@ -481,13 +481,7 @@ The honest acknowledgment of these limitations is itself a methodological contri
 
 \subsection{Structural Risks}\label{sec:risks}
 
-Several risks threaten the persistence of this edge:
-\begin{enumerate}
-    \item \textbf{Competition:} As more bots exploit the same latency, spreads will compress toward the fee floor.
-    \item \textbf{Exchange improvements:} Crypto.com or MEXC may upgrade their matching engines, eliminating the price lag.
-    \item \textbf{Fee increases:} Exchanges may raise taker fees for high-frequency accounts.
-    \item \textbf{Regulatory changes:} Jurisdictions may restrict automated trading or API access on certain venues.
-\end{enumerate}
+Four forces threaten edge persistence: competition compressing spreads toward the fee floor (already observed in our own decay measurements, Sections~\ref{sec:executability}--\ref{sec:live}); venue improvements to matching engines or market-maker coverage eliminating the lag; fee increases for high-frequency accounts; and regulatory restrictions on automated trading or API access at specific venues.
 
 % ======================================================================
 %  7. CONCLUSION
@@ -505,7 +499,7 @@ We presented a cross-exchange stochastic spread-trading framework for cryptocurr
 
 Our ablation studies show per-trade Sharpe peaks at the default entry threshold while idealized net P\&L is monotone in trade count, and the edge persists across all three 10-day subperiods. Our realistic degradation analysis estimates a 50--80\% reduction in net profits under conservative execution assumptions---emphasizing that idealized OHLCV backtests are an upper bound, not a deployment forecast.
 
-Future work should extend live paper trading across regimes and venues to characterize edge persistence, extend the analysis to order-book-level data with bid-ask spread modeling, and investigate reinforcement learning for dynamic threshold optimization~\cite{ning2024advanced, carapeto2024deep}.
+Future work should extend live paper trading across regimes and venues to characterize edge persistence, apply the fee-floor criterion to the decentralized-exchange side of our released corpus---where round-trip costs (gas plus price impact, 50--130~bps) are several times CEX fees, providing a sharp out-of-domain test of the viability law---and investigate reinforcement learning for dynamic threshold optimization~\cite{ning2024advanced, carapeto2024deep}.
 
 % ======================================================================
 %  REFERENCES
