@@ -37,7 +37,7 @@
 %  ABSTRACT
 % ======================================================================
 \begin{abstract}
-Cross-exchange price deviations in cryptocurrency markets have been widely documented, yet few studies build and evaluate systematic trading strategies that exploit them. We present a \emph{cross-exchange} stochastic spread-trading framework that models the price spread of identical assets across centralized exchanges as an Ornstein--Uhlenbeck (OU) process and generates trades when deviations exceed a calibrated threshold. Using 30 days of one-minute OHLCV data across 5~assets, 8~exchanges, and 100~exchange-pair--model combinations, we find that profitability requires the cross-exchange spread standard deviation to exceed the round-trip transaction fee ($\approx$15~bps): WIF (73~bps average spread std; best pair +68,305~bps net), PEPE (20~bps; +40,403~bps), and CRV (63~bps; +10,613~bps) are profitable on 43 of 60 pair-models, while high-cap assets below the fee threshold (DOGE at 9~bps, SOL at 6~bps) are unprofitable on all 40. We identify structural \emph{price latency} on Crypto.com (38-minute OU half-life for CRV) and MEXC (1.5~minutes for WIF) as the primary microstructural driver of the measured spreads---and, using contemporaneously collected quote snapshots that cannot be reconstructed retroactively from public APIs, we verify which of these dislocations are executable: the MEXC dislocation is genuine at the quote level, while Crypto.com's printed spreads are dominated by stale last-trade prints ($26\times$ wider than its quote-mid dispersion over the same window). Contrary to a blanket superiority claim, we find OU outperformance over a rolling z-score baseline is \emph{conditional}: OU dominates when the spread half-life is short relative to the estimation window (WIF, PEPE), while the z-score baseline is more robust when the half-life approaches the window length (CRV, where OU is unprofitable on all 10 pairs). We contribute (i)~an empirically grounded \emph{necessary} condition ($\sigma_{\text{spread}} > c_{\text{fee}}$) for cross-exchange spread-trading viability, replicated out-of-sample on quote data across 23~assets and 12~venues (2{,}860 pair-models per window; profitability monotone in $\sigma/c_{\text{fee}}$ with 87\% cross-window persistence), (ii)~a characterization of exchange-specific latency as a persistent microstructural inefficiency, (iii)~a model-selection rule linking OU applicability to the half-life-to-window ratio, and (iv)~an honest assessment of the gap between idealized backtests and realistic execution: a friction analysis estimating 50--80\% profit reduction, and a live paper-trading session six weeks later in which the spread had compressed $30\times$ below the fee floor and the viability criterion---applied online---correctly produced zero trades.
+Cross-exchange price deviations in cryptocurrency markets have been widely documented, yet few studies build and evaluate systematic trading strategies that exploit them. We present a \emph{cross-exchange} stochastic spread-trading framework that models the price spread of identical assets across centralized exchanges as an Ornstein--Uhlenbeck (OU) process and generates trades when deviations exceed a calibrated threshold. Using 30 days of one-minute OHLCV data across 5~assets, 8~exchanges, and 100~exchange-pair--model combinations, we find that profitability requires the cross-exchange spread standard deviation to exceed the round-trip transaction fee ($\approx$15~bps): WIF (73~bps average spread std; best pair +68,305~bps net), PEPE (20~bps; +40,403~bps), and CRV (63~bps; +10,613~bps) are profitable on 43 of 60 pair-models, while high-cap assets below the fee threshold (DOGE at 9~bps, SOL at 6~bps) are unprofitable on all 40. We identify structural \emph{price latency} on Crypto.com (38-minute OU half-life for CRV) and MEXC (1.5~minutes for WIF) as the primary microstructural driver of the measured spreads---and, using contemporaneously collected quote snapshots that cannot be reconstructed retroactively from public APIs, we verify which of these dislocations are executable: the MEXC dislocation is genuine at the quote level, while Crypto.com's printed spreads are dominated by stale last-trade prints ($26\times$ wider than its quote-mid dispersion over the same window). Contrary to a blanket superiority claim, we find OU outperformance over a rolling z-score baseline is \emph{conditional}: OU dominates when the spread half-life is short relative to the estimation window (WIF, PEPE), while the z-score baseline is more robust when the half-life approaches the window length (CRV, where OU is unprofitable on all 10 pairs). We contribute (i)~an empirically grounded \emph{necessary} condition ($\sigma_{\text{spread}} > c_{\text{fee}}$) for cross-exchange spread-trading viability, replicated out-of-sample on quote data across 23~assets and 12~venues (2{,}860 pair-models per window; profitability monotone in $\sigma/c_{\text{fee}}$ with 87\% cross-window persistence), (ii)~a characterization of exchange-specific latency as a persistent microstructural inefficiency, (iii)~a model-selection rule linking OU applicability to the half-life-to-window ratio, and (iv)~an honest assessment of the gap between idealized backtests and realistic execution: a friction analysis with \emph{measured} bid-ask crossing costs under which no June-window pair-model survives taker fills, and a live paper-trading session six weeks later in which the spread had compressed $30\times$ below the fee floor and the viability criterion---applied online---correctly produced zero trades.
 \end{abstract}
 
 %%% CCS Concepts generated from https://dl.acm.org/ccs/ccs.cfm
@@ -274,9 +274,9 @@ As a negative control, we tested the framework on 7~stablecoins across 10~exchan
 
 \subsubsection{WIF (dogwifhat)}
 
-WIF exhibited the highest profitability, with 15 of 20~pair-models producing positive net returns. The best-performing pair, Binance--MEXC under the OU model, achieved +68{,}305~bps net on unit notional over 30~days with 1{,}754 trades at a 100\% win rate and per-trade Sharpe of 2.24. The OU half-life of 1.5~minutes indicates very fast mean-reversion, consistent with MEXC's price updates lagging Binance's by approximately 90~seconds.
+WIF exhibited the highest profitability, with 15 of 20~pair-models producing positive net returns. The best-performing pair, Binance--MEXC under the OU model, achieved +68{,}305~bps net on unit notional over 30~days with 1{,}754 trades at a 99.8\% win rate and per-trade Sharpe of 2.24. The OU half-life of 1.5~minutes indicates very fast mean-reversion, consistent with MEXC's price updates lagging Binance's by approximately 90~seconds.
 
-We flag the 100\% win rate explicitly as a property of the idealized fill model rather than evidence of risk-free trading: with frictionless execution at close prices and an exit rule that waits for reversion, a loss can only be realized through the one-day maximum-holding stop. Under realistic execution (Section~\ref{sec:limitations}), marginal trades flip negative and the win rate drops accordingly.
+We flag the near-perfect win rate explicitly as a property of the idealized fill model rather than evidence of risk-free trading---and we can isolate the cause by measurement. Sweeping the maximum-holding cap over 30/60/120/1{,}440 bars leaves the win rate at 99.7--99.8\% with at most two stop-outs, so bounded holding is not the driver; mid-price fills are. Re-pricing fills at the quoted touch (Section~\ref{sec:limitations}) flips marginal trades negative and drops win rates by tens of percentage points.
 
 \subsubsection{PEPE}
 
@@ -308,11 +308,11 @@ We vary the entry threshold $k$ from 1.0 to 3.0 for the best-performing pair (WI
 \toprule
 $k$ & \textbf{Trades} & \textbf{Win Rate} & \textbf{Net (bps)} & \textbf{Sharpe} \\
 \midrule
-1.0 & 6{,}924 & 97\% & +200{,}231 & 1.72 \\
-1.5 & 4{,}221 & 100\% & +144{,}508 & 2.15 \\
-2.0 & 1{,}754 & 100\% & +68{,}305 & 2.24 \\
-2.5 & 546  & 100\% & +24{,}397 & 2.05 \\
-3.0 & 128  & 99\% & +7{,}075 & 1.58 \\
+1.0 & 6{,}924 & 96.6\% & +200{,}231 & 1.72 \\
+1.5 & 4{,}221 & 99.7\% & +144{,}508 & 2.15 \\
+2.0 & 1{,}754 & 99.8\% & +68{,}305 & 2.24 \\
+2.5 & 546  & 99.8\% & +24{,}397 & 2.05 \\
+3.0 & 128  & 99.2\% & +7{,}075 & 1.58 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -330,11 +330,11 @@ To assess whether the edge is concentrated in a single regime, we split the 30-d
 \toprule
 \textbf{Period} & \textbf{Trades} & \textbf{Win Rate} & \textbf{Net (bps)} & \textbf{Sharpe} \\
 \midrule
-Days 1--10   & 451  & 100\% & +17{,}121 & 1.97 \\
-Days 11--20  & 611  & 100\% & +23{,}580 & 2.21 \\
-Days 21--30  & 686  & 100\% & +27{,}410 & 2.50 \\
+Days 1--10   & 451  & 100.0\% & +17{,}121 & 1.97 \\
+Days 11--20  & 611  & 99.5\% & +23{,}580 & 2.21 \\
+Days 21--30  & 686  & 100.0\% & +27{,}410 & 2.50 \\
 \midrule
-Full 30-day  & 1{,}754 & 100\% & +68{,}305 & 2.24 \\
+Full 30-day  & 1{,}754 & 99.8\% & +68{,}305 & 2.24 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -357,8 +357,8 @@ We compare the OU strategy against two additional baselines beyond the z-score m
 \toprule
 \textbf{Strategy} & \textbf{Net (bps)} & \textbf{Sharpe} & \textbf{Win Rate} \\
 \midrule
-OU (ours)       & +68{,}305 & 2.24 & 100\% \\
-Z-Score         & +42{,}981 & 2.16 & 100\% \\
+OU (ours)       & +68{,}305 & 2.24 & 99.8\% \\
+Z-Score         & +42{,}981 & 2.16 & 100.0\% \\
 Buy-and-Hold    & $-426$ & --- & --- \\
 Random Entry    & $-26{,}295$ & --- & 0\% \\
 \bottomrule
@@ -427,7 +427,7 @@ We devote significant attention to limitations because the gap between backtest 
 \textbf{Metric} & \textbf{Backtest} & \textbf{Conservative} \\
 \midrule
 Trades / month       & 1{,}754    & 500--700 \\
-Win rate             & 100\%    & 60--75\% \\
+Win rate             & 99.8\%    & 60--75\% \\
 Avg.\ gross / trade  & 54 bps   & 15--25 bps \\
 Net per trade        & 39 bps   & 5--15 bps \\
 Monthly net          & +68{,}305 bps & +2{,}500--10{,}000 bps \\
@@ -438,8 +438,8 @@ Per-trade Sharpe     & 2.24     & 0.5--1.0 \\
 
 Key friction sources include:
 \begin{itemize}
-    \item \textbf{Bid-ask crossing cost:} Entry at the close price assumes mid-price execution. Crossing the spread adds 10--40~bps per trade.
-    \item \textbf{Slippage:} Low-cap tokens (WIF, PEPE) have thin order books on smaller exchanges, increasing market impact.
+    \item \textbf{Bid-ask crossing cost (measured):} re-pricing every trade's entry and exit at the quoted touch on our snapshot windows costs a median 27~bps per book-touch ($\sim$55~bps per round trip); under taker fills, \emph{none} of the 572 viable-region pair-models in the June windows remain profitable (median win-rate drop 63~pp). Taker execution is thus unviable in the compressed regime; deployment requires maker execution, which our tick-level robustness suite models at 6~bps round trip and finds marginally positive. For the May headline pair, average gross of 54~bps per trade would have cleared this pair's measured crossing cost ($\sim$18~bps round trip; Binance and MEXC quote tightly for WIF) plus fees---but May quotes are unobservable, so this remains an estimate.
+    \item \textbf{Slippage:} Low-cap tokens (WIF, PEPE) have thin order books on smaller exchanges, increasing market impact beyond the touch.
     \item \textbf{Execution latency:} REST API round-trips of 1--10~seconds may cause 30--50\% of signals to expire before execution.
     \item \textbf{Capital rebalancing:} Inventory drifts to one side over time, requiring periodic cross-exchange transfers with withdrawal fees and 10-minute to 24-hour delays.
 \end{itemize}
