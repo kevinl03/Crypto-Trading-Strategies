@@ -1,0 +1,101 @@
+{
+  "pairs": [
+    {
+      "coin": "WIF",
+      "ex1": "binance",
+      "ex2": "mexc",
+      "may_ohlcv_std": 26.15,
+      "jun_train_ohlcv_std": 7.8,
+      "jun_train_ohlcv_n": 4065,
+      "jun_train_quote_std": 6.9,
+      "jun_train_quote_n": 3909,
+      "jun_test_quote_std": 9.3,
+      "jun_test_quote_n": 3457,
+      "stale_print_dominated": false
+    },
+    {
+      "coin": "WIF",
+      "ex1": "binance",
+      "ex2": "cryptocom",
+      "may_ohlcv_std": 93.94,
+      "jun_train_ohlcv_std": 92.2,
+      "jun_train_ohlcv_n": 4065,
+      "jun_train_quote_std": 3.6,
+      "jun_train_quote_n": 3905,
+      "jun_test_quote_std": 3.5,
+      "jun_test_quote_n": 3447,
+      "stale_print_dominated": true
+    },
+    {
+      "coin": "PEPE",
+      "ex1": "binance",
+      "ex2": "cryptocom",
+      "may_ohlcv_std": 24.95,
+      "jun_train_ohlcv_std": 57.2,
+      "jun_train_ohlcv_n": 4065,
+      "jun_train_quote_std": 8.4,
+      "jun_train_quote_n": 3906,
+      "jun_test_quote_std": 9.1,
+      "jun_test_quote_n": 3447,
+      "stale_print_dominated": true
+    },
+    {
+      "coin": "CRV",
+      "ex1": "cryptocom",
+      "ex2": "mexc",
+      "may_ohlcv_std": 76.66,
+      "jun_train_ohlcv_std": 46.2,
+      "jun_train_ohlcv_n": 4065,
+      "jun_train_quote_std": 3.1,
+      "jun_train_quote_n": 3906,
+      "jun_test_quote_std": 2.5,
+      "jun_test_quote_n": 3448,
+      "stale_print_dominated": true
+    }
+  ],
+  "quoted_width_bps": {
+    "CRV/binance": {
+      "n": 3909,
+      "median": 4.2
+    },
+    "CRV/cryptocom": {
+      "n": 3906,
+      "median": 12.7
+    },
+    "CRV/mexc": {
+      "n": 3909,
+      "median": 4.2
+    },
+    "PEPE/binance": {
+      "n": 3909,
+      "median": 34.3
+    },
+    "PEPE/cryptocom": {
+      "n": 3906,
+      "median": 20.3
+    },
+    "PEPE/mexc": {
+      "n": 3909,
+      "median": 6.8
+    },
+    "WIF/binance": {
+      "n": 3909,
+      "median": 6.0
+    },
+    "WIF/cryptocom": {
+      "n": 3905,
+      "median": 18.0
+    },
+    "WIF/mexc": {
+      "n": 3909,
+      "median": 11.8
+    }
+  },
+  "provenance": {
+    "generated_utc": "2026-07-13T01:15:55+00:00",
+    "git_sha": "47d7fa3f16e7706234044cb4f2d0571c84da206a",
+    "script": "experiments/analyze_executability.py",
+    "train_window": "2026-06-13T23:48Z/2026-06-16T19:34Z",
+    "test_window": "2026-06-22T03:10Z/2026-06-24T15:10Z"
+  }
+}
