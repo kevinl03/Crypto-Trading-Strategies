@@ -37,7 +37,7 @@
 %  ABSTRACT
 % ======================================================================
 \begin{abstract}
-Cross-exchange price deviations in cryptocurrency markets have been widely documented, yet few studies build and evaluate systematic trading strategies that exploit them. We present a \emph{cross-exchange} stochastic spread-trading framework that models the price spread of identical assets across centralized exchanges as an Ornstein--Uhlenbeck (OU) process and generates trades when deviations exceed a calibrated threshold. Using 30 days of one-minute OHLCV data across 5~assets, 8~exchanges, and 100~exchange-pair--model combinations, we find that profitability requires the cross-exchange spread standard deviation to exceed the round-trip transaction fee ($\approx$15~bps): WIF (73~bps average spread std; best pair +68,305~bps net), PEPE (20~bps; +40,403~bps), and CRV (63~bps; +10,613~bps) are profitable on 43 of 60 pair-models, while high-cap assets below the fee threshold (DOGE at 9~bps, SOL at 6~bps) are unprofitable on all 40. We identify structural \emph{price latency} on Crypto.com (38-minute OU half-life for CRV) and MEXC (1.5~minutes for WIF) as the primary microstructural driver of the measured spreads---and, using contemporaneously collected quote snapshots that cannot be reconstructed retroactively from public APIs, we verify which of these dislocations are executable: the MEXC dislocation is genuine at the quote level, while Crypto.com's printed spreads are dominated by stale last-trade prints ($26\times$ wider than its quote-mid dispersion over the same window). Contrary to a blanket superiority claim, we find OU outperformance over a rolling z-score baseline is \emph{conditional}: OU dominates when the spread half-life is short relative to the estimation window (WIF, PEPE), while the z-score baseline is more robust when the half-life approaches the window length (CRV, where OU is unprofitable on all 10 pairs). We contribute (i)~an empirically grounded \emph{necessary} condition ($\sigma_{\text{spread}} > c_{\text{fee}}$) for cross-exchange spread-trading viability, (ii)~a characterization of exchange-specific latency as a persistent microstructural inefficiency, (iii)~a model-selection rule linking OU applicability to the half-life-to-window ratio, and (iv)~an honest assessment of the gap between idealized backtests and realistic execution: a friction analysis estimating 50--80\% profit reduction, and a live paper-trading session six weeks later in which the spread had compressed $30\times$ below the fee floor and the viability criterion---applied online---correctly produced zero trades.
+Cross-exchange price deviations in cryptocurrency markets have been widely documented, yet few studies build and evaluate systematic trading strategies that exploit them. We present a \emph{cross-exchange} stochastic spread-trading framework that models the price spread of identical assets across centralized exchanges as an Ornstein--Uhlenbeck (OU) process and generates trades when deviations exceed a calibrated threshold. Using 30 days of one-minute OHLCV data across 5~assets, 8~exchanges, and 100~exchange-pair--model combinations, we find that profitability requires the cross-exchange spread standard deviation to exceed the round-trip transaction fee ($\approx$15~bps): WIF (73~bps average spread std; best pair +68,305~bps net), PEPE (20~bps; +40,403~bps), and CRV (63~bps; +10,613~bps) are profitable on 43 of 60 pair-models, while high-cap assets below the fee threshold (DOGE at 9~bps, SOL at 6~bps) are unprofitable on all 40. We identify structural \emph{price latency} on Crypto.com (38-minute OU half-life for CRV) and MEXC (1.5~minutes for WIF) as the primary microstructural driver of the measured spreads---and, using contemporaneously collected quote snapshots that cannot be reconstructed retroactively from public APIs, we verify which of these dislocations are executable: the MEXC dislocation is genuine at the quote level, while Crypto.com's printed spreads are dominated by stale last-trade prints ($26\times$ wider than its quote-mid dispersion over the same window). Contrary to a blanket superiority claim, we find OU outperformance over a rolling z-score baseline is \emph{conditional}: OU dominates when the spread half-life is short relative to the estimation window (WIF, PEPE), while the z-score baseline is more robust when the half-life approaches the window length (CRV, where OU is unprofitable on all 10 pairs). We contribute (i)~an empirically grounded \emph{necessary} condition ($\sigma_{\text{spread}} > c_{\text{fee}}$) for cross-exchange spread-trading viability, replicated out-of-sample on quote data across 23~assets and 12~venues (2{,}860 pair-models per window; profitability monotone in $\sigma/c_{\text{fee}}$ with 87\% cross-window persistence), (ii)~a characterization of exchange-specific latency as a persistent microstructural inefficiency, (iii)~a model-selection rule linking OU applicability to the half-life-to-window ratio, and (iv)~an honest assessment of the gap between idealized backtests and realistic execution: a friction analysis estimating 50--80\% profit reduction, and a live paper-trading session six weeks later in which the spread had compressed $30\times$ below the fee floor and the viability criterion---applied online---correctly produced zero trades.
 \end{abstract}
 
 %%% CCS Concepts generated from https://dl.acm.org/ccs/ccs.cfm
@@ -171,9 +171,7 @@ Our evaluation draws on two corpora. First, a \textbf{30-day backtest corpus}: o
 
 \subsection{Asset Selection}
 
-To identify candidate assets, we screened all spot markets available on at least 5 of our 11 target exchanges and ranked them by cross-exchange spread standard deviation computed from a 48-hour pilot collection of 1-minute OHLCV data. We selected the top~3 assets by spread volatility---WIF (dogwifhat, $\sigma_{\text{spread}}=93$~bps), CRV (Curve DAO, 77~bps), and PEPE (Pepe, 25~bps)---as high-opportunity candidates, and two high-cap assets with low spread volatility---DOGE (Dogecoin, 8~bps) and SOL (Solana, 7~bps)---as negative-result controls. This deliberate inclusion of assets expected to be unprofitable strengthens the identification of the 15~bps profitability threshold (Section~\ref{sec:results}).
-
-Additionally, we tested 7~stablecoins (USDT, USDC, DAI, BUSD, TUSD, USDP, FDUSD) as a further baseline to confirm the unprofitability of stablecoin spread trading under realistic fee structures (fee-to-spread ratio of $25.9\times$).
+To identify candidate assets, we screened all spot markets available on at least 5 of our 11 target exchanges and ranked them by cross-exchange spread standard deviation computed from a 48-hour pilot collection of 1-minute OHLCV data. We selected the top~3 assets by spread volatility---WIF (dogwifhat, $\sigma_{\text{spread}}=93$~bps), CRV (Curve DAO, 77~bps), and PEPE (Pepe, 25~bps)---as high-opportunity candidates, and two high-cap assets with low spread volatility---DOGE (Dogecoin, 8~bps) and SOL (Solana, 7~bps)---as negative-result controls. This deliberate inclusion of assets expected to be unprofitable strengthens the identification of the 15~bps profitability threshold (Section~\ref{sec:results}); 7~stablecoins serve as a further baseline (Section~\ref{sec:stablecoin}).
 
 \subsection{Exchange Coverage}
 
@@ -185,14 +183,7 @@ Signal computation (OU estimation, rolling z-scores) and the backtest loop are i
 
 \subsection{Evaluation Metrics}
 
-For each exchange-pair--model combination, we report:
-\begin{itemize}
-    \item \textbf{Net P\&L} in basis points (bps) on unit notional per leg, after fee deduction, summed over all round-trip trades.
-    \item \textbf{Win rate}: fraction of trades with positive net P\&L.
-    \item \textbf{Per-trade Sharpe}: mean over standard deviation of per-trade net P\&L. We deliberately report this dimensionless quantity rather than an annualized time-based Sharpe, because a capital-denominated return series depends on inventory and rebalancing assumptions across two venues that our OHLCV backtest does not model (Section~\ref{sec:limitations}).
-    \item \textbf{OU half-life}: estimated mean-reversion half-life in minutes.
-    \item \textbf{Trade count}: total number of round-trip trades over 30~days.
-\end{itemize}
+For each exchange-pair--model combination we report net P\&L in basis points on unit notional per leg (after fees, summed over round trips), win rate, per-trade Sharpe (mean over standard deviation of per-trade net P\&L---we deliberately avoid an annualized time-based Sharpe because a capital-denominated return series depends on inventory and rebalancing assumptions across two venues that our OHLCV backtest does not model; Section~\ref{sec:limitations}), OU half-life in minutes, and round-trip trade count over the 30~days.
 
 % ======================================================================
 %  5. RESULTS
@@ -282,7 +273,7 @@ The comparison reveals a \emph{conditional} relationship rather than uniform dom
 
 The mechanism is estimation-theoretic. With a 60-minute calibration window, a 1.5-minute half-life provides $\sim$40 reversion cycles per window---ample signal to identify $\theta$ and $\mu$. A 37.6-minute half-life provides barely one cycle per window, so the OLS estimates of $\theta$ and $\mu$ are dominated by noise, and the guard against non-mean-reverting fits ($\hat\theta \le 0$) discards many bars entirely. The practical rule: OU spread modeling on a window of $w$ bars is reliable when $t_{1/2} \lesssim w/10$; beyond that, local z-score statistics degrade more gracefully. This refines both the blanket OU-inferiority finding of Suchato et al.~\cite{suchato2024application} and blanket-superiority claims elsewhere.
 
-\subsection{Stablecoin Baseline}
+\subsection{Stablecoin Baseline}\label{sec:stablecoin}
 
 As a negative control, we tested the framework on 7~stablecoins across 10~exchanges (120 snapshots): zero profitable trades, spread standard deviation of 0.7~bps against a typical 18~bps round-trip fee (ratio $25.9\times$). While prior work speculated about stablecoin price discrepancies~\cite{makarov2020trading}, this quantification shows the fee-to-spread ratio makes such strategies categorically impossible under public fee schedules, consistent with the efficiency implied by peg mechanisms.
 
@@ -304,15 +295,7 @@ CRV showed the longest OU half-life (37.6~minutes), driven entirely by Crypto.co
 
 \subsubsection{DOGE and SOL (Negative Results)}
 
-DOGE (9~bps average spread std) and SOL (6~bps) produced zero profitable pair-models out of 40. Both assets are highly liquid across all exchanges, with deep order books and active market makers that enforce tight cross-exchange pricing. The strategies traded frequently (up to 2{,}267 trades per pair-model) and lost the fee on nearly every round trip---SOL win rates are 0\% on every pair---confirming that market efficiency in high-cap assets eliminates the cross-exchange spread-trading opportunity.
-
-The failure is structural, not methodological. These assets have:\vspace{-0.5em}
-\begin{itemize}
-    \item \textbf{Deep liquidity:} Tight bid-ask spreads compress cross-exchange deviations below the fee floor.
-    \item \textbf{Active market makers:} Well-capitalized participants already exploit any transient dislocations within seconds.
-    \item \textbf{Uniform exchange coverage:} Unlike CRV or WIF, no single exchange exhibits price latency for DOGE or SOL---all venues track the same price nearly simultaneously.
-\end{itemize}\vspace{-0.5em}
-This negative result provides a useful screening criterion: assets with high market-cap rank and deep multi-venue liquidity are poor candidates for cross-exchange spread trading. The strategy is inherently an edge that exists in the \emph{long tail} of lower-liquidity assets where market-making coverage is uneven across venues.
+DOGE (9~bps average spread std) and SOL (6~bps) produced zero profitable pair-models out of 40. The strategies traded frequently (up to 2{,}267 trades per pair-model) and lost the fee on nearly every round trip---SOL win rates are 0\% on every pair. The failure is structural, not methodological: deep liquidity compresses cross-exchange deviations below the fee floor, well-capitalized market makers exploit transient dislocations within seconds, and no single venue exhibits price latency for these assets. High market-cap rank with deep multi-venue liquidity is thus a disqualifying screen; the edge lives in the \emph{long tail} of lower-liquidity assets where market-making coverage is uneven across venues.
 
 % ======================================================================
 %  5b. ABLATION AND ROBUSTNESS
@@ -398,7 +381,9 @@ Both naive baselines are unprofitable. Buy-and-hold loses modestly ($-426$~bps: 
 
 \subsection{Profitability Threshold}
 
-Our results support a screening criterion that is \emph{necessary but not sufficient}: an asset is viable for cross-exchange spread trading only if its cross-exchange spread standard deviation exceeds the round-trip transaction fee ($\approx$15~bps in our data). Below $\sim$10~bps the outcome is unambiguous---0 of 26 pair-models profitable; a narrow transition zone (10--15~bps, 4 of 18 profitable) separates it from the viable region, where 39 of 56 pair-models are profitable and the residual variation is explained by model choice and reversion speed rather than spread volatility alone. The criterion is intuitive---the spread must clear trading costs---and cheap to evaluate: it requires only a short pilot collection of public OHLCV data.
+Our results support a screening criterion that is \emph{necessary but not sufficient}: an asset is viable for cross-exchange spread trading only if its cross-exchange spread standard deviation exceeds the round-trip transaction fee ($\approx$15~bps in our data). Below $\sim$10~bps the outcome is unambiguous---0 of 26 pair-models profitable; a narrow transition zone (10--15~bps, 4 of 18 profitable) separates it from the viable region, where 39 of 56 pair-models are profitable and the residual variation is explained by model choice and reversion speed rather than spread volatility alone.
+
+We replicate the law out-of-sample, at breadth, and on the executable instrument: applying the identical protocol to \emph{quote-mid} spreads for all 23~assets $\times$ 12~venues in our snapshot corpus (2{,}860 pair-models per window, including the 10--25~bps gray zone the five-asset design under-sampled), profitability is monotone in the ratio $\sigma_{\text{spread}}/c_{\text{fee}}$: 3\% of pair-models are profitable below $0.5$, 76\% at $0.5$--$1$, 100\% at $1$--$2$, and 60\% above $2$ (train window); the test window, collected after a deliberate break, reproduces the gradient (2\%, 69\%, 94\%, 80\%), and 87\% of train-profitable pair-models remain profitable out-of-sample. The break-even near $\sigma/c_{\text{fee}} \approx 0.5$ matches entry-threshold economics: with $k=2$, entries capture roughly $2\sigma$ gross, so viability requires $2\sigma > c_{\text{fee}}$. The dip above ratio~2 is the slow-half-life regime of Section~\ref{sec:ou_vs_z}. The criterion is cheap to evaluate, requiring only a short pilot collection.
 
 \subsection{When OU Outperforms Z-Score}
 
@@ -406,14 +391,7 @@ The cross-exchange setting anchors the equilibrium spread near zero by the Law o
 
 \subsection{Exchange Latency as Microstructure}
 
-The identification of Crypto.com and MEXC as systematically slow exchanges is, to our knowledge, a novel empirical finding. Possible explanations include:
-\begin{itemize}
-    \item Lower market-maker presence on these venues for specific assets.
-    \item Slower matching-engine update cycles.
-    \item Thinner order books that delay price discovery.
-\end{itemize}
-
-This latency is \emph{asset-specific}: Crypto.com is slow for CRV and PEPE but not for DOGE, suggesting it is driven by liquidity rather than exchange infrastructure.
+The identification of Crypto.com and MEXC as systematically slow exchanges is, to our knowledge, a novel empirical finding. Possible explanations include lower market-maker presence for specific assets, slower matching-engine update cycles, and thinner order books that delay price discovery. This latency is \emph{asset-specific}: Crypto.com is slow for CRV and PEPE but not for DOGE, suggesting it is driven by liquidity rather than exchange infrastructure.
 
 \subsection{Quote-Level Executability Verification}\label{sec:executability}
 
@@ -491,7 +469,7 @@ Four forces threaten edge persistence: competition compressing spreads toward th
 We presented a cross-exchange stochastic spread-trading framework for cryptocurrency markets that exploits venue-specific price latency using Ornstein--Uhlenbeck mean-reversion modeling. Beginning with a failed stablecoin trading attempt that revealed a $25.9\times$ fee-to-spread ratio, we pivoted to volatile assets and discovered a rich vein of exploitable microstructure. Our 30-day empirical study across 5~assets, 8~exchanges, and 100~pair-model combinations reveals:
 
 \begin{enumerate}
-    \item A \emph{necessary} profitability condition at $\sigma_{\text{spread}} \approx 15$~bps (the round-trip fee): 4 of 44 pair-models below the fee floor are profitable (all marginal, in the 10--15~bps transition zone; 0 of 26 below 10~bps), versus 39 of 56 above it, where model choice determines the remainder.
+    \item A \emph{necessary} profitability condition at $\sigma_{\text{spread}} \approx 15$~bps (the round-trip fee): 4 of 44 pair-models below the fee floor are profitable (all marginal, in the 10--15~bps transition zone; 0 of 26 below 10~bps), versus 39 of 56 above it, where model choice determines the remainder. Replicated on quote-mid spreads across 23~assets $\times$ 12~venues in two chronologically separated windows: profitability is monotone in $\sigma_{\text{spread}}/c_{\text{fee}}$ with break-even near $0.5$ and 87\% out-of-sample persistence.
     \item Systematic price latency on Crypto.com (up to 38~minutes for CRV) and MEXC (1.5~minutes for WIF) as the driver of measured spreads---with quote-level verification showing the MEXC dislocation is genuine and executable while Crypto.com's printed spreads are stale-print artifacts, a distinction only observable with contemporaneously collected quote data.
     \item A \emph{conditional} model ranking: OU outperforms the rolling z-score when the spread half-life is short relative to the estimation window (WIF: +68{,}305 vs.\ +42{,}981~bps; PEPE: +40{,}403 vs.\ +31{,}907~bps), but is uniformly unprofitable when the half-life approaches the window (CRV: 0/10 OU vs.\ 9/10 z-score pair-models profitable). The half-life-to-window ratio is the operative model-selection statistic.
     \item Stablecoin spread trading is definitively unviable (fee-to-spread ratio of 25.9$\times$), and high-cap assets (DOGE, SOL) are unprofitable on all 40 pair-models due to efficient multi-venue market making.
