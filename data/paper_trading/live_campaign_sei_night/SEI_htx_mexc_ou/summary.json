@@ -1,0 +1,46 @@
+{
+  "config": {
+    "asset": "SEI",
+    "exchange_a": "htx",
+    "exchange_b": "mexc",
+    "strategy": "ou",
+    "entry_z": 2.0,
+    "exit_z": 0.0,
+    "warmup": 60,
+    "max_holding_sec": 300,
+    "vol_filter_mult": 0.8,
+    "cooldown_ticks": 0,
+    "ou_window": 60,
+    "zscore_window": 60,
+    "slippage_bps": 2.0,
+    "capital_usd": 1000.0,
+    "max_position": 1,
+    "output_dir": "data/paper_trading/live_campaign_sei_night",
+    "poll_interval_ms": 1000,
+    "use_websocket": true
+  },
+  "runtime_sec": 41412.1,
+  "total_ticks": 423234,
+  "total_trades": 0,
+  "wins": 0,
+  "losses": 0,
+  "win_rate": 0,
+  "total_net_pnl_bps": 0.0,
+  "avg_pnl_per_trade_bps": 0,
+  "fee_bps_per_trade": 25.0,
+  "slippage_bps_per_trade": 4.0,
+  "reconnections_a": 6,
+  "reconnections_b": 1,
+  "tick_latency_us": {
+    "p50": 85.9,
+    "p99": 250.0,
+    "max": 1024.7,
+    "samples": 1000
+  },
+  "signal_latency_us": {
+    "p50": 219.6,
+    "p99": 505.6,
+    "max": 756.7,
+    "samples": 1000
+  }
+}
