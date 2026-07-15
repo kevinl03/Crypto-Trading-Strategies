@@ -48,3 +48,7 @@ paper/ACM-Reference-Format.bst
 *.dll
 build/
 *.egg-info/
+
+# Collected/derived data kept out of git for PR reviewability (published to HF / regenerable)
+data/paper_trading/
+statarb/statarb_outputs/*.csv
