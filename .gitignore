@@ -52,3 +52,8 @@ build/
 # Collected/derived data kept out of git for PR reviewability (published to HF / regenerable)
 data/paper_trading/
 statarb/statarb_outputs/*.csv
+
+# Large regenerable analysis outputs (rerun their experiments/ scripts on stored/HF data)
+paper/hf_replication_data.json
+paper/dex_viability_data.json
+paper/quote_fill_data.json
