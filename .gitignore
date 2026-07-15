@@ -18,19 +18,51 @@ build/
 .DS_Store
 Thumbs.db
 
-# Collected run data & exports (multi-GB; published to Hugging Face, not git)
-data/statarb/
-data/exports/
-data/logs/
-data/historical/
-data/ohlcv_live/
+# ======================================================================
+# DATA POLICY
+# Raw collected data and bulk regenerable outputs never go in git.
+# Canonical homes: Hugging Face datasets (collected runs) or the
+# experiments//statarb/ scripts that regenerate derived outputs.
+# Small canonical or irreplaceable records are re-included explicitly.
+# To intentionally track a new data file, use `git add -f` and say why
+# in the commit message.
+# ======================================================================
+
+# Raw data formats - never commit, anywhere in the repo
+*.jsonl
 *.parquet
+*.xlsx
+
+# Collected run data & exports (multi-GB; published to Hugging Face, not git)
+data/statarb/**
+data/exports/**
+data/logs/**
+data/historical/**
+data/historical_test/**
+data/ohlcv_live/**
+data/dex/**
+data/features_night/**
+data/paper_trading/**
+# keep directories traversable so the exceptions below can apply
+!data/paper_trading/**/
+
+# Exceptions: small canonical records cited by the paper (regenerable but frozen)
+!data/historical/backtest_results.json
+!data/historical/_validation_report.json
+# Exceptions: live-session summaries - IRREPLACEABLE records of live market conditions
+!data/paper_trading/**/summary.json
+
+# Analysis outputs (regenerable from tracked scripts + stored/HF data)
+statarb/statarb_outputs/
+paper/hf_replication_data.json
+paper/dex_viability_data.json
+paper/quote_fill_data.json
 
 # HuggingFace datasets (large files)
 datasets/
 
 # LaTeX build artifacts & downloaded class files
-paper/*.pdf
+# (the compiled paper PDF is intentionally committed - verify page count first)
 paper/*.aux
 paper/*.log
 paper/*.bbl
@@ -49,11 +81,3 @@ paper/ACM-Reference-Format.bst
 build/
 *.egg-info/
 
-# Collected/derived data kept out of git for PR reviewability (published to HF / regenerable)
-data/paper_trading/
-statarb/statarb_outputs/*.csv
-
-# Large regenerable analysis outputs (rerun their experiments/ scripts on stored/HF data)
-paper/hf_replication_data.json
-paper/dex_viability_data.json
-paper/quote_fill_data.json
