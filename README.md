@@ -119,6 +119,42 @@ Useful flags:
 
 Output is written under `data/statarb/<run_timestamp>/` and partitioned by UTC day per signal.
 
+#### Launching an unattended multi-day run (Windows)
+
+For a run meant to survive the terminal/VS Code window closing (needed for
+anything longer than a few hours), launch it detached and hidden instead of
+running it directly in a foreground shell:
+
+```powershell
+Start-Process -FilePath python -ArgumentList "-m","experiments.collect_statarb_data","--assets","volatile","--interval","60","--slow-every","10","--hours","60" `
+  -WorkingDirectory "<repo-path>" -WindowStyle Hidden `
+  -RedirectStandardOutput "data\statarb\collector_console.log" `
+  -RedirectStandardError "data\statarb\collector_console_err.log"
+```
+
+**Before launching a multi-day run, disable sleep/hibernate** — this was the
+single biggest cause of data gaps in earlier runs (Windows Kernel-Power event
+IDs 42/506/507 correlate exactly with collection stalls):
+
+```powershell
+powercfg /change standby-timeout-ac 0
+powercfg /change standby-timeout-dc 0
+powercfg /change hibernate-timeout-ac 0
+powercfg /change hibernate-timeout-dc 0
+```
+
+On a laptop, also set "when I close the lid, while plugged in" to **Do
+nothing** in Settings → Power. Note this does *not* override a critical-battery
+hibernate action — keep that safety net intact and plug the machine in for the
+duration of the run.
+
+**Verify it's alive after launching:**
+
+```powershell
+Get-Process python | Select-Object Id, StartTime
+Get-Content data\statarb\collector_console.log -Tail 10
+```
+
 #### Check Collector Bandwidth Without Stopping It (Windows PowerShell)
 
 ```powershell
