@@ -199,107 +199,131 @@ def collect_tickers(
 ) -> Tuple[List[Dict], Dict[Tuple[str, str], Dict]]:
     """
     Fetch ticker data for every (exchange, coin) pair.
+
+    Uses one batched ``fetch_tickers()`` call per exchange instead of looping
+    ``fetch_ticker()`` per coin. All 12 exchanges support the batch endpoint;
+    measured live it is 22x-362x faster per exchange than the per-coin loop
+    (see docs/supervisor_brief.md), since it collapses ~23 sequential
+    round-trips — each paced by that exchange's own rate limiter — into one.
+
+    Two exchanges reject a scoped ``symbols`` argument outright: Crypto.com
+    allows at most 1 symbol per call, and Phemex raises for the *entire* call
+    if even one requested symbol isn't a valid market there (unlike
+    per-symbol ``fetch_ticker()``, where only that one call would fail). Both
+    are handled by falling back to an unscoped ``fetch_tickers()`` (fetch
+    every market) and filtering locally to the coins we track.
+
+    Because this is now a single call per exchange, ``recv_latency_ms`` is the
+    shared batch round-trip time applied to every coin from that exchange this
+    snapshot, not a per-symbol measurement as before.
+
     Returns (list of ticker records, raw_tickers_by_node for downstream use).
     """
     ts = _now_iso()
 
     def _worker(ex_name: str, ex) -> List[Dict]:
         out: List[Dict] = []
+
+        coin_by_market: Dict[str, str] = {}
         for coin in ACTIVE_COINS:
             market = COIN_MARKETS.get(coin, {}).get(ex_name)
-            if not market:
-                continue
+            if market:
+                coin_by_market[market] = coin
+        if not coin_by_market:
+            return out
 
+        def _error_record(coin: str, market: str, err: str) -> Dict:
+            return {
+                "type": "ticker",
+                "ts": ts,
+                "snapshot_idx": snapshot_idx,
+                "exchange": ex_name,
+                "coin": coin,
+                "market": market,
+                "error": err,
+            }
+
+        _t0 = time.time()
+        try:
             try:
-                _t0 = time.time()
-                t = ex.fetch_ticker(market)
-                recv_latency_ms = round((time.time() - _t0) * 1000.0, 1)
-                bid = _safe_float(t.get("bid"))
-                ask = _safe_float(t.get("ask"))
-                last = _safe_float(t.get("last"))
-                # Top-of-book sizes: cheap microstructure signal (queue imbalance,
-                # available size at touch) that ships inside the ticker payload.
-                bid_volume = _safe_float(t.get("bidVolume"))
-                ask_volume = _safe_float(t.get("askVolume"))
-                vol = _safe_float(t.get("baseVolume"))
-                quote_vol = _safe_float(t.get("quoteVolume"))
-                high = _safe_float(t.get("high"))
-                low = _safe_float(t.get("low"))
-                vwap = _safe_float(t.get("vwap"))
-                pct_change = _safe_float(t.get("percentage"))
-                # Exchange-reported quote time lets us measure cross-venue
-                # staleness/lag later (vs our local receive time `ts`).
-                exch_ts = t.get("timestamp")
+                tickers = ex.fetch_tickers(list(coin_by_market.keys()))
+            except ccxt.NetworkError:
+                raise
+            except Exception:
+                # Scoped symbols list rejected (Phemex: fails whole call if any
+                # symbol is unknown; Crypto.com: >1 symbol not allowed at all).
+                # Fall back to an unscoped fetch and filter locally.
+                all_tickers = ex.fetch_tickers()
+                tickers = {m: all_tickers[m] for m in coin_by_market if m in all_tickers}
+            recv_latency_ms = round((time.time() - _t0) * 1000.0, 1)
+        except Exception as e:
+            # Whole-exchange batch failure (network or otherwise) — emit one
+            # error record per coin so per-(exchange, coin) error-rate
+            # accounting downstream stays consistent with the per-coin loop.
+            return [_error_record(coin, market, str(e)) for market, coin in coin_by_market.items()]
 
-                # Normalize mid to USD
-                mid = None
-                if bid is not None and ask is not None:
-                    mid = (bid + ask) / 2.0
-                elif last is not None:
-                    mid = last
-
-                price_usd = None
-                if mid is not None:
-                    price_usd = normalize_price_to_usd(coin, market, mid)
-
-                spread_bps = None
-                if bid is not None and ask is not None and mid and mid > 0:
-                    spread_bps = ((ask - bid) / mid) * 10_000
-
-                out.append({
-                    "type": "ticker",
-                    "ts": ts,
-                    "snapshot_idx": snapshot_idx,
-                    "exchange": ex_name,
-                    "coin": coin,
-                    "market": market,
-                    "bid": bid,
-                    "ask": ask,
-                    "last": last,
-                    "mid": mid,
-                    "price_usd": price_usd,
-                    "spread_bps": spread_bps,
-                    "bid_volume": bid_volume,
-                    "ask_volume": ask_volume,
-                    "base_volume_24h": vol,
-                    "quote_volume_24h": quote_vol,
-                    "high_24h": high,
-                    "low_24h": low,
-                    "vwap": vwap,
-                    "pct_change_24h": pct_change,
-                    "exchange_timestamp": exch_ts,
-                    "recv_latency_ms": recv_latency_ms,
-                })
-
-            except ccxt.NetworkError as e:
-                # Genuine connectivity failure (timeout / connection reset / DNS /
-                # exchange-under-maintenance) usually means the whole exchange is
-                # unreachable this tick — stop hammering it.
-                out.append({
-                    "type": "ticker",
-                    "ts": ts,
-                    "snapshot_idx": snapshot_idx,
-                    "exchange": ex_name,
-                    "coin": coin,
-                    "market": market,
-                    "error": str(e),
-                })
-                break
-            except Exception as e:
-                # Per-symbol failure (e.g. BadSymbol from a stale COIN_MARKETS
-                # mapping) does NOT mean the exchange is down — record it and
-                # keep collecting the remaining coins instead of silently
-                # dropping every coin that comes after this one in the list.
-                out.append({
-                    "type": "ticker",
-                    "ts": ts,
-                    "snapshot_idx": snapshot_idx,
-                    "exchange": ex_name,
-                    "coin": coin,
-                    "market": market,
-                    "error": str(e),
-                })
+        for market, coin in coin_by_market.items():
+            t = tickers.get(market)
+            if t is None:
+                out.append(_error_record(coin, market, "not present in batch fetch_tickers() response"))
                 continue
+
+            bid = _safe_float(t.get("bid"))
+            ask = _safe_float(t.get("ask"))
+            last = _safe_float(t.get("last"))
+            # Top-of-book sizes: cheap microstructure signal (queue imbalance,
+            # available size at touch) that ships inside the ticker payload.
+            bid_volume = _safe_float(t.get("bidVolume"))
+            ask_volume = _safe_float(t.get("askVolume"))
+            vol = _safe_float(t.get("baseVolume"))
+            quote_vol = _safe_float(t.get("quoteVolume"))
+            high = _safe_float(t.get("high"))
+            low = _safe_float(t.get("low"))
+            vwap = _safe_float(t.get("vwap"))
+            pct_change = _safe_float(t.get("percentage"))
+            # Exchange-reported quote time lets us measure cross-venue
+            # staleness/lag later (vs our local receive time `ts`).
+            exch_ts = t.get("timestamp")
+
+            # Normalize mid to USD
+            mid = None
+            if bid is not None and ask is not None:
+                mid = (bid + ask) / 2.0
+            elif last is not None:
+                mid = last
+
+            price_usd = None
+            if mid is not None:
+                price_usd = normalize_price_to_usd(coin, market, mid)
+
+            spread_bps = None
+            if bid is not None and ask is not None and mid and mid > 0:
+                spread_bps = ((ask - bid) / mid) * 10_000
+
+            out.append({
+                "type": "ticker",
+                "ts": ts,
+                "snapshot_idx": snapshot_idx,
+                "exchange": ex_name,
+                "coin": coin,
+                "market": market,
+                "bid": bid,
+                "ask": ask,
+                "last": last,
+                "mid": mid,
+                "price_usd": price_usd,
+                "spread_bps": spread_bps,
+                "bid_volume": bid_volume,
+                "ask_volume": ask_volume,
+                "base_volume_24h": vol,
+                "quote_volume_24h": quote_vol,
+                "high_24h": high,
+                "low_24h": low,
+                "vwap": vwap,
+                "pct_change_24h": pct_change,
+                "exchange_timestamp": exch_ts,
+                "recv_latency_ms": recv_latency_ms,
+            })
         return out
 
     records = _collect_parallel(_worker)
