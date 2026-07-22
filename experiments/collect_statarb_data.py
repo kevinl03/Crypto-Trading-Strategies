@@ -1,7 +1,7 @@
 """
 Multi-signal data collector for statistical arbitrage research.
 
-Collects 10 data types per snapshot at configurable intervals:
+Collects 12 data types per snapshot at configurable intervals:
   1. Ticker (bid/ask/last/volume/24h stats)
   2. L2 Order Book (top N levels per side)
   3. OHLCV 1-minute candles (latest N candles)
@@ -12,6 +12,8 @@ Collects 10 data types per snapshot at configurable intervals:
   8. Open interest (stablecoin perps)
   9. Withdrawal/deposit status per coin per chain
  10. Exchange health status
+ 11. Long/short account ratio (perp positioning/sentiment)
+ 12. Public liquidation feed (forced-close/cascade events)
 
 Output: JSONL files in data/statarb/<run_id>/<data_type>/<YYYYMMDD>.jsonl,
 partitioned by UTC day so a multi-day run yields bounded, independently
@@ -809,6 +811,82 @@ def collect_open_interest(snapshot_idx: int) -> List[Dict]:
     return _collect_parallel(_worker)
 
 
+def collect_long_short_ratio(snapshot_idx: int) -> List[Dict]:
+    """
+    Fetch aggregate long/short account ratio for perpetual contracts.
+
+    Direct positioning/sentiment signal: ratio > 1 means more long accounts
+    than short. Confirmed live (unauthenticated) on binance, bybit, okx;
+    bitget and gate also advertise support via `ex.has`.
+    """
+    ts = _now_iso()
+
+    def _worker(ex_name: str, ex) -> List[Dict]:
+        if not ex.has.get("fetchLongShortRatioHistory", False):
+            return []
+        out: List[Dict] = []
+        for sym in ACTIVE_PERPS:
+            try:
+                history = ex.fetch_long_short_ratio_history(sym, limit=1)
+                if not history:
+                    continue
+                h = history[-1]
+                out.append({
+                    "type": "long_short_ratio",
+                    "ts": ts,
+                    "snapshot_idx": snapshot_idx,
+                    "exchange": ex_name,
+                    "symbol": sym,
+                    "long_short_ratio": h.get("longShortRatio"),
+                    "ratio_timestamp": h.get("timestamp"),
+                    "ratio_datetime": h.get("datetime"),
+                })
+            except Exception:
+                pass  # symbol may not have a perp/ratio feed on this exchange
+        return out
+
+    return _collect_parallel(_worker)
+
+
+def collect_liquidations(snapshot_idx: int) -> List[Dict]:
+    """
+    Fetch recent public forced-liquidation events for perpetual contracts.
+
+    This is a market-wide feed (not account-specific), a proxy for
+    cascade/deleveraging risk. Confirmed live (unauthenticated) on gate, htx.
+    """
+    ts = _now_iso()
+
+    def _worker(ex_name: str, ex) -> List[Dict]:
+        if not ex.has.get("fetchLiquidations", False):
+            return []
+        out: List[Dict] = []
+        for sym in ACTIVE_PERPS:
+            try:
+                liqs = ex.fetch_liquidations(sym)
+                # Keep only the most recent few per (exchange, symbol) per
+                # snapshot — same storage-efficiency pattern as `trades`.
+                for liq in liqs[-20:]:
+                    out.append({
+                        "type": "liquidations",
+                        "ts": ts,
+                        "snapshot_idx": snapshot_idx,
+                        "exchange": ex_name,
+                        "symbol": sym,
+                        "side": liq.get("side"),
+                        "price": liq.get("price"),
+                        "contracts": liq.get("contracts"),
+                        "quote_value": liq.get("quoteValue"),
+                        "liq_timestamp": liq.get("timestamp"),
+                        "liq_datetime": liq.get("datetime"),
+                    })
+            except Exception:
+                pass  # symbol may not have a liquidation feed on this exchange
+        return out
+
+    return _collect_parallel(_worker)
+
+
 def collect_withdrawal_status(snapshot_idx: int) -> List[Dict]:
     """
     Fetch deposit/withdrawal enable/disable status per coin per chain.
@@ -1002,6 +1080,10 @@ def main():
                         help="Skip withdrawal/deposit status collection")
     parser.add_argument("--skip-exchange-status", action="store_true",
                         help="Skip exchange health status collection")
+    parser.add_argument("--skip-long-short-ratio", action="store_true",
+                        help="Skip long/short account ratio collection")
+    parser.add_argument("--skip-liquidations", action="store_true",
+                        help="Skip public liquidation feed collection")
     parser.add_argument("--assets", type=str, default="stablecoins",
                         choices=["stablecoins", "volatile", "all"],
                         help="Asset group to collect (default: stablecoins)")
@@ -1044,6 +1126,8 @@ def main():
         args.skip_oi = cfg.get("skip_oi", args.skip_oi)
         args.skip_withdrawal_status = cfg.get("skip_withdrawal_status", args.skip_withdrawal_status)
         args.skip_exchange_status = cfg.get("skip_exchange_status", args.skip_exchange_status)
+        args.skip_long_short_ratio = cfg.get("skip_long_short_ratio", args.skip_long_short_ratio)
+        args.skip_liquidations = cfg.get("skip_liquidations", args.skip_liquidations)
         # Restore asset mode. Older checkpoints did not persist asset_mode;
         # fall back to whatever --assets was passed (NOT a hardcoded default)
         # so a resume can never silently switch universes.
@@ -1104,6 +1188,8 @@ def main():
             "skip_oi": args.skip_oi,
             "skip_withdrawal_status": args.skip_withdrawal_status,
             "skip_exchange_status": args.skip_exchange_status,
+            "skip_long_short_ratio": args.skip_long_short_ratio,
+            "skip_liquidations": args.skip_liquidations,
             "exchanges": list(EXCHANGES.keys()),
             "coins": list(ACTIVE_COINS),
             "perp_symbols": list(ACTIVE_PERPS),
@@ -1133,6 +1219,8 @@ def main():
         "skip_oi": args.skip_oi,
         "skip_withdrawal_status": args.skip_withdrawal_status,
         "skip_exchange_status": args.skip_exchange_status,
+        "skip_long_short_ratio": args.skip_long_short_ratio,
+        "skip_liquidations": args.skip_liquidations,
         "asset_mode": resumed_mode if args.resume else args.assets,
     }
     _state_start_ts = _now_iso() if not args.resume else state["start_ts"]
@@ -1171,6 +1259,10 @@ def main():
         print(f" + withdrawal_status", end="")
     if not args.skip_exchange_status:
         print(f" + exchange_status", end="")
+    if not args.skip_long_short_ratio:
+        print(f" + long_short_ratio", end="")
+    if not args.skip_liquidations:
+        print(f" + liquidations", end="")
     print(f" + spread_matrix")
     print(f"  Slow signals (funding/OI/withdrawal/status) every "
           f"{args.slow_every} snapshots (~{args.slow_every * args.interval}s).")
@@ -1259,7 +1351,21 @@ def main():
                 writer.write(es_recs)
                 es_count = len(es_recs)
 
-            # 9) Spread matrix (computed, no API calls)
+            # 9) Long/short account ratio
+            lsr_count = 0
+            if not args.skip_long_short_ratio and do_slow:
+                lsr_recs = collect_long_short_ratio(snapshot_idx)
+                writer.write(lsr_recs)
+                lsr_count = len(lsr_recs)
+
+            # 10) Public liquidation feed
+            liq_count = 0
+            if not args.skip_liquidations and do_slow:
+                liq_recs = collect_liquidations(snapshot_idx)
+                writer.write(liq_recs)
+                liq_count = len(liq_recs)
+
+            # 11) Spread matrix (computed, no API calls)
             spread_recs = compute_spread_matrix(raw_tickers, snapshot_idx)
             writer.write(spread_recs)
 
@@ -1272,6 +1378,7 @@ def main():
                 f"tick={valid_tickers} ob={ob_count} "
                 f"ohlcv={ohlcv_count} trades={trade_count} "
                 f"fr={fr_count} oi={oi_count} ws={ws_count} es={es_count} "
+                f"lsr={lsr_count} liq={liq_count} "
                 f"spr={len(spread_recs)} "
                 f"({snap_dur:.1f}s)",
                 flush=True,
