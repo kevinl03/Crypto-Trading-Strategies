@@ -68,6 +68,100 @@ def _allow_sleep():
         ES_CONTINUOUS = 0x80000000
         ctypes.windll.kernel32.SetThreadExecutionState(ES_CONTINUOUS)
 
+
+# ---------------------------------------------------------------------------
+# Single-instance lock (only one collector process at a time)
+# ---------------------------------------------------------------------------
+
+_LOCK_FILE = (
+    Path(__file__).resolve().parent.parent / "data" / "statarb" / ".collector.lock"
+)
+
+
+def _pid_alive(pid: int) -> bool:
+    """Return True if ``pid`` refers to a live process."""
+    if pid <= 0:
+        return False
+    if sys.platform == "win32":
+        PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
+        handle = ctypes.windll.kernel32.OpenProcess(
+            PROCESS_QUERY_LIMITED_INFORMATION, False, pid
+        )
+        if handle:
+            ctypes.windll.kernel32.CloseHandle(handle)
+            return True
+        return False
+    try:
+        os.kill(pid, 0)
+        return True
+    except OSError:
+        return False
+
+
+def _read_lock_payload() -> Optional[Dict[str, Any]]:
+    if not _LOCK_FILE.exists():
+        return None
+    try:
+        with open(_LOCK_FILE, encoding="utf-8") as f:
+            data = json.load(f)
+        if isinstance(data, dict):
+            return data
+    except (OSError, json.JSONDecodeError, TypeError):
+        pass
+    return None
+
+
+def _acquire_collector_lock() -> None:
+    """Ensure only one collector process runs at a time."""
+    _LOCK_FILE.parent.mkdir(parents=True, exist_ok=True)
+
+    existing = _read_lock_payload()
+    if existing is not None:
+        pid = int(existing.get("pid", 0) or 0)
+        if _pid_alive(pid):
+            started = existing.get("start_ts", "?")
+            print(
+                f"[ERROR] Another collector is already running "
+                f"(PID {pid}, started {started})."
+            )
+            print(f"        Lock file: {_LOCK_FILE}")
+            sys.exit(1)
+        print(f"  [LOCK] Removing stale lock from PID {pid or '?'}")
+        _LOCK_FILE.unlink(missing_ok=True)
+
+    payload = {
+        "pid": os.getpid(),
+        "start_ts": datetime.now(timezone.utc).isoformat(),
+        "cmdline": " ".join(sys.argv),
+    }
+    try:
+        fd = os.open(str(_LOCK_FILE), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+    except FileExistsError:
+        existing = _read_lock_payload()
+        pid = int((existing or {}).get("pid", 0) or 0)
+        if existing and _pid_alive(pid):
+            print(
+                f"[ERROR] Another collector started concurrently (PID {pid})."
+            )
+            sys.exit(1)
+        _LOCK_FILE.unlink(missing_ok=True)
+        fd = os.open(str(_LOCK_FILE), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        json.dump(payload, f)
+    print(f"  [LOCK] Acquired collector lock (PID {os.getpid()})")
+
+
+def _release_collector_lock() -> None:
+    """Drop the lock file if this process owns it."""
+    existing = _read_lock_payload()
+    if existing is None:
+        return
+    pid = int(existing.get("pid", 0) or 0)
+    if pid == os.getpid():
+        _LOCK_FILE.unlink(missing_ok=True)
+
+
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
@@ -131,11 +225,13 @@ ACTIVE_PERPS = STABLECOIN_PERP_SYMBOLS
 
 # Graceful shutdown
 _RUNNING = True
+_SHUTDOWN_REQUESTED = False
 
 
 def _handle_signal(signum, frame):
-    global _RUNNING
+    global _RUNNING, _SHUTDOWN_REQUESTED
     _RUNNING = False
+    _SHUTDOWN_REQUESTED = True
     print("\n[SHUTDOWN] Signal received, finishing current snapshot...")
 
 
@@ -1050,7 +1146,10 @@ def main():
     parser.add_argument("--interval", type=int, default=DEFAULT_INTERVAL_SEC,
                         help=f"Seconds between snapshots (default: {DEFAULT_INTERVAL_SEC})")
     parser.add_argument("--hours", type=float, default=DEFAULT_HOURS,
-                        help=f"Total hours to run (default: {DEFAULT_HOURS})")
+                        help=f"Total hours to run (default: {DEFAULT_HOURS}; "
+                             "ignored when --forever is set)")
+    parser.add_argument("--forever", action="store_true",
+                        help="Run until stopped (Ctrl+C / kill). No duration limit.")
     parser.add_argument("--ob-depth", type=int, default=DEFAULT_OB_DEPTH,
                         help=f"Order book depth per side (default: {DEFAULT_OB_DEPTH})")
     parser.add_argument("--candles", type=int, default=DEFAULT_OHLCV_CANDLES,
@@ -1093,6 +1192,10 @@ def main():
                         help="Resume a previous run from its output directory")
     args = parser.parse_args()
 
+    _acquire_collector_lock()
+
+    run_forever = args.forever
+
     # --- Resolve asset configuration ---
     global ACTIVE_COINS, ACTIVE_PERPS, _MAX_WORKERS
     ACTIVE_COINS, ACTIVE_PERPS = _resolve_asset_config(args.assets)
@@ -1113,6 +1216,7 @@ def main():
         cfg = state.get("config", {})
         args.interval = cfg.get("interval_sec", args.interval)
         args.hours = cfg.get("hours", args.hours)
+        run_forever = run_forever or cfg.get("forever", False)
         args.ob_depth = cfg.get("ob_depth", args.ob_depth)
         args.candles = cfg.get("candles", args.candles)
         args.trades = cfg.get("trades_limit", args.trades)
@@ -1136,13 +1240,19 @@ def main():
             print(f"  [RESUME][WARN] checkpoint has no asset_mode; using --assets={args.assets!r}")
         ACTIVE_COINS, ACTIVE_PERPS = _resolve_asset_config(resumed_mode)
         print(f"  [RESUME] Asset mode: {resumed_mode} \u2192 {len(ACTIVE_COINS)} coins, {len(ACTIVE_PERPS)} perps")
-        # Compute remaining time
-        original_start = datetime.fromisoformat(state["start_ts"])
-        elapsed_h = (datetime.now(timezone.utc) - original_start).total_seconds() / 3600
-        remaining_h = max(0, args.hours - elapsed_h)
-        total_sec = remaining_h * 3600
-        end_time = time.time() + total_sec
-        expected_snapshots = snapshot_idx + int(total_sec / args.interval)
+        # Compute remaining time (skipped for forever runs)
+        if run_forever:
+            end_time = None
+            expected_snapshots = None
+        else:
+            original_start = datetime.fromisoformat(state["start_ts"])
+            elapsed_h = (
+                datetime.now(timezone.utc) - original_start
+            ).total_seconds() / 3600
+            remaining_h = max(0, args.hours - elapsed_h)
+            total_sec = remaining_h * 3600
+            end_time = time.time() + total_sec
+            expected_snapshots = snapshot_idx + int(total_sec / args.interval)
         run_id = out_dir.name
         writer = DataWriter(out_dir)
         # Log resume event
@@ -1151,9 +1261,13 @@ def main():
             "event": "resume",
             "resume_ts": _now_iso(),
             "resumed_from_snapshot": snapshot_idx,
-            "remaining_hours": round(remaining_h, 3),
+            "remaining_hours": None if run_forever else round(remaining_h, 3),
+            "forever": run_forever,
         }])
-        print(f"[RESUME] Continuing from snapshot {snapshot_idx}, {remaining_h:.2f}h remaining")
+        if run_forever:
+            print(f"[RESUME] Continuing from snapshot {snapshot_idx} (runs until stopped)")
+        else:
+            print(f"[RESUME] Continuing from snapshot {snapshot_idx}, {remaining_h:.2f}h remaining")
     else:
         # Fresh start
         run_id = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
@@ -1176,6 +1290,7 @@ def main():
             "start_ts": _now_iso(),
             "interval_sec": args.interval,
             "hours": args.hours,
+            "forever": run_forever,
             "ob_depth": args.ob_depth,
             "candles": args.candles,
             "trades_limit": args.trades,
@@ -1197,9 +1312,13 @@ def main():
         }
         writer.write([config])
 
-        total_sec = args.hours * 3600
-        end_time = time.time() + total_sec
-        expected_snapshots = int(total_sec / args.interval)
+        if run_forever:
+            end_time = None
+            expected_snapshots = None
+        else:
+            total_sec = args.hours * 3600
+            end_time = time.time() + total_sec
+            expected_snapshots = int(total_sec / args.interval)
         snapshot_idx = 0
 
     # State file for crash recovery
@@ -1207,6 +1326,7 @@ def main():
     _state_config = {
         "interval_sec": args.interval,
         "hours": args.hours,
+        "forever": run_forever,
         "ob_depth": args.ob_depth,
         "candles": args.candles,
         "trades_limit": args.trades,
@@ -1238,12 +1358,20 @@ def main():
             json.dump(s, f)
         tmp.replace(_state_file)  # atomic on Windows NTFS
 
+    snap_label = lambda idx: (
+        f"{idx}" if expected_snapshots is None else f"{idx}/{expected_snapshots}"
+    )
+
     print(f"=== Stat Arb Data Collector ===")
     print(f"  Output: {out_dir}")
-    print(f"  Interval: {args.interval}s | Duration: {args.hours}h")
+    if run_forever:
+        print(f"  Interval: {args.interval}s | Duration: until stopped")
+    else:
+        print(f"  Interval: {args.interval}s | Duration: {args.hours}h")
     print(f"  Parallelism: {_MAX_WORKERS} worker(s) "
           f"({'per-exchange concurrent' if _MAX_WORKERS > 1 else 'sequential'})")
-    print(f"  Expected snapshots: ~{expected_snapshots}")
+    if expected_snapshots is not None:
+        print(f"  Expected snapshots: ~{expected_snapshots}")
     print(f"  Signals: ticker", end="")
     if not args.skip_orderbook:
         print(f" + orderbook(L{args.ob_depth})", end="")
@@ -1271,8 +1399,9 @@ def main():
 
     _prevent_sleep()
 
+    exit_code = 0
     try:
-        while _RUNNING and time.time() < end_time:
+        while _RUNNING and (run_forever or time.time() < end_time):
             snapshot_idx += 1
             snap_start = time.time()
 
@@ -1285,7 +1414,7 @@ def main():
             # (longer when slow signals run), and without this line the console
             # sits silent the whole time and looks hung.
             print(
-                f"  [{snapshot_idx:>4}/{expected_snapshots}] collecting"
+                f"  [{snap_label(snapshot_idx):>7}] collecting"
                 f"{' + slow signals (funding/OI/withdrawal/status — slower)' if do_slow else ''}...",
                 flush=True,
             )
@@ -1374,7 +1503,7 @@ def main():
 
             snap_dur = time.time() - snap_start
             print(
-                f"  [{snapshot_idx:>4}/{expected_snapshots}] "
+                f"  [{snap_label(snapshot_idx):>7}] "
                 f"tick={valid_tickers} ob={ob_count} "
                 f"ohlcv={ohlcv_count} trades={trade_count} "
                 f"fr={fr_count} oi={oi_count} ws={ws_count} es={es_count} "
@@ -1392,12 +1521,19 @@ def main():
 
     except KeyboardInterrupt:
         print("\n[SHUTDOWN] Interrupted by user.")
+        _SHUTDOWN_REQUESTED = True
+        exit_code = 2
     finally:
+        if _SHUTDOWN_REQUESTED:
+            exit_code = 2
         _allow_sleep()
+        _release_collector_lock()
         writer.close()
         print(f"\n=== Collection complete ===")
         print(f"  Snapshots: {snapshot_idx}")
         print(f"  Output: {out_dir}")
+        if exit_code:
+            sys.exit(exit_code)
 
 
 if __name__ == "__main__":
