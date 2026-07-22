@@ -33,6 +33,8 @@ import os
 import signal
 import sys
 import time
+
+import ccxt
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
@@ -269,9 +271,10 @@ def collect_tickers(
                     "recv_latency_ms": recv_latency_ms,
                 })
 
-            except Exception as e:
-                # One bad call (often a connection reset / timeout) usually means
-                # the whole exchange is unreachable this tick — stop hammering it.
+            except ccxt.NetworkError as e:
+                # Genuine connectivity failure (timeout / connection reset / DNS /
+                # exchange-under-maintenance) usually means the whole exchange is
+                # unreachable this tick — stop hammering it.
                 out.append({
                     "type": "ticker",
                     "ts": ts,
@@ -282,6 +285,21 @@ def collect_tickers(
                     "error": str(e),
                 })
                 break
+            except Exception as e:
+                # Per-symbol failure (e.g. BadSymbol from a stale COIN_MARKETS
+                # mapping) does NOT mean the exchange is down — record it and
+                # keep collecting the remaining coins instead of silently
+                # dropping every coin that comes after this one in the list.
+                out.append({
+                    "type": "ticker",
+                    "ts": ts,
+                    "snapshot_idx": snapshot_idx,
+                    "exchange": ex_name,
+                    "coin": coin,
+                    "market": market,
+                    "error": str(e),
+                })
+                continue
         return out
 
     records = _collect_parallel(_worker)
@@ -358,8 +376,9 @@ def collect_orderbooks(
                     "asks_raw": [[round(p, 8), round(q, 4)] for p, q in asks],
                 })
 
-            except Exception as e:
-                # Some exchanges may not support order books for all pairs
+            except ccxt.NetworkError as e:
+                # Genuine connectivity failure — skip the rest of this exchange
+                # for this snapshot rather than retrying every remaining coin.
                 out.append({
                     "type": "orderbook",
                     "ts": ts,
@@ -369,9 +388,20 @@ def collect_orderbooks(
                     "market": market,
                     "error": str(e),
                 })
-                if "not support" in str(e).lower() or "not available" in str(e).lower():
-                    continue
-                break  # connection-level failure: skip the rest of this exchange
+                break
+            except Exception as e:
+                # Per-symbol failure (unsupported pair, BadSymbol, etc.) — keep
+                # collecting the remaining coins on this exchange.
+                out.append({
+                    "type": "orderbook",
+                    "ts": ts,
+                    "snapshot_idx": snapshot_idx,
+                    "exchange": ex_name,
+                    "coin": coin,
+                    "market": market,
+                    "error": str(e),
+                })
+                continue
         return out
 
     return _collect_parallel(_worker)
@@ -480,6 +510,17 @@ def collect_ohlcv(
                         "volume": candle[5],
                     })
 
+            except ccxt.NetworkError as e:
+                out.append({
+                    "type": "ohlcv",
+                    "ts": ts,
+                    "snapshot_idx": snapshot_idx,
+                    "exchange": ex_name,
+                    "coin": coin,
+                    "market": market,
+                    "error": str(e),
+                })
+                break
             except Exception as e:
                 out.append({
                     "type": "ohlcv",
@@ -490,9 +531,7 @@ def collect_ohlcv(
                     "market": market,
                     "error": str(e),
                 })
-                if "not support" in str(e).lower():
-                    continue
-                break
+                continue
         return out
 
     return _collect_parallel(_worker)
@@ -577,6 +616,17 @@ def collect_trades(
                     ],
                 })
 
+            except ccxt.NetworkError as e:
+                out.append({
+                    "type": "trades",
+                    "ts": ts,
+                    "snapshot_idx": snapshot_idx,
+                    "exchange": ex_name,
+                    "coin": coin,
+                    "market": market,
+                    "error": str(e),
+                })
+                break
             except Exception as e:
                 out.append({
                     "type": "trades",
@@ -587,9 +637,7 @@ def collect_trades(
                     "market": market,
                     "error": str(e),
                 })
-                if "not support" in str(e).lower():
-                    continue
-                break
+                continue
         return out
 
     return _collect_parallel(_worker)
