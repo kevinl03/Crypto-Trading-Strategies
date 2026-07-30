@@ -1,0 +1,9 @@
+{
+  "model": "C:\\Users\\Kev\\repos\\stochastic-spread-modeling-analysis\\statarb\\outputs_ob_fix\\statarb_lgbm.txt",
+  "run_dir": "C:\\Users\\Kev\\repos\\stochastic-spread-modeling\\data\\statarb\\20260730_075605",
+  "hours": 6.79572998019444,
+  "entry_tau": 0.5,
+  "horizon": 2,
+  "zscore_window": 120,
+  "started_at": "2026-07-30T09:08:16.570267+00:00"
+}
