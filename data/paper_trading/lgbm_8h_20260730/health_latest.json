@@ -1,0 +1,14 @@
+{
+  "ok": true,
+  "hard": false,
+  "issues": [],
+  "elapsed_min": 456.2,
+  "remaining_min": 23.7,
+  "n_snaps": 160,
+  "n_preds": 75555,
+  "n_closed": 4719,
+  "dir_acc": 0.7340538249629158,
+  "mean_pnl_proxy": 0.6909361382296436,
+  "updated_at": "2026-07-30T15:31:19.891941+00:00",
+  "checked_at": "2026-07-30T15:32:19.514358+00:00"
+}

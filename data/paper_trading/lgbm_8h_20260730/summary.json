@@ -1,0 +1,15 @@
+{
+  "n_closed": 4901,
+  "n_open": 19,
+  "n_preds": 80040,
+  "n_snaps": 160,
+  "n_signals": 80040,
+  "dir_acc": 0.7314833707406652,
+  "mean_pnl_proxy": 0.677897740436698,
+  "median_abs_pred_entries": 0.6199035136079919,
+  "model": "C:\\Users\\Kev\\repos\\stochastic-spread-modeling-analysis\\statarb\\outputs_ob_fix\\statarb_lgbm.txt",
+  "run_dir": "C:\\Users\\Kev\\repos\\stochastic-spread-modeling\\data\\statarb\\20260730_075605",
+  "entry_tau": 0.5,
+  "horizon": 2,
+  "updated_at": "2026-07-30T15:56:20.680680+00:00"
+}
