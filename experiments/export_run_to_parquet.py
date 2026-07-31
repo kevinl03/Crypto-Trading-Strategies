@@ -46,6 +46,8 @@ DEFAULT_SIGNALS = [
     "open_interest",
     "withdrawal_status",
     "exchange_status",
+    "long_short_ratio",
+    "liquidations",
 ]
 
 SCHEMA = pa.schema([

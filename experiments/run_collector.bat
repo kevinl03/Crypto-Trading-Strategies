@@ -4,7 +4,7 @@ REM Auto-restarting data collector wrapper for Windows.
 REM Survives laptop sleep (process resumes) and crash/shutdown (auto-restarts).
 REM
 REM Usage:
-REM   run_collector.bat                        -- default volatile, 168h (7 days)
+REM   run_collector.bat                        -- default volatile, runs until stopped
 REM   run_collector.bat --interval 30 --hours 48
 REM   run_collector.bat --resume data\statarb\20260602_185451
 REM
@@ -25,7 +25,7 @@ REM   (see issue #33), so we drop them live to protect the ~60s snapshot cadence
 REM Collection now fans out one thread per exchange, so the full signal set
 REM finishes in roughly the slowest single exchange's time rather than the sum.
 set "ARGS=%*"
-if "%ARGS%"=="" set "ARGS=--assets volatile --interval 60 --slow-every 10 --hours 168 --skip-ohlcv"
+if "%ARGS%"=="" set "ARGS=--assets volatile --interval 60 --slow-every 10 --forever --skip-ohlcv"
 
 REM Track the output directory for auto-resume
 set "RESUME_DIR="
@@ -44,11 +44,18 @@ if defined RESUME_DIR (
 
 set "EXIT_CODE=%ERRORLEVEL%"
 
-REM Exit code 0 = completed normally (duration reached), stop.
+REM Exit code 0 without --forever = completed normally (duration reached), stop.
+REM With --forever, exit 0 means an unexpected clean exit — treat as crash and resume.
 if %EXIT_CODE%==0 (
+    echo %ARGS% | findstr /i /c:"--forever" >nul
+    if errorlevel 1 (
+        echo.
+        echo [DONE] Collection finished normally.
+        goto :END
+    )
     echo.
-    echo [DONE] Collection finished normally.
-    goto :END
+    echo [WARN] Forever collector exited unexpectedly. Will resume...
+    goto :CRASH
 )
 
 REM Exit code 2 = user Ctrl+C, stop.
@@ -58,7 +65,7 @@ if %EXIT_CODE%==2 (
     goto :END
 )
 
-REM Any other exit = crash or sleep-wake kill. Find the most recent run to resume.
+:CRASH
 echo.
 echo [CRASH] Exit code %EXIT_CODE%. Looking for latest run to resume...
 

@@ -1,7 +1,7 @@
 """
 Multi-signal data collector for statistical arbitrage research.
 
-Collects 10 data types per snapshot at configurable intervals:
+Collects 12 data types per snapshot at configurable intervals:
   1. Ticker (bid/ask/last/volume/24h stats)
   2. L2 Order Book (top N levels per side)
   3. OHLCV 1-minute candles (latest N candles)
@@ -12,6 +12,8 @@ Collects 10 data types per snapshot at configurable intervals:
   8. Open interest (stablecoin perps)
   9. Withdrawal/deposit status per coin per chain
  10. Exchange health status
+ 11. Long/short account ratio (perp positioning/sentiment)
+ 12. Public liquidation feed (forced-close/cascade events)
 
 Output: JSONL files in data/statarb/<run_id>/<data_type>/<YYYYMMDD>.jsonl,
 partitioned by UTC day so a multi-day run yields bounded, independently
@@ -33,6 +35,8 @@ import os
 import signal
 import sys
 import time
+
+import ccxt
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
@@ -63,6 +67,100 @@ def _allow_sleep():
     if sys.platform == "win32":
         ES_CONTINUOUS = 0x80000000
         ctypes.windll.kernel32.SetThreadExecutionState(ES_CONTINUOUS)
+
+
+# ---------------------------------------------------------------------------
+# Single-instance lock (only one collector process at a time)
+# ---------------------------------------------------------------------------
+
+_LOCK_FILE = (
+    Path(__file__).resolve().parent.parent / "data" / "statarb" / ".collector.lock"
+)
+
+
+def _pid_alive(pid: int) -> bool:
+    """Return True if ``pid`` refers to a live process."""
+    if pid <= 0:
+        return False
+    if sys.platform == "win32":
+        PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
+        handle = ctypes.windll.kernel32.OpenProcess(
+            PROCESS_QUERY_LIMITED_INFORMATION, False, pid
+        )
+        if handle:
+            ctypes.windll.kernel32.CloseHandle(handle)
+            return True
+        return False
+    try:
+        os.kill(pid, 0)
+        return True
+    except OSError:
+        return False
+
+
+def _read_lock_payload() -> Optional[Dict[str, Any]]:
+    if not _LOCK_FILE.exists():
+        return None
+    try:
+        with open(_LOCK_FILE, encoding="utf-8") as f:
+            data = json.load(f)
+        if isinstance(data, dict):
+            return data
+    except (OSError, json.JSONDecodeError, TypeError):
+        pass
+    return None
+
+
+def _acquire_collector_lock() -> None:
+    """Ensure only one collector process runs at a time."""
+    _LOCK_FILE.parent.mkdir(parents=True, exist_ok=True)
+
+    existing = _read_lock_payload()
+    if existing is not None:
+        pid = int(existing.get("pid", 0) or 0)
+        if _pid_alive(pid):
+            started = existing.get("start_ts", "?")
+            print(
+                f"[ERROR] Another collector is already running "
+                f"(PID {pid}, started {started})."
+            )
+            print(f"        Lock file: {_LOCK_FILE}")
+            sys.exit(1)
+        print(f"  [LOCK] Removing stale lock from PID {pid or '?'}")
+        _LOCK_FILE.unlink(missing_ok=True)
+
+    payload = {
+        "pid": os.getpid(),
+        "start_ts": datetime.now(timezone.utc).isoformat(),
+        "cmdline": " ".join(sys.argv),
+    }
+    try:
+        fd = os.open(str(_LOCK_FILE), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+    except FileExistsError:
+        existing = _read_lock_payload()
+        pid = int((existing or {}).get("pid", 0) or 0)
+        if existing and _pid_alive(pid):
+            print(
+                f"[ERROR] Another collector started concurrently (PID {pid})."
+            )
+            sys.exit(1)
+        _LOCK_FILE.unlink(missing_ok=True)
+        fd = os.open(str(_LOCK_FILE), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        json.dump(payload, f)
+    print(f"  [LOCK] Acquired collector lock (PID {os.getpid()})")
+
+
+def _release_collector_lock() -> None:
+    """Drop the lock file if this process owns it."""
+    existing = _read_lock_payload()
+    if existing is None:
+        return
+    pid = int(existing.get("pid", 0) or 0)
+    if pid == os.getpid():
+        _LOCK_FILE.unlink(missing_ok=True)
+
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -127,11 +225,13 @@ ACTIVE_PERPS = STABLECOIN_PERP_SYMBOLS
 
 # Graceful shutdown
 _RUNNING = True
+_SHUTDOWN_REQUESTED = False
 
 
 def _handle_signal(signum, frame):
-    global _RUNNING
+    global _RUNNING, _SHUTDOWN_REQUESTED
     _RUNNING = False
+    _SHUTDOWN_REQUESTED = True
     print("\n[SHUTDOWN] Signal received, finishing current snapshot...")
 
 
@@ -197,91 +297,131 @@ def collect_tickers(
 ) -> Tuple[List[Dict], Dict[Tuple[str, str], Dict]]:
     """
     Fetch ticker data for every (exchange, coin) pair.
+
+    Uses one batched ``fetch_tickers()`` call per exchange instead of looping
+    ``fetch_ticker()`` per coin. All 12 exchanges support the batch endpoint;
+    measured live it is 22x-362x faster per exchange than the per-coin loop
+    (see docs/supervisor_brief_2026-07-15.md), since it collapses ~23 sequential
+    round-trips — each paced by that exchange's own rate limiter — into one.
+
+    Two exchanges reject a scoped ``symbols`` argument outright: Crypto.com
+    allows at most 1 symbol per call, and Phemex raises for the *entire* call
+    if even one requested symbol isn't a valid market there (unlike
+    per-symbol ``fetch_ticker()``, where only that one call would fail). Both
+    are handled by falling back to an unscoped ``fetch_tickers()`` (fetch
+    every market) and filtering locally to the coins we track.
+
+    Because this is now a single call per exchange, ``recv_latency_ms`` is the
+    shared batch round-trip time applied to every coin from that exchange this
+    snapshot, not a per-symbol measurement as before.
+
     Returns (list of ticker records, raw_tickers_by_node for downstream use).
     """
     ts = _now_iso()
 
     def _worker(ex_name: str, ex) -> List[Dict]:
         out: List[Dict] = []
+
+        coin_by_market: Dict[str, str] = {}
         for coin in ACTIVE_COINS:
             market = COIN_MARKETS.get(coin, {}).get(ex_name)
-            if not market:
+            if market:
+                coin_by_market[market] = coin
+        if not coin_by_market:
+            return out
+
+        def _error_record(coin: str, market: str, err: str) -> Dict:
+            return {
+                "type": "ticker",
+                "ts": ts,
+                "snapshot_idx": snapshot_idx,
+                "exchange": ex_name,
+                "coin": coin,
+                "market": market,
+                "error": err,
+            }
+
+        _t0 = time.time()
+        try:
+            try:
+                tickers = ex.fetch_tickers(list(coin_by_market.keys()))
+            except ccxt.NetworkError:
+                raise
+            except Exception:
+                # Scoped symbols list rejected (Phemex: fails whole call if any
+                # symbol is unknown; Crypto.com: >1 symbol not allowed at all).
+                # Fall back to an unscoped fetch and filter locally.
+                all_tickers = ex.fetch_tickers()
+                tickers = {m: all_tickers[m] for m in coin_by_market if m in all_tickers}
+            recv_latency_ms = round((time.time() - _t0) * 1000.0, 1)
+        except Exception as e:
+            # Whole-exchange batch failure (network or otherwise) — emit one
+            # error record per coin so per-(exchange, coin) error-rate
+            # accounting downstream stays consistent with the per-coin loop.
+            return [_error_record(coin, market, str(e)) for market, coin in coin_by_market.items()]
+
+        for market, coin in coin_by_market.items():
+            t = tickers.get(market)
+            if t is None:
+                out.append(_error_record(coin, market, "not present in batch fetch_tickers() response"))
                 continue
 
-            try:
-                _t0 = time.time()
-                t = ex.fetch_ticker(market)
-                recv_latency_ms = round((time.time() - _t0) * 1000.0, 1)
-                bid = _safe_float(t.get("bid"))
-                ask = _safe_float(t.get("ask"))
-                last = _safe_float(t.get("last"))
-                # Top-of-book sizes: cheap microstructure signal (queue imbalance,
-                # available size at touch) that ships inside the ticker payload.
-                bid_volume = _safe_float(t.get("bidVolume"))
-                ask_volume = _safe_float(t.get("askVolume"))
-                vol = _safe_float(t.get("baseVolume"))
-                quote_vol = _safe_float(t.get("quoteVolume"))
-                high = _safe_float(t.get("high"))
-                low = _safe_float(t.get("low"))
-                vwap = _safe_float(t.get("vwap"))
-                pct_change = _safe_float(t.get("percentage"))
-                # Exchange-reported quote time lets us measure cross-venue
-                # staleness/lag later (vs our local receive time `ts`).
-                exch_ts = t.get("timestamp")
+            bid = _safe_float(t.get("bid"))
+            ask = _safe_float(t.get("ask"))
+            last = _safe_float(t.get("last"))
+            # Top-of-book sizes: cheap microstructure signal (queue imbalance,
+            # available size at touch) that ships inside the ticker payload.
+            bid_volume = _safe_float(t.get("bidVolume"))
+            ask_volume = _safe_float(t.get("askVolume"))
+            vol = _safe_float(t.get("baseVolume"))
+            quote_vol = _safe_float(t.get("quoteVolume"))
+            high = _safe_float(t.get("high"))
+            low = _safe_float(t.get("low"))
+            vwap = _safe_float(t.get("vwap"))
+            pct_change = _safe_float(t.get("percentage"))
+            # Exchange-reported quote time lets us measure cross-venue
+            # staleness/lag later (vs our local receive time `ts`).
+            exch_ts = t.get("timestamp")
 
-                # Normalize mid to USD
-                mid = None
-                if bid is not None and ask is not None:
-                    mid = (bid + ask) / 2.0
-                elif last is not None:
-                    mid = last
+            # Normalize mid to USD
+            mid = None
+            if bid is not None and ask is not None:
+                mid = (bid + ask) / 2.0
+            elif last is not None:
+                mid = last
 
-                price_usd = None
-                if mid is not None:
-                    price_usd = normalize_price_to_usd(coin, market, mid)
+            price_usd = None
+            if mid is not None:
+                price_usd = normalize_price_to_usd(coin, market, mid)
 
-                spread_bps = None
-                if bid is not None and ask is not None and mid and mid > 0:
-                    spread_bps = ((ask - bid) / mid) * 10_000
+            spread_bps = None
+            if bid is not None and ask is not None and mid and mid > 0:
+                spread_bps = ((ask - bid) / mid) * 10_000
 
-                out.append({
-                    "type": "ticker",
-                    "ts": ts,
-                    "snapshot_idx": snapshot_idx,
-                    "exchange": ex_name,
-                    "coin": coin,
-                    "market": market,
-                    "bid": bid,
-                    "ask": ask,
-                    "last": last,
-                    "mid": mid,
-                    "price_usd": price_usd,
-                    "spread_bps": spread_bps,
-                    "bid_volume": bid_volume,
-                    "ask_volume": ask_volume,
-                    "base_volume_24h": vol,
-                    "quote_volume_24h": quote_vol,
-                    "high_24h": high,
-                    "low_24h": low,
-                    "vwap": vwap,
-                    "pct_change_24h": pct_change,
-                    "exchange_timestamp": exch_ts,
-                    "recv_latency_ms": recv_latency_ms,
-                })
-
-            except Exception as e:
-                # One bad call (often a connection reset / timeout) usually means
-                # the whole exchange is unreachable this tick — stop hammering it.
-                out.append({
-                    "type": "ticker",
-                    "ts": ts,
-                    "snapshot_idx": snapshot_idx,
-                    "exchange": ex_name,
-                    "coin": coin,
-                    "market": market,
-                    "error": str(e),
-                })
-                break
+            out.append({
+                "type": "ticker",
+                "ts": ts,
+                "snapshot_idx": snapshot_idx,
+                "exchange": ex_name,
+                "coin": coin,
+                "market": market,
+                "bid": bid,
+                "ask": ask,
+                "last": last,
+                "mid": mid,
+                "price_usd": price_usd,
+                "spread_bps": spread_bps,
+                "bid_volume": bid_volume,
+                "ask_volume": ask_volume,
+                "base_volume_24h": vol,
+                "quote_volume_24h": quote_vol,
+                "high_24h": high,
+                "low_24h": low,
+                "vwap": vwap,
+                "pct_change_24h": pct_change,
+                "exchange_timestamp": exch_ts,
+                "recv_latency_ms": recv_latency_ms,
+            })
         return out
 
     records = _collect_parallel(_worker)
@@ -358,8 +498,9 @@ def collect_orderbooks(
                     "asks_raw": [[round(p, 8), round(q, 4)] for p, q in asks],
                 })
 
-            except Exception as e:
-                # Some exchanges may not support order books for all pairs
+            except ccxt.NetworkError as e:
+                # Genuine connectivity failure — skip the rest of this exchange
+                # for this snapshot rather than retrying every remaining coin.
                 out.append({
                     "type": "orderbook",
                     "ts": ts,
@@ -369,9 +510,20 @@ def collect_orderbooks(
                     "market": market,
                     "error": str(e),
                 })
-                if "not support" in str(e).lower() or "not available" in str(e).lower():
-                    continue
-                break  # connection-level failure: skip the rest of this exchange
+                break
+            except Exception as e:
+                # Per-symbol failure (unsupported pair, BadSymbol, etc.) — keep
+                # collecting the remaining coins on this exchange.
+                out.append({
+                    "type": "orderbook",
+                    "ts": ts,
+                    "snapshot_idx": snapshot_idx,
+                    "exchange": ex_name,
+                    "coin": coin,
+                    "market": market,
+                    "error": str(e),
+                })
+                continue
         return out
 
     return _collect_parallel(_worker)
@@ -480,6 +632,17 @@ def collect_ohlcv(
                         "volume": candle[5],
                     })
 
+            except ccxt.NetworkError as e:
+                out.append({
+                    "type": "ohlcv",
+                    "ts": ts,
+                    "snapshot_idx": snapshot_idx,
+                    "exchange": ex_name,
+                    "coin": coin,
+                    "market": market,
+                    "error": str(e),
+                })
+                break
             except Exception as e:
                 out.append({
                     "type": "ohlcv",
@@ -490,9 +653,7 @@ def collect_ohlcv(
                     "market": market,
                     "error": str(e),
                 })
-                if "not support" in str(e).lower():
-                    continue
-                break
+                continue
         return out
 
     return _collect_parallel(_worker)
@@ -577,6 +738,17 @@ def collect_trades(
                     ],
                 })
 
+            except ccxt.NetworkError as e:
+                out.append({
+                    "type": "trades",
+                    "ts": ts,
+                    "snapshot_idx": snapshot_idx,
+                    "exchange": ex_name,
+                    "coin": coin,
+                    "market": market,
+                    "error": str(e),
+                })
+                break
             except Exception as e:
                 out.append({
                     "type": "trades",
@@ -587,9 +759,7 @@ def collect_trades(
                     "market": market,
                     "error": str(e),
                 })
-                if "not support" in str(e).lower():
-                    continue
-                break
+                continue
         return out
 
     return _collect_parallel(_worker)
@@ -732,6 +902,82 @@ def collect_open_interest(snapshot_idx: int) -> List[Dict]:
                 })
             except Exception:
                 pass
+        return out
+
+    return _collect_parallel(_worker)
+
+
+def collect_long_short_ratio(snapshot_idx: int) -> List[Dict]:
+    """
+    Fetch aggregate long/short account ratio for perpetual contracts.
+
+    Direct positioning/sentiment signal: ratio > 1 means more long accounts
+    than short. Confirmed live (unauthenticated) on binance, bybit, okx;
+    bitget and gate also advertise support via `ex.has`.
+    """
+    ts = _now_iso()
+
+    def _worker(ex_name: str, ex) -> List[Dict]:
+        if not ex.has.get("fetchLongShortRatioHistory", False):
+            return []
+        out: List[Dict] = []
+        for sym in ACTIVE_PERPS:
+            try:
+                history = ex.fetch_long_short_ratio_history(sym, limit=1)
+                if not history:
+                    continue
+                h = history[-1]
+                out.append({
+                    "type": "long_short_ratio",
+                    "ts": ts,
+                    "snapshot_idx": snapshot_idx,
+                    "exchange": ex_name,
+                    "symbol": sym,
+                    "long_short_ratio": h.get("longShortRatio"),
+                    "ratio_timestamp": h.get("timestamp"),
+                    "ratio_datetime": h.get("datetime"),
+                })
+            except Exception:
+                pass  # symbol may not have a perp/ratio feed on this exchange
+        return out
+
+    return _collect_parallel(_worker)
+
+
+def collect_liquidations(snapshot_idx: int) -> List[Dict]:
+    """
+    Fetch recent public forced-liquidation events for perpetual contracts.
+
+    This is a market-wide feed (not account-specific), a proxy for
+    cascade/deleveraging risk. Confirmed live (unauthenticated) on gate, htx.
+    """
+    ts = _now_iso()
+
+    def _worker(ex_name: str, ex) -> List[Dict]:
+        if not ex.has.get("fetchLiquidations", False):
+            return []
+        out: List[Dict] = []
+        for sym in ACTIVE_PERPS:
+            try:
+                liqs = ex.fetch_liquidations(sym)
+                # Keep only the most recent few per (exchange, symbol) per
+                # snapshot — same storage-efficiency pattern as `trades`.
+                for liq in liqs[-20:]:
+                    out.append({
+                        "type": "liquidations",
+                        "ts": ts,
+                        "snapshot_idx": snapshot_idx,
+                        "exchange": ex_name,
+                        "symbol": sym,
+                        "side": liq.get("side"),
+                        "price": liq.get("price"),
+                        "contracts": liq.get("contracts"),
+                        "quote_value": liq.get("quoteValue"),
+                        "liq_timestamp": liq.get("timestamp"),
+                        "liq_datetime": liq.get("datetime"),
+                    })
+            except Exception:
+                pass  # symbol may not have a liquidation feed on this exchange
         return out
 
     return _collect_parallel(_worker)
@@ -900,7 +1146,10 @@ def main():
     parser.add_argument("--interval", type=int, default=DEFAULT_INTERVAL_SEC,
                         help=f"Seconds between snapshots (default: {DEFAULT_INTERVAL_SEC})")
     parser.add_argument("--hours", type=float, default=DEFAULT_HOURS,
-                        help=f"Total hours to run (default: {DEFAULT_HOURS})")
+                        help=f"Total hours to run (default: {DEFAULT_HOURS}; "
+                             "ignored when --forever is set)")
+    parser.add_argument("--forever", action="store_true",
+                        help="Run until stopped (Ctrl+C / kill). No duration limit.")
     parser.add_argument("--ob-depth", type=int, default=DEFAULT_OB_DEPTH,
                         help=f"Order book depth per side (default: {DEFAULT_OB_DEPTH})")
     parser.add_argument("--candles", type=int, default=DEFAULT_OHLCV_CANDLES,
@@ -930,6 +1179,10 @@ def main():
                         help="Skip withdrawal/deposit status collection")
     parser.add_argument("--skip-exchange-status", action="store_true",
                         help="Skip exchange health status collection")
+    parser.add_argument("--skip-long-short-ratio", action="store_true",
+                        help="Skip long/short account ratio collection")
+    parser.add_argument("--skip-liquidations", action="store_true",
+                        help="Skip public liquidation feed collection")
     parser.add_argument("--assets", type=str, default="stablecoins",
                         choices=["stablecoins", "volatile", "all"],
                         help="Asset group to collect (default: stablecoins)")
@@ -938,6 +1191,10 @@ def main():
     parser.add_argument("--resume", type=str, default=None, metavar="DIR",
                         help="Resume a previous run from its output directory")
     args = parser.parse_args()
+
+    _acquire_collector_lock()
+
+    run_forever = args.forever
 
     # --- Resolve asset configuration ---
     global ACTIVE_COINS, ACTIVE_PERPS, _MAX_WORKERS
@@ -959,6 +1216,7 @@ def main():
         cfg = state.get("config", {})
         args.interval = cfg.get("interval_sec", args.interval)
         args.hours = cfg.get("hours", args.hours)
+        run_forever = run_forever or cfg.get("forever", False)
         args.ob_depth = cfg.get("ob_depth", args.ob_depth)
         args.candles = cfg.get("candles", args.candles)
         args.trades = cfg.get("trades_limit", args.trades)
@@ -972,6 +1230,8 @@ def main():
         args.skip_oi = cfg.get("skip_oi", args.skip_oi)
         args.skip_withdrawal_status = cfg.get("skip_withdrawal_status", args.skip_withdrawal_status)
         args.skip_exchange_status = cfg.get("skip_exchange_status", args.skip_exchange_status)
+        args.skip_long_short_ratio = cfg.get("skip_long_short_ratio", args.skip_long_short_ratio)
+        args.skip_liquidations = cfg.get("skip_liquidations", args.skip_liquidations)
         # Restore asset mode. Older checkpoints did not persist asset_mode;
         # fall back to whatever --assets was passed (NOT a hardcoded default)
         # so a resume can never silently switch universes.
@@ -980,13 +1240,19 @@ def main():
             print(f"  [RESUME][WARN] checkpoint has no asset_mode; using --assets={args.assets!r}")
         ACTIVE_COINS, ACTIVE_PERPS = _resolve_asset_config(resumed_mode)
         print(f"  [RESUME] Asset mode: {resumed_mode} \u2192 {len(ACTIVE_COINS)} coins, {len(ACTIVE_PERPS)} perps")
-        # Compute remaining time
-        original_start = datetime.fromisoformat(state["start_ts"])
-        elapsed_h = (datetime.now(timezone.utc) - original_start).total_seconds() / 3600
-        remaining_h = max(0, args.hours - elapsed_h)
-        total_sec = remaining_h * 3600
-        end_time = time.time() + total_sec
-        expected_snapshots = snapshot_idx + int(total_sec / args.interval)
+        # Compute remaining time (skipped for forever runs)
+        if run_forever:
+            end_time = None
+            expected_snapshots = None
+        else:
+            original_start = datetime.fromisoformat(state["start_ts"])
+            elapsed_h = (
+                datetime.now(timezone.utc) - original_start
+            ).total_seconds() / 3600
+            remaining_h = max(0, args.hours - elapsed_h)
+            total_sec = remaining_h * 3600
+            end_time = time.time() + total_sec
+            expected_snapshots = snapshot_idx + int(total_sec / args.interval)
         run_id = out_dir.name
         writer = DataWriter(out_dir)
         # Log resume event
@@ -995,9 +1261,13 @@ def main():
             "event": "resume",
             "resume_ts": _now_iso(),
             "resumed_from_snapshot": snapshot_idx,
-            "remaining_hours": round(remaining_h, 3),
+            "remaining_hours": None if run_forever else round(remaining_h, 3),
+            "forever": run_forever,
         }])
-        print(f"[RESUME] Continuing from snapshot {snapshot_idx}, {remaining_h:.2f}h remaining")
+        if run_forever:
+            print(f"[RESUME] Continuing from snapshot {snapshot_idx} (runs until stopped)")
+        else:
+            print(f"[RESUME] Continuing from snapshot {snapshot_idx}, {remaining_h:.2f}h remaining")
     else:
         # Fresh start
         run_id = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
@@ -1020,6 +1290,7 @@ def main():
             "start_ts": _now_iso(),
             "interval_sec": args.interval,
             "hours": args.hours,
+            "forever": run_forever,
             "ob_depth": args.ob_depth,
             "candles": args.candles,
             "trades_limit": args.trades,
@@ -1032,6 +1303,8 @@ def main():
             "skip_oi": args.skip_oi,
             "skip_withdrawal_status": args.skip_withdrawal_status,
             "skip_exchange_status": args.skip_exchange_status,
+            "skip_long_short_ratio": args.skip_long_short_ratio,
+            "skip_liquidations": args.skip_liquidations,
             "exchanges": list(EXCHANGES.keys()),
             "coins": list(ACTIVE_COINS),
             "perp_symbols": list(ACTIVE_PERPS),
@@ -1039,9 +1312,13 @@ def main():
         }
         writer.write([config])
 
-        total_sec = args.hours * 3600
-        end_time = time.time() + total_sec
-        expected_snapshots = int(total_sec / args.interval)
+        if run_forever:
+            end_time = None
+            expected_snapshots = None
+        else:
+            total_sec = args.hours * 3600
+            end_time = time.time() + total_sec
+            expected_snapshots = int(total_sec / args.interval)
         snapshot_idx = 0
 
     # State file for crash recovery
@@ -1049,6 +1326,7 @@ def main():
     _state_config = {
         "interval_sec": args.interval,
         "hours": args.hours,
+        "forever": run_forever,
         "ob_depth": args.ob_depth,
         "candles": args.candles,
         "trades_limit": args.trades,
@@ -1061,6 +1339,8 @@ def main():
         "skip_oi": args.skip_oi,
         "skip_withdrawal_status": args.skip_withdrawal_status,
         "skip_exchange_status": args.skip_exchange_status,
+        "skip_long_short_ratio": args.skip_long_short_ratio,
+        "skip_liquidations": args.skip_liquidations,
         "asset_mode": resumed_mode if args.resume else args.assets,
     }
     _state_start_ts = _now_iso() if not args.resume else state["start_ts"]
@@ -1078,12 +1358,20 @@ def main():
             json.dump(s, f)
         tmp.replace(_state_file)  # atomic on Windows NTFS
 
+    snap_label = lambda idx: (
+        f"{idx}" if expected_snapshots is None else f"{idx}/{expected_snapshots}"
+    )
+
     print(f"=== Stat Arb Data Collector ===")
     print(f"  Output: {out_dir}")
-    print(f"  Interval: {args.interval}s | Duration: {args.hours}h")
+    if run_forever:
+        print(f"  Interval: {args.interval}s | Duration: until stopped")
+    else:
+        print(f"  Interval: {args.interval}s | Duration: {args.hours}h")
     print(f"  Parallelism: {_MAX_WORKERS} worker(s) "
           f"({'per-exchange concurrent' if _MAX_WORKERS > 1 else 'sequential'})")
-    print(f"  Expected snapshots: ~{expected_snapshots}")
+    if expected_snapshots is not None:
+        print(f"  Expected snapshots: ~{expected_snapshots}")
     print(f"  Signals: ticker", end="")
     if not args.skip_orderbook:
         print(f" + orderbook(L{args.ob_depth})", end="")
@@ -1099,6 +1387,10 @@ def main():
         print(f" + withdrawal_status", end="")
     if not args.skip_exchange_status:
         print(f" + exchange_status", end="")
+    if not args.skip_long_short_ratio:
+        print(f" + long_short_ratio", end="")
+    if not args.skip_liquidations:
+        print(f" + liquidations", end="")
     print(f" + spread_matrix")
     print(f"  Slow signals (funding/OI/withdrawal/status) every "
           f"{args.slow_every} snapshots (~{args.slow_every * args.interval}s).")
@@ -1107,8 +1399,9 @@ def main():
 
     _prevent_sleep()
 
+    exit_code = 0
     try:
-        while _RUNNING and time.time() < end_time:
+        while _RUNNING and (run_forever or time.time() < end_time):
             snapshot_idx += 1
             snap_start = time.time()
 
@@ -1121,7 +1414,7 @@ def main():
             # (longer when slow signals run), and without this line the console
             # sits silent the whole time and looks hung.
             print(
-                f"  [{snapshot_idx:>4}/{expected_snapshots}] collecting"
+                f"  [{snap_label(snapshot_idx):>7}] collecting"
                 f"{' + slow signals (funding/OI/withdrawal/status — slower)' if do_slow else ''}...",
                 flush=True,
             )
@@ -1187,7 +1480,21 @@ def main():
                 writer.write(es_recs)
                 es_count = len(es_recs)
 
-            # 9) Spread matrix (computed, no API calls)
+            # 9) Long/short account ratio
+            lsr_count = 0
+            if not args.skip_long_short_ratio and do_slow:
+                lsr_recs = collect_long_short_ratio(snapshot_idx)
+                writer.write(lsr_recs)
+                lsr_count = len(lsr_recs)
+
+            # 10) Public liquidation feed
+            liq_count = 0
+            if not args.skip_liquidations and do_slow:
+                liq_recs = collect_liquidations(snapshot_idx)
+                writer.write(liq_recs)
+                liq_count = len(liq_recs)
+
+            # 11) Spread matrix (computed, no API calls)
             spread_recs = compute_spread_matrix(raw_tickers, snapshot_idx)
             writer.write(spread_recs)
 
@@ -1196,10 +1503,11 @@ def main():
 
             snap_dur = time.time() - snap_start
             print(
-                f"  [{snapshot_idx:>4}/{expected_snapshots}] "
+                f"  [{snap_label(snapshot_idx):>7}] "
                 f"tick={valid_tickers} ob={ob_count} "
                 f"ohlcv={ohlcv_count} trades={trade_count} "
                 f"fr={fr_count} oi={oi_count} ws={ws_count} es={es_count} "
+                f"lsr={lsr_count} liq={liq_count} "
                 f"spr={len(spread_recs)} "
                 f"({snap_dur:.1f}s)",
                 flush=True,
@@ -1213,12 +1521,19 @@ def main():
 
     except KeyboardInterrupt:
         print("\n[SHUTDOWN] Interrupted by user.")
+        _SHUTDOWN_REQUESTED = True
+        exit_code = 2
     finally:
+        if _SHUTDOWN_REQUESTED:
+            exit_code = 2
         _allow_sleep()
+        _release_collector_lock()
         writer.close()
         print(f"\n=== Collection complete ===")
         print(f"  Snapshots: {snapshot_idx}")
         print(f"  Output: {out_dir}")
+        if exit_code:
+            sys.exit(exit_code)
 
 
 if __name__ == "__main__":
