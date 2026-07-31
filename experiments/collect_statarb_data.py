@@ -301,7 +301,7 @@ def collect_tickers(
     Uses one batched ``fetch_tickers()`` call per exchange instead of looping
     ``fetch_ticker()`` per coin. All 12 exchanges support the batch endpoint;
     measured live it is 22x-362x faster per exchange than the per-coin loop
-    (see docs/supervisor_brief.md), since it collapses ~23 sequential
+    (see docs/supervisor_brief_2026-07-15.md), since it collapses ~23 sequential
     round-trips — each paced by that exchange's own rate limiter — into one.
 
     Two exchanges reject a scoped ``symbols`` argument outright: Crypto.com
