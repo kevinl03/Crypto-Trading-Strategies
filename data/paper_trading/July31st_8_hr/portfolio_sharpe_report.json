@@ -1,0 +1,98 @@
+{
+  "session": "C:\\Users\\Kev\\repos\\stochastic-spread-modeling\\data\\paper_trading\\July31st_8_hr",
+  "n_closed": 7973,
+  "max_open_capital": 50,
+  "note": "Open MTM uses direction*z_t for bets with entry_ts<=t<exit_ts. Bets still open at session kill never appear in trades.jsonl, so terminal orphan inventory is not marked (same limitation as closed-only).",
+  "variants": {
+    "A_closed_only_hourly_pnl": {
+      "sharpe": 2.350998459955362,
+      "n_periods": 6,
+      "mean_pnl": 991.614545538709,
+      "std_pnl": 421.78443007467416,
+      "ann_crypto_24x365": 220.04139911916883,
+      "ann_equity_hf_1638": 95.15010970446144
+    },
+    "B_hourly_equity_pnl_with_open_mtm": {
+      "sharpe": 2.4055442193908543,
+      "n_periods": 6,
+      "mean_pnl": 991.6145455387091,
+      "std_pnl": 412.2204603621094,
+      "ann_crypto_24x365": 225.14660247282447,
+      "ann_equity_hf_1638": 97.35769728165569,
+      "lit": "Tadi-style Rf=0 on period P&L; includes unrealized MTM delta"
+    },
+    "C_hourly_return_capital_max_open": {
+      "sharpe": 2.405544219390854,
+      "n_periods": 6,
+      "mean_return": 19.83229091077418,
+      "std_return": 8.244409207242189,
+      "ann_crypto_24x365": 225.14660247282444,
+      "ann_equity_hf_1638": 97.35769728165566,
+      "lit": "Period P&L / max_open (fixed book); closest to capital-based Sharpe"
+    },
+    "C2_hourly_return_capital_n_open": {
+      "sharpe": 2.5708073900849633,
+      "ann_crypto_24x365": 240.61438772313562
+    },
+    "D_snapshot_equity_pnl_with_open_mtm": {
+      "sharpe": 1.704863522066999,
+      "n_periods": 171,
+      "mean_dt_sec": 108.84921753216373,
+      "ann_sqrt_snaps_per_year": 917.6567558805631
+    },
+    "D2_snapshot_return_capital_max_open": {
+      "sharpe": 1.7048635220669988,
+      "ann_sqrt_snaps_per_year": 917.656755880563
+    }
+  },
+  "hourly_path": [
+    {
+      "t": "2026-08-01T06:00:00+00:00",
+      "equity": 305.1583194035583,
+      "realized_cum": 254.3766313309042,
+      "open_mtm": 50.78168807265415,
+      "n_open": 50,
+      "pnl": 305.1583194035583
+    },
+    {
+      "t": "2026-08-01T07:00:00+00:00",
+      "equity": 1066.8606204836362,
+      "realized_cum": 1043.852887099424,
+      "open_mtm": 23.007733384212276,
+      "n_open": 40,
+      "pnl": 761.7023010800779
+    },
+    {
+      "t": "2026-08-01T08:00:00+00:00",
+      "equity": 2322.3276144729984,
+      "realized_cum": 2257.9355721505613,
+      "open_mtm": 64.392042322437,
+      "n_open": 50,
+      "pnl": 1255.4669939893622
+    },
+    {
+      "t": "2026-08-01T09:00:00+00:00",
+      "equity": 3644.565248334114,
+      "realized_cum": 3572.7224701575647,
+      "open_mtm": 71.84277817654946,
+      "n_open": 50,
+      "pnl": 1322.2376338611157
+    },
+    {
+      "t": "2026-08-01T10:00:00+00:00",
+      "equity": 5014.852554150479,
+      "realized_cum": 4953.148286509517,
+      "open_mtm": 61.70426764096149,
+      "n_open": 50,
+      "pnl": 1370.2873058163646
+    },
+    {
+      "t": "2026-08-01T11:00:00+00:00",
+      "equity": 5949.6872732322545,
+      "realized_cum": 5949.6872732322545,
+      "open_mtm": 0.0,
+      "n_open": 0,
+      "pnl": 934.8347190817758
+    }
+  ]
+}
