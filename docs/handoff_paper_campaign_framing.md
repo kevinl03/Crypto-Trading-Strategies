@@ -59,7 +59,7 @@ cd <analysis-worktree>
 - Nominal collector interval **60s**; with `--slow-every 1` observed wall cadence **~110s/snap** (important for “hours of data” conversions).
 - Universe: **23 high-volatility** assets (`VOLATILE_COINS`: BTC, ETH, SOL, memes, DeFi majors, etc.) × up to **6 venues** (binance, bybit, okx, coinbase, kraken, mexc).
 
-### 2. Mean-reversion / OU-style z-score target (not binary classification)
+### 2. Mean-reversion / z-score target (not binary classification)
 - Cross-exchange **spread** in bps → rolling z-score (`ZSCORE_WINDOW`, `MIN_PERIODS`).
 - Supervised target: **`z_{t+H}`** via `groupby(coin,pair).zscore.shift(-HORIZON)`.
 - Jul 31 model / notebook: **`HORIZON = 1`** (predict next snapshot’s z).  
@@ -71,6 +71,9 @@ we compare:
 - **Executed trades:** observations where `|pred|>= 0.5`  
 
 Without this comparison, `|pred|≥0.5` DirAcc looks falsely strong because filtering selects high-|z| / high-persistence states.
+
+**Additional Baseline:**
+we also tested a plain rule-based z-score signal as a trade criterion, and the results are stored in the repo. we found that our model had comparable sharpe ratio, better dir_acc, and much better proxy pnl. 
 
 ### 3. Confidence filter as trading policy
 - Paper bets only when `|pred| ≥ 0.5` (entry tau).
