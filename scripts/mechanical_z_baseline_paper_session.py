@@ -1,11 +1,12 @@
-"""Mechanical |z_t|>=tau persistence peer on an LGBM paper session.
+"""Mechanical |z_t|>=tau peers on an LGBM paper session.
 
-Policy (persistence only — no mean-reversion):
-  - Enter when |z_t| >= tau
-  - direction = sign(z_t)
-  - Settle at t+H with pnl_proxy = direction * z_{t+H}
+Entry: |z_t| >= tau. Settle at t+H with pnl_proxy = direction * z_{t+H}.
 
-Runs two books on the same signals panel:
+Direction modes:
+  - persistence:     direction = sign(z_t)
+  - mean_reversion:  direction = -sign(z_t)
+
+Each mode is scored as:
   A) unconstrained — every eligible row with a forward z
   B) capacity-matched — max_open slots, one open bet per (coin, pair),
      settle-before-open per snapshot (mirrors experiments/paper_trade_lgbm.py)
@@ -20,6 +21,7 @@ import json
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal
 
 import numpy as np
 import pandas as pd
@@ -37,6 +39,8 @@ from portfolio_sharpe_paper_session import (  # noqa: E402
     sharpe,
 )
 
+DirectionMode = Literal["persistence", "mean_reversion"]
+
 
 @dataclass
 class OpenBet:
@@ -48,6 +52,11 @@ class OpenBet:
     direction: int
     entry_z: float
     entry_spread_bps: float
+
+
+def direction_from_z(z: float, mode: DirectionMode) -> int:
+    base = 1 if z > 0 else -1
+    return base if mode == "persistence" else -base
 
 
 def load_signals(out: Path) -> pd.DataFrame:
@@ -73,7 +82,6 @@ def align_forward_z(sig: pd.DataFrame, horizon: int) -> pd.DataFrame:
             "spread_bps": "exit_spread_bps",
         }
     )
-    # If multiple signal rows share a key, keep last
     z = z.sort_values(["coin", "pair", "snapshot_idx", "exit_ts"]).drop_duplicates(
         ["coin", "pair", "snapshot_idx"], keep="last"
     )
@@ -94,7 +102,7 @@ def trade_row(row: pd.Series, direction: int) -> dict:
         "entry_snap": int(row["snapshot_idx"]),
         "exit_snap": int(row["snapshot_idx"]) + int(row["horizon"]),
         "direction": int(direction),
-        "pred": entry_z,  # mechanical "prediction" = z_t (persistence)
+        "pred": entry_z,
         "entry_z": entry_z,
         "exit_z": exit_z,
         "entry_spread_bps": float(row["spread_bps"]) if pd.notna(row["spread_bps"]) else None,
@@ -111,14 +119,15 @@ def trade_row(row: pd.Series, direction: int) -> dict:
     }
 
 
-def unconstrained_trades(df: pd.DataFrame, tau: float, horizon: int) -> pd.DataFrame:
-    """Every row with |z_t| >= tau and finite z_fwd."""
+def unconstrained_trades(
+    df: pd.DataFrame, tau: float, horizon: int, mode: DirectionMode
+) -> pd.DataFrame:
     rows = []
     for row in df.itertuples(index=False):
         z = float(row.zscore)
         if abs(z) < tau or z == 0.0:
             continue
-        direction = 1 if z > 0 else -1
+        direction = direction_from_z(z, mode)
         s = pd.Series(row._asdict())
         s["horizon"] = horizon
         rows.append(trade_row(s, direction))
@@ -126,10 +135,8 @@ def unconstrained_trades(df: pd.DataFrame, tau: float, horizon: int) -> pd.DataF
 
 
 def capacity_trades(
-    df: pd.DataFrame, tau: float, horizon: int, max_open: int
+    df: pd.DataFrame, tau: float, horizon: int, max_open: int, mode: DirectionMode
 ) -> tuple[pd.DataFrame, dict]:
-    """Replay live capacity: settle then open; max_open; one per (coin, pair)."""
-    # Preserve within-snap signal order from the session file.
     work = df.sort_values(["snapshot_idx", "ts"]).reset_index(drop=True)
     open_bets: list[OpenBet] = []
     closed: list[dict] = []
@@ -137,11 +144,8 @@ def capacity_trades(
     skipped_cap = 0
     candidates = 0
 
-    # Exit z lookup: (coin, pair, exit_snap) -> (z, spread, ts)
     exit_lookup: dict[tuple[str, str, int], tuple[float, float | None, pd.Timestamp]] = {}
     for row in work.itertuples(index=False):
-        # work rows are at entry snap; zscore is z at that snap.
-        # We also need z at each snap as a possible exit — use zscore keyed by this snap.
         key = (row.coin, row.pair, int(row.snapshot_idx))
         exit_lookup[key] = (
             float(row.zscore),
@@ -151,25 +155,17 @@ def capacity_trades(
 
     snaps = sorted(work["snapshot_idx"].unique())
     for snap in snaps:
-        # Settle bets whose exit_snap == this snap
         still: list[OpenBet] = []
         for bet in open_bets:
             if bet.exit_snap > snap:
                 still.append(bet)
                 continue
-            if bet.exit_snap < snap:
-                # Should have settled earlier; keep trying
-                key = (bet.coin, bet.pair, bet.exit_snap)
-                if key not in exit_lookup:
-                    still.append(bet)
-                    continue
             key = (bet.coin, bet.pair, bet.exit_snap)
             if key not in exit_lookup:
                 still.append(bet)
                 continue
             z_exit, spread_exit, exit_ts = exit_lookup[key]
             hit = int(np.sign(z_exit) == bet.direction) if z_exit != 0 else 0
-            pnl = float(bet.direction * z_exit)
             closed.append(
                 {
                     "entry_ts": bet.entry_ts,
@@ -189,7 +185,7 @@ def capacity_trades(
                         if spread_exit is None
                         else float(spread_exit) - float(bet.entry_spread_bps)
                     ),
-                    "pnl_proxy": pnl,
+                    "pnl_proxy": float(bet.direction * z_exit),
                     "dir_hit": hit,
                 }
             )
@@ -201,9 +197,7 @@ def capacity_trades(
             z = float(row.zscore)
             if abs(z) < tau or z == 0.0:
                 continue
-            # Need forward z available eventually; skip if we know it will never settle
             exit_key = (row.coin, row.pair, int(snap) + horizon)
-            # Prefer pre-aligned z_fwd when present
             if hasattr(row, "z_fwd") and row.z_fwd == row.z_fwd:
                 pass
             elif exit_key not in exit_lookup:
@@ -215,7 +209,7 @@ def capacity_trades(
             if len(open_bets) >= max_open:
                 skipped_cap += 1
                 continue
-            direction = 1 if z > 0 else -1
+            direction = direction_from_z(z, mode)
             bet = OpenBet(
                 coin=row.coin,
                 pair=row.pair,
@@ -229,7 +223,6 @@ def capacity_trades(
             open_bets.append(bet)
             open_keys.add((row.coin, row.pair))
 
-    # Attempt final settle for any leftovers that have exit z
     still_open = 0
     for bet in open_bets:
         key = (bet.coin, bet.pair, bet.exit_snap)
@@ -268,6 +261,7 @@ def capacity_trades(
         "skipped_at_capacity": skipped_cap,
         "n_still_open_unsettled": still_open,
         "max_open": max_open,
+        "direction_mode": mode,
     }
     return pd.DataFrame(closed), meta
 
@@ -288,7 +282,6 @@ def summarize_book(trades: pd.DataFrame, z_panel: pd.DataFrame, max_open: int, l
 
     entry_z = trades["entry_z"].to_numpy(float)
     exit_z = trades["exit_z"].to_numpy(float)
-    # Persistence forecast quality on the traded rows: predict z_fwd with z_t
     return {
         "label": label,
         "n_closed": int(len(trades)),
@@ -337,6 +330,42 @@ def write_trades_jsonl(path: Path, trades: pd.DataFrame) -> None:
             f.write(json.dumps(rec, default=float) + "\n")
 
 
+def run_mode(
+    mode: DirectionMode,
+    aligned: pd.DataFrame,
+    sig_cap: pd.DataFrame,
+    z_panel: pd.DataFrame,
+    tau: float,
+    horizon: int,
+    max_open: int,
+    dest_dir: Path,
+) -> dict:
+    trades_free = unconstrained_trades(aligned, tau=tau, horizon=horizon, mode=mode)
+    trades_cap, cap_meta = capacity_trades(
+        sig_cap, tau=tau, horizon=horizon, max_open=max_open, mode=mode
+    )
+    write_trades_jsonl(dest_dir / f"trades_{mode}_unconstrained.jsonl", trades_free)
+    write_trades_jsonl(dest_dir / f"trades_{mode}_capacity_max_open.jsonl", trades_cap)
+    # Keep legacy filenames for persistence so prior paths still work.
+    if mode == "persistence":
+        write_trades_jsonl(dest_dir / "trades_unconstrained.jsonl", trades_free)
+        write_trades_jsonl(dest_dir / "trades_capacity_max_open.jsonl", trades_cap)
+
+    block = {
+        "direction": "sign(z_t)" if mode == "persistence" else "-sign(z_t)",
+        "unconstrained": summarize_book(
+            trades_free, z_panel, max_open=max_open, label="unconstrained"
+        ),
+        "capacity_matched": {
+            **summarize_book(
+                trades_cap, z_panel, max_open=max_open, label=f"max_open={max_open}"
+            ),
+            "capacity_meta": cap_meta,
+        },
+    }
+    return block
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("session_dir", type=Path)
@@ -358,76 +387,64 @@ def main() -> None:
     aligned = align_forward_z(sig, horizon=horizon)
     aligned["horizon"] = horizon
 
-    # Unconstrained book uses only rows with known z_fwd
-    trades_free = unconstrained_trades(aligned, tau=args.tau, horizon=horizon)
-
-    # Capacity book uses full signal stream (for settle lookup) but only opens
-    # when |z|>=tau; align_forward already dropped terminal snaps without fwd z
-    # for unconstrained — for capacity, prefer full sig panel + exit lookup.
-    # Rebuild capacity input from all signals so mid-session exits resolve,
-    # then only open when forward exists via z_fwd merge where possible.
-    sig_cap = sig.copy()
-    # Attach z_fwd when available (same merge)
     z_fwd = aligned[
         ["coin", "pair", "snapshot_idx", "z_fwd", "exit_ts", "exit_spread_bps"]
     ].drop_duplicates(["coin", "pair", "snapshot_idx"])
-    sig_cap = sig_cap.merge(
-        z_fwd, on=["coin", "pair", "snapshot_idx"], how="left"
-    )
-    trades_cap, cap_meta = capacity_trades(
-        sig_cap, tau=args.tau, horizon=horizon, max_open=args.max_open
-    )
-
+    sig_cap = sig.merge(z_fwd, on=["coin", "pair", "snapshot_idx"], how="left")
     z_panel = build_z_panel(sig)
+
+    dest_dir = out / "mechanical_z_baseline"
+    dest_dir.mkdir(parents=True, exist_ok=True)
+
+    modes: list[DirectionMode] = ["persistence", "mean_reversion"]
+    by_mode = {
+        mode: run_mode(
+            mode, aligned, sig_cap, z_panel, args.tau, horizon, args.max_open, dest_dir
+        )
+        for mode in modes
+    }
 
     report = {
         "session": str(out),
         "policy": {
-            "name": "mechanical_abs_z_persistence",
+            "name": "mechanical_abs_z",
             "enter": f"|z_t| >= {args.tau}",
-            "direction": "sign(z_t)",
-            "mean_reversion": False,
             "horizon": horizon,
             "settle": "pnl_proxy = direction * z_{t+H}",
+            "direction_modes": ["persistence", "mean_reversion"],
         },
         "n_signal_rows": int(len(sig)),
         "n_rows_with_z_fwd": int(len(aligned)),
-        "unconstrained": summarize_book(
-            trades_free, z_panel, max_open=args.max_open, label="unconstrained"
-        ),
-        "capacity_matched": {
-            **summarize_book(
-                trades_cap, z_panel, max_open=args.max_open, label=f"max_open={args.max_open}"
-            ),
-            "capacity_meta": cap_meta,
-        },
+        "persistence": by_mode["persistence"],
+        "mean_reversion": by_mode["mean_reversion"],
+        # Back-compat top-level keys = persistence (prior report shape)
+        "unconstrained": by_mode["persistence"]["unconstrained"],
+        "capacity_matched": by_mode["persistence"]["capacity_matched"],
     }
 
-    dest_dir = out / "mechanical_z_baseline"
-    dest_dir.mkdir(parents=True, exist_ok=True)
-    write_trades_jsonl(dest_dir / "trades_unconstrained.jsonl", trades_free)
-    write_trades_jsonl(dest_dir / "trades_capacity_max_open.jsonl", trades_cap)
     report_path = dest_dir / "mechanical_z_baseline_report.json"
     report_path.write_text(json.dumps(report, indent=2, default=float), encoding="utf-8")
-
     print(json.dumps(report, indent=2, default=float))
     print(f"\nsaved {report_path}", flush=True)
-    print(f"saved trades under {dest_dir}", flush=True)
 
-    u = report["unconstrained"]
-    c = report["capacity_matched"]
-    print("\n=== HEADLINES (persistence |z|>=tau -> t+H) ===", flush=True)
-    print(
-        f"Unconstrained: n={u['n_closed']}  DirAcc={u.get('dir_acc')}  "
-        f"mean_pnl={u.get('mean_pnl_proxy')}  SharpeB={u['sharpe']['B_hourly_equity_pnl_with_open_mtm']['sharpe']}",
-        flush=True,
-    )
-    print(
-        f"Capacity max_open={args.max_open}: n={c['n_closed']}  DirAcc={c.get('dir_acc')}  "
-        f"mean_pnl={c.get('mean_pnl_proxy')}  SharpeB={c['sharpe']['B_hourly_equity_pnl_with_open_mtm']['sharpe']}  "
-        f"skip_cap={cap_meta['skipped_at_capacity']} skip_pair={cap_meta['skipped_pair_busy']}",
-        flush=True,
-    )
+    print("\n=== HEADLINES (|z|>=tau -> t+H) ===", flush=True)
+    for mode in modes:
+        u = by_mode[mode]["unconstrained"]
+        c = by_mode[mode]["capacity_matched"]
+        meta = c["capacity_meta"]
+        print(
+            f"[{mode}] unconstrained n={u['n_closed']} DirAcc={u.get('dir_acc'):.4f} "
+            f"mean_pnl={u.get('mean_pnl_proxy'):.4f} "
+            f"SharpeB={u['sharpe']['B_hourly_equity_pnl_with_open_mtm']['sharpe']:.4f}",
+            flush=True,
+        )
+        print(
+            f"[{mode}] capacity n={c['n_closed']} DirAcc={c.get('dir_acc'):.4f} "
+            f"mean_pnl={c.get('mean_pnl_proxy'):.4f} "
+            f"SharpeB={c['sharpe']['B_hourly_equity_pnl_with_open_mtm']['sharpe']:.4f} "
+            f"skip_cap={meta['skipped_at_capacity']}",
+            flush=True,
+        )
 
 
 if __name__ == "__main__":
