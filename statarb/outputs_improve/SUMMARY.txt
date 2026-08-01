@@ -1,0 +1,78 @@
+## Protocol (chronological)
+                        label      mae     rmse        r2  dir_acc  dir_acc_tau0.5  pnl_proxy       n
+                        train 0.766819 1.008328  0.045734 0.565403        0.753047   0.151047 2979842
+                val_jul19_pre 0.797232 1.035303  0.031106 0.553428        0.714431   0.131039  133170
+              test_jul19_post 0.765130 1.000514  0.058027 0.573958        0.768233   0.177548  632869
+             naive_jul19_post 0.939252 1.315273 -0.627886 0.603828        0.602125   0.160940  632869
+                test_jul22_28 0.777283 1.008084  0.063308 0.584644        0.755715   0.192608 2845891
+               naive_jul22_28 0.929249 1.310266 -0.582420 0.609159        0.607062   0.176109 2845891
+      OLDPROTO_test_jul19_pre 0.790360 1.029632  0.041692 0.557798        0.735647   0.131935  133170
+OLDPROTO_earlystop_jul19_post 0.759622 0.995322  0.067778 0.577826        0.778587   0.181175  632869
+
+## Validation rotation
+                                                label      mae     rmse       r2  dir_acc  dir_acc_tau0.5  pnl_proxy       n                               config            split  best_iter                                             note
+                  A_val=jul19_pre_test=jul19_post val 0.797232 1.035303 0.031106 0.553428        0.714431   0.131039  133170      A_val=jul19_pre_test=jul19_post              val        108                                 current protocol
+                 A_val=jul19_pre_test=jul19_post test 0.765130 1.000514 0.058027 0.573958        0.768233   0.177548  632869      A_val=jul19_pre_test=jul19_post             test        108                                 current protocol
+     A_val=jul19_pre_test=jul19_post forward_jul22_28 0.777283 1.008084 0.063308 0.584644        0.755715   0.192608 2845891      A_val=jul19_pre_test=jul19_post forward_jul22_28        108                                 current protocol
+                  B_val=jul19_post_test=jul19_pre val 0.764966 1.000317 0.058397 0.572365        0.773738   0.175978  632869      B_val=jul19_post_test=jul19_pre              val        202                           swapped val/test order
+                 B_val=jul19_post_test=jul19_pre test 0.797119 1.035266 0.031175 0.552534        0.713784   0.129483  133170      B_val=jul19_post_test=jul19_pre             test        202                           swapped val/test order
+     B_val=jul19_post_test=jul19_pre forward_jul22_28 0.777341 1.008298 0.062911 0.583188        0.755386   0.190938 2845891      B_val=jul19_post_test=jul19_pre forward_jul22_28        202                           swapped val/test order
+                   C_val=jul13tail_test=jul19_all val 0.721496 0.937317 0.083256 0.611783        0.841709   0.227073   94795       C_val=jul13tail_test=jul19_all              val        220 val carved from train tail; jul19 fully held out
+                  C_val=jul13tail_test=jul19_all test 0.771384 1.007090 0.052485 0.568339        0.768018   0.167337  766039       C_val=jul13tail_test=jul19_all             test        220 val carved from train tail; jul19 fully held out
+      C_val=jul13tail_test=jul19_all forward_jul22_28 0.777771 1.008680 0.062202 0.582313        0.759170   0.190605 2845891       C_val=jul13tail_test=jul19_all forward_jul22_28        220 val carved from train tail; jul19 fully held out
+             D_val=jul19_random20_test=jul19_rest val 0.771166 1.007329 0.054504 0.568740        0.761200   0.169344  153265 D_val=jul19_random20_test=jul19_rest              val        202  NON-chronological random val slice inside jul19
+            D_val=jul19_random20_test=jul19_rest test 0.770402 1.006267 0.053413 0.568962        0.763986   0.167533  612774 D_val=jul19_random20_test=jul19_rest             test        202  NON-chronological random val slice inside jul19
+D_val=jul19_random20_test=jul19_rest forward_jul22_28 0.777341 1.008298 0.062911 0.583188        0.755386   0.190938 2845891 D_val=jul19_random20_test=jul19_rest forward_jul22_28        202  NON-chronological random val slice inside jul19
+              E_val=jul19_first20_test=jul19_rest val 0.795531 1.032735 0.030954 0.553370        0.715045   0.130018  136603  E_val=jul19_first20_test=jul19_rest              val        108         chronological first-20% val inside jul19
+             E_val=jul19_first20_test=jul19_rest test 0.765324 1.000896 0.058197 0.574082        0.768314   0.178024  629436  E_val=jul19_first20_test=jul19_rest             test        108         chronological first-20% val inside jul19
+ E_val=jul19_first20_test=jul19_rest forward_jul22_28 0.777283 1.008084 0.063308 0.584644        0.755715   0.192608 2845891  E_val=jul19_first20_test=jul19_rest forward_jul22_28        108         chronological first-20% val inside jul19
+                                  ordered_val forward 0.777283 1.008084 0.063308 0.584644        0.755715   0.192608 2845891                 rowcheck_ordered_val forward_jul22_28        108                             row-order invariance
+                                 shuffled_val forward 0.777283 1.008084 0.063308 0.584644        0.755715   0.192608 2845891                rowcheck_shuffled_val forward_jul22_28        108                             row-order invariance
+
+## Horizon sweep (test = jul19_post)
+                   label      mae     rmse        r2  dir_acc  dir_acc_tau0.5  pnl_proxy      n  horizon       target       model  best_iter      auc  naive_dir_acc
+      reg H=2 zscore_fwd 0.765130 1.000514  0.058027 0.573958        0.768233   0.177548 632869        2   zscore_fwd    lgbm_reg        108      NaN            NaN
+    naive H=2 zscore_fwd 0.939252 1.315273 -0.627886 0.603828        0.602125   0.160940 632869        2   zscore_fwd naive_zlag1          0      NaN            NaN
+      cls H=2 zscore_fwd      NaN      NaN       NaN 0.621391             NaN   0.149748 632869        2   zscore_fwd    lgbm_cls        408 0.661090       0.603828
+    reg H=2 zscore_delta 0.925140 1.295245  0.004651 0.522742        0.565385   0.055084 632869        2 zscore_delta    lgbm_reg         66      NaN            NaN
+  naive H=2 zscore_delta 1.297309 1.699775 -0.714171 0.447829        0.442690  -0.055955 632869        2 zscore_delta naive_zlag1          0      NaN            NaN
+    cls H=2 zscore_delta      NaN      NaN       NaN 0.540162             NaN   0.056023 613333        2 zscore_delta    lgbm_cls         21 0.558361       0.462093
+     reg H=10 zscore_fwd 0.783205 1.019337  0.023013 0.530022        0.765957   0.111078 630085       10   zscore_fwd    lgbm_reg         37      NaN            NaN
+   naive H=10 zscore_fwd 1.001120 1.372847 -0.772140 0.572735        0.563814   0.095454 630085       10   zscore_fwd naive_zlag1          0      NaN            NaN
+     cls H=10 zscore_fwd      NaN      NaN       NaN 0.594193             NaN   0.085365 630085       10   zscore_fwd    lgbm_cls        156 0.621449       0.572735
+   reg H=10 zscore_delta 0.992659 1.355521  0.018113 0.550450        0.740831   0.123333 630085       10 zscore_delta    lgbm_reg         45      NaN            NaN
+ naive H=10 zscore_delta 1.379128 1.797119 -0.725849 0.447227        0.430470  -0.121751 630085       10 zscore_delta naive_zlag1          0      NaN            NaN
+   cls H=10 zscore_delta      NaN      NaN       NaN 0.554112             NaN   0.125476 626788       10 zscore_delta    lgbm_cls         32 0.577083       0.449579
+     reg H=20 zscore_fwd 0.789001 1.025754  0.011170 0.497986        0.928571   0.074124 626620       20   zscore_fwd    lgbm_reg         34      NaN            NaN
+   naive H=20 zscore_fwd 1.033891 1.402387 -0.848294 0.557081        0.544518   0.063688 626620       20   zscore_fwd naive_zlag1          0      NaN            NaN
+     cls H=20 zscore_fwd      NaN      NaN       NaN 0.578528             NaN   0.048057 626620       20   zscore_fwd    lgbm_cls         64 0.599784       0.557081
+   reg H=20 zscore_delta 1.022750 1.383339  0.027856 0.559755        0.740406   0.161471 626617       20 zscore_delta    lgbm_reg         56      NaN            NaN
+ naive H=20 zscore_delta 1.421625 1.845992 -0.731143 0.442474        0.420204  -0.153358 626617       20 zscore_delta naive_zlag1          0      NaN            NaN
+   cls H=20 zscore_delta      NaN      NaN       NaN 0.561216             NaN   0.162192 625697       20 zscore_delta    lgbm_cls         21 0.588471       0.443125
+     reg H=60 zscore_fwd 0.794516 1.031992  0.000757 0.456576             NaN   0.008196 612820       60   zscore_fwd    lgbm_reg         18      NaN            NaN
+   naive H=60 zscore_fwd 1.094640 1.458915 -0.997000 0.524022        0.507136  -0.003233 612820       60   zscore_fwd naive_zlag1          0      NaN            NaN
+     cls H=60 zscore_fwd      NaN      NaN       NaN 0.559941             NaN   0.007128 612820       60   zscore_fwd    lgbm_cls         61 0.562908       0.524022
+   reg H=60 zscore_delta 1.067829 1.422086  0.049198 0.573979        0.719634   0.234464 612817       60 zscore_delta    lgbm_reg         76      NaN            NaN
+ naive H=60 zscore_delta 1.492798 1.931113 -0.753291 0.430285        0.402855  -0.221249 612817       60 zscore_delta naive_zlag1          0      NaN            NaN
+   cls H=60 zscore_delta      NaN      NaN       NaN 0.575929             NaN   0.232788 612812       60 zscore_delta    lgbm_cls         43 0.609119       0.430289
+    reg H=120 zscore_fwd 0.794731 1.033651 -0.000323 0.453317             NaN   0.002304 592120      120   zscore_fwd    lgbm_reg         11      NaN            NaN
+  naive H=120 zscore_fwd 1.113616 1.474532 -1.035639 0.514173        0.496334  -0.017785 592120      120   zscore_fwd naive_zlag1          0      NaN            NaN
+    cls H=120 zscore_fwd      NaN      NaN       NaN 0.552829             NaN   0.004414 592120      120   zscore_fwd    lgbm_cls         32 0.555541       0.514173
+  reg H=120 zscore_delta 1.079933 1.431872  0.057232 0.574717        0.716199   0.253646 592117      120 zscore_delta    lgbm_reg        114      NaN            NaN
+naive H=120 zscore_delta 1.510769 1.955312 -0.758040 0.430726        0.400071  -0.236377 592117      120 zscore_delta naive_zlag1          0      NaN            NaN
+  cls H=120 zscore_delta      NaN      NaN       NaN 0.579470             NaN   0.253284 592117      120 zscore_delta    lgbm_cls         84 0.614786       0.430726
+
+## LSR / liquidations (jul22-28 only)
+                           label      mae     rmse        r2  dir_acc  dir_acc_tau0.5  pnl_proxy      n       target      features  n_features  n_aux  best_iter       model  naive_dir_acc
+          zscore_fwd spread_only 0.766669 1.009142  0.056484 0.581792        0.735015   0.171456 588351   zscore_fwd   spread_only           5      0        268    lgbm_reg            NaN
+    naive zscore_fwd spread_only 0.943229 1.332386 -0.644768 0.598014        0.595748   0.152866 588351   zscore_fwd   spread_only           1      0          0 naive_zlag1            NaN
+      cls zscore_fwd spread_only      NaN      NaN       NaN 0.614917             NaN   0.145055 588349   zscore_fwd   spread_only           5      0        626    lgbm_cls       0.598018
+        zscore_fwd with_LSR_liqs 0.766774 1.008917  0.056906 0.581452        0.733802   0.173082 588351   zscore_fwd with_LSR_liqs          13      8        171    lgbm_reg            NaN
+  naive zscore_fwd with_LSR_liqs 0.943229 1.332386 -0.644768 0.598014        0.595748   0.152866 588351   zscore_fwd with_LSR_liqs           1      0          0 naive_zlag1            NaN
+    cls zscore_fwd with_LSR_liqs      NaN      NaN       NaN 0.614871             NaN   0.147200 588349   zscore_fwd with_LSR_liqs          13      8        536    lgbm_cls       0.598018
+        zscore_delta spread_only 0.921836 1.298068  0.008960 0.530725        0.650556   0.082256 588350 zscore_delta   spread_only           5      0         52    lgbm_reg            NaN
+  naive zscore_delta spread_only 1.308228 1.730150 -0.760613 0.444348        0.431674  -0.081803 588350 zscore_delta   spread_only           1      0          0 naive_zlag1            NaN
+    cls zscore_delta spread_only      NaN      NaN       NaN 0.546508             NaN   0.084103 572925 zscore_delta   spread_only           5      0         60    lgbm_cls       0.456313
+      zscore_delta with_LSR_liqs 0.921930 1.298084  0.008936 0.530779        0.652339   0.081934 588350 zscore_delta with_LSR_liqs          13      8         54    lgbm_reg            NaN
+naive zscore_delta with_LSR_liqs 1.308228 1.730150 -0.760613 0.444348        0.431674  -0.081803 588350 zscore_delta with_LSR_liqs           1      0          0 naive_zlag1            NaN
+  cls zscore_delta with_LSR_liqs      NaN      NaN       NaN 0.546454             NaN   0.084252 572925 zscore_delta with_LSR_liqs          13      8         41    lgbm_cls       0.456313

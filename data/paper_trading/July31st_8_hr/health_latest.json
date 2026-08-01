@@ -1,0 +1,17 @@
+{
+  "ok": false,
+  "hard": true,
+  "issues": [
+    "snap lag: have=8 expected~1166",
+    "still below warmup after 70m: snaps=8"
+  ],
+  "elapsed_min": 2591.9,
+  "remaining_min": 467.6,
+  "n_snaps": 8,
+  "n_preds": 0,
+  "n_closed": 0,
+  "dir_acc": null,
+  "mean_pnl_proxy": null,
+  "updated_at": "2026-08-01T03:07:19.199352+00:00",
+  "checked_at": "2026-08-01T03:07:56.326604+00:00"
+}
