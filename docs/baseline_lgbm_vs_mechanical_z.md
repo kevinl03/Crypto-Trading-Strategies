@@ -1,17 +1,19 @@
 # Baseline comparison: LightGBM vs mechanical \(|z|\ge 0.5\)
 
-**Branch purpose:** Document the Jul 31 live paper-session comparison of the production LightGBM z-forecast policy against mechanical `|z|` peers (persistence **and** classic mean-reversion), place those peers in the literature’s baseline taxonomy, and state the paper-facing claim that the learned model is the stronger trading signal under matched constraints.
+**Branch purpose:** Document the Jul 31 live paper-session comparison of the production LightGBM z-forecast policy against a mechanical `|z|` **persistence** peer (primary), with classic mean-reversion kept as a **low-priority** completeness row. Numbers for both live in JSON for later reference.
 
 **Session:** `data/paper_trading/July31st_8_hr/`  
 **Reproduce mechanical peers:**  
 `python scripts/mechanical_z_baseline_paper_session.py data/paper_trading/July31st_8_hr`  
-**Artifacts:** `data/paper_trading/July31st_8_hr/mechanical_z_baseline/`
+**Artifacts (source of truth for numbers):**  
+`data/paper_trading/July31st_8_hr/mechanical_z_baseline/mechanical_z_baseline_report.json`  
+→ keys `persistence` and `mean_reversion` (each with `capacity_matched` / `unconstrained`)
 
 ---
 
 ## Claim (paste-ready)
 
-On the Jul 31 live paper session, under the **same** horizon (H=1), settlement proxy (`pnl_proxy = direction × z_{t+1}`), rolling-z definition (window 300, `min_periods` 90), and **matched inventory cap** (`max_open=50`), LightGBM’s `|pred|≥0.5` policy delivers higher **per-trade directional accuracy**, higher **mean z-unit PnL**, and stronger **forecast R²** than mechanical `|z_t|≥0.5` rules. Against **persistence** (`sign(z_t)`), the model improves selection quality on a similar trade count. Against **mean-reversion** (`−sign(z_t)`) — the classical pairs direction — the mechanical book is negative on this minute-scale hold, so LightGBM is clearly preferred. Primary evidence is DirAcc, mean `pnl_proxy`, and R²; hourly portfolio Sharpe is reported for both books as portfolio context under matched capacity. Unconstrained mechanical books are not capacity-matched peers.
+On the Jul 31 live paper session, under the **same** horizon (H=1), settlement proxy (`pnl_proxy = direction × z_{t+1}`), rolling-z definition (window 300, `min_periods` 90), and **matched inventory cap** (`max_open=50`), LightGBM’s `|pred|≥0.5` policy delivers higher **per-trade directional accuracy**, higher **mean z-unit PnL**, and stronger **forecast R²** than a mechanical `|z_t|≥0.5` **persistence** trader (`sign(z_t)`). Primary evidence is DirAcc, mean `pnl_proxy`, and R²; hourly portfolio Sharpe is portfolio context under matched capacity. Unconstrained mechanical books are not capacity-matched peers. Classical mean-reversion (`−sign(z_t)`) was scored on the same panel and is retained only as a low-priority completeness check (see below / JSON).
 
 ---
 
@@ -38,22 +40,34 @@ So mean-reversion is not a different filter or different trades list under capac
 
 ---
 
-## Headline metrics (fair peer = `max_open=50`)
+## Headline metrics — primary peer = persistence (`max_open=50`)
+
+Use this table in the paper. **Primary mechanical baseline = persistence only.**
+
+| Strategy | Direction | n closed | DirAcc | mean `pnl_proxy` | Hourly Sharpe **B** |
+|---|---|---:|---:|---:|---:|
+| **LightGBM** | \(\mathrm{sign}(\widehat{z})\) | 7,973 | **76.9%** | **+0.746** | 2.41 |
+| Mechanical \|z\|≥0.5 | persistence \(\mathrm{sign}(z_t)\) | 8,550 | 69.3% | +0.437 | 2.63 |
+
+**LGBM vs mechanical persistence (capacity):** DirAcc **+7.6 pp**; mean `pnl_proxy` **+0.31 (~+71%)**.
+
+Sources: `summary.json`, `portfolio_sharpe_report.json`, `mechanical_z_baseline_report.json` → `persistence.capacity_matched`.
+
+### Low priority — full mechanical table (incl. mean-reversion)
+
+Kept so persistence vs fade is visible; **do not lead** Methods/Results with mean-reversion. At H=1 it is largely the sign-flip of persistence on the same slots. Prefer a one-liner in text (“classical fade direction is negative on this hold”) and pull numbers from JSON if needed.
 
 | Strategy | Direction | n closed | DirAcc | mean `pnl_proxy` | Hourly Sharpe **B** |
 |---|---|---:|---:|---:|---:|
 | **LightGBM** | \(\mathrm{sign}(\widehat{z})\) | 7,973 | **76.9%** | **+0.746** | 2.41 |
 | Mechanical \|z\|≥0.5 | persistence \(\mathrm{sign}(z_t)\) | 8,550 | 69.3% | +0.437 | 2.63 |
 | Mechanical \|z\|≥0.5 | mean-reversion \(-\mathrm{sign}(z_t)\) | 8,550 | 30.7% | **−0.437** | −2.63 |
-| Mechanical \|z\|≥0.5 unconstrained | persistence | 37,296 | 66.2% | +0.391 | 2.69† |
-| Mechanical \|z\|≥0.5 unconstrained | mean-reversion | 37,296 | 33.8% | −0.391 | −2.69† |
+| Mechanical unconstrained | persistence | 37,296 | 66.2% | +0.391 | 2.69† |
+| Mechanical unconstrained | mean-reversion | 37,296 | 33.8% | −0.391 | −2.69† |
 
-†Not capacity-matched (~200–240 opens/hour vs 50). Report for completeness only.
+†Not capacity-matched (~200–240 opens/hour vs 50).
 
-**LGBM vs mechanical persistence (capacity):** DirAcc **+7.6 pp**; mean `pnl_proxy` **+0.31 (~+71%)**.  
-**LGBM vs mechanical mean-reversion (capacity):** DirAcc **+46.2 pp**; mean `pnl_proxy` flips from **−0.44 to +0.75**.
-
-Sources: `summary.json`, `portfolio_sharpe_report.json`, `mechanical_z_baseline/mechanical_z_baseline_report.json`.
+JSON: `mechanical_z_baseline_report.json` → `persistence.*` / `mean_reversion.*` (`capacity_matched`, `unconstrained`, Sharpe paths, capacity meta).
 
 ---
 
@@ -111,19 +125,16 @@ Use these as **baseline types** and reporting norms, not as numbers to race.
 
 `max_open=50` is the live inventory / risk budget. Without it, mechanical takes every `|z|≥0.5` row (~37k trades) and is not the same book as the campaign. Capacity matching is required before portfolio Sharpe is discussed side-by-side.
 
-### 2. Lead with per-trade skill and forecast fit
+### 2. Lead with per-trade skill and forecast fit (vs persistence)
 
-Under capacity:
+Under capacity, vs **persistence:** DirAcc 76.9% vs 69.3%; mean `pnl_proxy` +0.75 vs +0.44 — better picks at similar n.  
+**Filtered R² 0.35** vs naive 0.17 on model rows (and vs −0.33 for \(z_t\to z_{t+1}\) on mechanical entries).
 
-- vs **persistence:** DirAcc 76.9% vs 69.3%; mean `pnl_proxy` +0.75 vs +0.44 — better picks at similar n.
-- vs **mean-reversion:** mechanical DirAcc 30.7% and mean pnl **negative** — classic reverse-the-spread direction fails at this hold; LightGBM does not.
-- **Filtered R² 0.35** vs naive 0.17 on model rows (and vs −0.33 for \(z_t\to z_{t+1}\) on mechanical entries).
-
-These unlock: *learned z-forecast + confidence filter improves on thresholding current z*, including the usual pairs mean-reversion direction.
+Mean-reversion is optional context only (negative z-book at H=1); numbers in JSON / low-priority table above.
 
 ### 3. Portfolio Sharpe as context, not the verdict
 
-Report hourly Sharpe B for LightGBM and both mechanical modes under `max_open=50`. Emphasize DirAcc, mean `pnl_proxy`, and R² as the primary comparison. On a six-hour live window, Sharpe is a short-path portfolio summary; do not frame the paper around ranking Sharpes across policies.
+Report hourly Sharpe B for LightGBM and the **persistence** peer under `max_open=50`. Emphasize DirAcc, mean `pnl_proxy`, and R². On a six-hour live window, Sharpe is a short-path portfolio summary; do not frame the paper around ranking Sharpes across policies.
 
 ### 4. Scope limits (keep light)
 
@@ -135,7 +146,7 @@ Report hourly Sharpe B for LightGBM and both mechanical modes under `max_open=50
 
 ## Optional one-paragraph Methods/Results blurb
 
-> As trading baselines we replay mechanical `|z_t|≥0.5` peers on the Jul 31 signal panel, settling at `t+1` with the same `pnl_proxy` as the live LightGBM campaign, with and without `max_open=50`. Directions follow persistence (`sign(z_t)`) and classical mean-reversion (`−sign(z_t)`). Under matched capacity, LightGBM records DirAcc 76.9% and mean `pnl_proxy` +0.75, versus 69.3% / +0.44 for persistence and 30.7% / −0.44 for mean-reversion (7,973 vs 8,550 closes). Filtered prediction R² for LightGBM is 0.35, versus 0.17 for matched-row naive persistence. Hourly portfolio Sharpe with open MTM is reported for each capacity-matched book as portfolio context; per-trade accuracy, mean proxy PnL, and forecast R² are the primary evidence that the learned policy improves on mechanical z-threshold rules used throughout the HF pairs literature.
+> As a trading baseline we replay a mechanical `|z_t|≥0.5` **persistence** peer (`sign(z_t)`) on the Jul 31 signal panel, settling at `t+1` with the same `pnl_proxy` as the live LightGBM campaign, under `max_open=50`. LightGBM records DirAcc 76.9% and mean `pnl_proxy` +0.75, versus 69.3% / +0.44 for persistence (7,973 vs 8,550 closes). Filtered prediction R² for LightGBM is 0.35, versus 0.17 for matched-row naive persistence. Hourly portfolio Sharpe with open MTM is reported as portfolio context; per-trade accuracy, mean proxy PnL, and forecast R² are the primary evidence that the learned policy improves on thresholding current z. (Classical mean-reversion on the same entries is available in the session JSON as a low-priority completeness check.)
 
 ---
 
@@ -165,9 +176,10 @@ Fairer scarce-slot peer: each snapshot, fill free slots by **`|pred|` desc** (LG
 | LightGBM campaign (reference) | FIFO / encounter | 7,973 | 76.9% | +0.746 | 2.41 |
 | LightGBM ranked | \|pred\| desc | 7,973 | **77.6%** | **+0.774** | 2.35 |
 | Mechanical persistence ranked | \|z\| desc | 8,550 | 69.5% | +0.731 | 2.62 |
-| Mechanical mean-reversion ranked | \|z\| desc | 8,550 | 30.5% | −0.731 | −2.62 |
 
-**Takeaway for later:** Ranking slightly lifts LGBM DirAcc/mean pnl vs the live FIFO book. Ranking mechanical by `|z|` **raises** its mean `pnl_proxy` a lot (0.44 → 0.73), narrowing the mean-pnl gap, while LGBM still leads DirAcc (~77.6% vs 69.5%). Prefer this table if reviewers object to FIFO slot allocation.
+Mean-reversion ranked numbers are in `baseline_strengthening_report.json` (`mechanical_mean_reversion_ranked_by_abs_z`) if needed — same low priority as the FIFO MR row.
+
+**Takeaway for later:** Ranking slightly lifts LGBM DirAcc/mean pnl vs the live FIFO book. Ranking mechanical persistence by `|z|` raises its mean `pnl_proxy` (0.44 → 0.73), narrowing the mean-pnl gap, while LGBM still leads DirAcc (~77.6% vs 69.5%). Prefer this table if reviewers object to FIFO slot allocation.
 
 ---
 
