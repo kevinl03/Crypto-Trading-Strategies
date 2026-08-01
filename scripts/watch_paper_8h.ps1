@@ -1,4 +1,4 @@
-# Unattended watchdog for the 8h LGBM paper-trading session.
+# Unattended watchdog for the 12h LGBM paper-trading session.
 # Ensures collector + paper trader stay up until DEADLINE_UTC; restarts paper on crash.
 #
 # Usage (from repo root):
@@ -6,14 +6,16 @@
 
 $ErrorActionPreference = "Continue"
 $Repo = "C:\Users\Kev\repos\stochastic-spread-modeling"
+$Analysis = "C:\Users\Kev\repos\stochastic-spread-modeling-analysis"
 $PyCollect = Join-Path $Repo ".venv\Scripts\python.exe"
-$PyPaper = "C:\Users\Kev\repos\stochastic-spread-modeling-analysis\.venv\Scripts\python.exe"
-$Model = "C:\Users\Kev\repos\stochastic-spread-modeling-analysis\statarb\outputs_ob_fix\statarb_lgbm.txt"
-$RunDir = Join-Path $Repo "data\statarb\20260730_075605"
-$OutDir = Join-Path $Repo "data\paper_trading\lgbm_8h_20260730"
+$PyPaper = Join-Path $Analysis ".venv\Scripts\python.exe"
+# Current session: cex_gbm_new Jul25-split model (68 feats, HORIZON=1 / N_LAGS=3 / ZSCORE=300)
+$Model = Join-Path $Analysis "statarb\outputs\statarb_lgbm.txt"
+$RunDir = Join-Path $Repo "data\statarb\20260801_025316"
+$OutDir = Join-Path $Repo "data\paper_trading\lgbm_jul25model_20260731"
 $LogDir = Join-Path $Repo "data\logs"
-$DeadlineUtc = [datetime]::Parse("2026-07-30T15:56:00Z").ToUniversalTime()  # ~8h from collector start
-$SessionStartUtc = [datetime]::Parse("2026-07-30T07:56:05Z").ToUniversalTime()
+$DeadlineUtc = [datetime]::Parse("2026-08-01T14:55:33Z").ToUniversalTime()  # ~12h from paper start
+$SessionStartUtc = [datetime]::Parse("2026-08-01T02:55:33Z").ToUniversalTime()
 
 New-Item -ItemType Directory -Force -Path $LogDir | Out-Null
 $env:PYTHONIOENCODING = "utf-8"
@@ -67,7 +69,7 @@ function Ensure-Paper {
         "--poll-sec", "20",
         "--output-dir", $OutDir
     )
-    Start-Process -FilePath $PyPaper -ArgumentList $args -WorkingDirectory $Repo `
+    Start-Process -FilePath $PyPaper -ArgumentList $args -WorkingDirectory $Analysis `
         -RedirectStandardOutput (Join-Path $LogDir "paper_lgbm_8h_watchdog.out.log") `
         -RedirectStandardError (Join-Path $LogDir "paper_lgbm_8h_watchdog.err.log") `
         -WindowStyle Hidden

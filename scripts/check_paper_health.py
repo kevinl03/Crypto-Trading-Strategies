@@ -7,10 +7,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 REPO = Path(r"C:\Users\Kev\repos\stochastic-spread-modeling")
-RUN = REPO / "data" / "statarb" / "20260730_075605"
-OUT = REPO / "data" / "paper_trading" / "lgbm_8h_20260730"
-DEADLINE = datetime(2026, 7, 30, 15, 56, tzinfo=timezone.utc)
-WARMUP_SNAPS = 30
+RUN = REPO / "data" / "statarb" / "20260801_025316"
+OUT = REPO / "data" / "paper_trading" / "lgbm_jul25model_20260731"
+DEADLINE = datetime(2026, 8, 1, 14, 55, 33, tzinfo=timezone.utc)
+WARMUP_SNAPS = 90
 
 
 def main() -> int:
@@ -39,7 +39,18 @@ def main() -> int:
     n_snaps = int(summary.get("n_snaps") or 0)
     n_preds = int(summary.get("n_preds") or 0)
     n_closed = int(summary.get("n_closed") or 0)
-    elapsed_min = (now - datetime(2026, 7, 30, 7, 56, 5, tzinfo=timezone.utc)).total_seconds() / 60
+    SESSION_START = datetime(2026, 8, 1, 2, 55, 33, tzinfo=timezone.utc)
+    cfg_path = OUT / "config.json"
+    if cfg_path.exists():
+        try:
+            started = json.loads(cfg_path.read_text(encoding="utf-8")).get("started_at")
+            if started:
+                SESSION_START = datetime.fromisoformat(started.replace("Z", "+00:00"))
+                if SESSION_START.tzinfo is None:
+                    SESSION_START = SESSION_START.replace(tzinfo=timezone.utc)
+        except Exception:
+            pass
+    elapsed_min = (now - SESSION_START).total_seconds() / 60
 
     # Live collector with slow-every=1 runs ~100-120s/snap, not 60s.
     # Expect ~0.5 snaps/min; require predictions only once we actually have warmup snaps.
