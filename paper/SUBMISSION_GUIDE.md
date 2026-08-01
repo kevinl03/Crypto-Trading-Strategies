@@ -1,6 +1,19 @@
 # ICAIF '26 Submission Guide
 
-Target venue: **7th ACM International Conference on AI in Finance (ICAIF '26)**, November 2026, Brooklyn, NY, USA.
+Target venue: **7th ACM International Conference on AI in Finance (ICAIF '26)**, November 14–17, 2026, Milan, Italy.
+
+## Hard Constraints
+
+| Constraint | Value |
+|-----------|-------|
+| **Page limit** | **8 pages total** (including figures and references) |
+| **Format** | ACM sigconf two-column |
+| **Over-length** | Rejected without review |
+| **Supplementary materials** | Not accepted (no appendices) |
+| **Submission deadline** | August 9, 2026, 23:59 AOE |
+| **Author limit** | Max 6 submissions per individual author |
+| **Author list** | Final at submission — no additions/removals after |
+| **Notification** | September 27, 2026 |
 
 ## Template
 
