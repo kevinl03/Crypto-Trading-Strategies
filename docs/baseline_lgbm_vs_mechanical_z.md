@@ -88,7 +88,8 @@ Use these as **baseline types** and reporting norms, not as numbers to race.
 | Abstention \|pred\|≥0.5 vs always-score | Done (campaign ablation) |
 | Mechanical \|z\| persistence + mean-reversion (trading) | **Done (this branch)** |
 | Capacity-matched portfolio Sharpe B | Done for LGBM + mechanical |
-| Cost grid (gross vs net bps) | Open — lit-standard next step |
+| Cost grid (gross vs net bps) | **Computed (optional)** — see Strengthening |
+| Ranked capacity (\|pred\| / \|z\|) | **Computed (optional)** — see Strengthening |
 | Execution-delay curve | Open |
 | Lag-OLS / full-feature Ridge | Open (forecast ladder) |
 | Offline OOS Sharpe train vs test | Open (#63) |
@@ -129,12 +130,52 @@ Report hourly Sharpe B for LightGBM and both mechanical modes under `max_open=50
 
 ---
 
+## Strengthening analyses (saved for later — optional)
+
+Reproduce:
+
+```text
+python scripts/baseline_strengthening_jul31.py data/paper_trading/July31st_8_hr
+```
+
+Artifacts: `data/paper_trading/July31st_8_hr/baseline_strengthening/`  
+These are **not** required for the primary claim table above; keep them when we want a sharper peer or fee discussion.
+
+### A. Cost grid (FIFO capacity books)
+
+Definition: \(\mathrm{net\_bps} = \mathrm{direction} \times \Delta\mathrm{spread\_bps} - c\) for round-turn \(c \in \{0,5,10,15\}\).
+
+| Book (max_open=50) | Gross mean bps | Win rate (c=0) | Mean net @ 5 bps | Win rate @ 5 bps |
+|---|---:|---:|---:|---:|
+| LightGBM campaign | −0.71 | 35.5% | −5.71 | 6.8% |
+| Mechanical persistence | −2.15 | 18.1% | −7.15 | 3.1% |
+| Mechanical mean-reversion | +2.15 | 62.2% | −2.85 | 20.7% |
+
+**Read carefully:** On this session the **bps** proxy and the **z** proxy disagree in sign for LGBM/persistence (gross bps negative while mean `pnl_proxy` is positive — already noted in Jul 31 results). Still useful: under the same bps definition, LGBM’s gross mean (−0.71) is **less negative** than persistence mechanical (−2.15). Mean-reversion looks better in bps precisely because its direction flips `direction×Δspread`; its **z-proxy** book remains negative. Do not mix bps-net and z-Sharpe in one “winner” sentence without stating the unit.
+
+### B. Ranked capacity fill (`max_open=50`)
+
+Fairer scarce-slot peer: each snapshot, fill free slots by **`|pred|` desc** (LGBM) or **`|z|` desc** (mechanical), instead of encounter/FIFO order.
+
+| Strategy | Fill rule | n closed | DirAcc | mean `pnl_proxy` | Sharpe B |
+|---|---|---:|---:|---:|---:|
+| LightGBM campaign (reference) | FIFO / encounter | 7,973 | 76.9% | +0.746 | 2.41 |
+| LightGBM ranked | \|pred\| desc | 7,973 | **77.6%** | **+0.774** | 2.35 |
+| Mechanical persistence ranked | \|z\| desc | 8,550 | 69.5% | +0.731 | 2.62 |
+| Mechanical mean-reversion ranked | \|z\| desc | 8,550 | 30.5% | −0.731 | −2.62 |
+
+**Takeaway for later:** Ranking slightly lifts LGBM DirAcc/mean pnl vs the live FIFO book. Ranking mechanical by `|z|` **raises** its mean `pnl_proxy` a lot (0.44 → 0.73), narrowing the mean-pnl gap, while LGBM still leads DirAcc (~77.6% vs 69.5%). Prefer this table if reviewers object to FIFO slot allocation.
+
+---
+
 ## File index
 
 | Path | Role |
 |---|---|
 | `scripts/mechanical_z_baseline_paper_session.py` | Offline replay (persistence + mean-reversion) |
 | `scripts/portfolio_sharpe_paper_session.py` | Shared hourly Sharpe B helpers |
-| `.../mechanical_z_baseline/mechanical_z_baseline_report.json` | Metrics + hourly paths |
+| `scripts/baseline_strengthening_jul31.py` | Cost grid + ranked-capacity analyses |
+| `.../mechanical_z_baseline/mechanical_z_baseline_report.json` | Mechanical metrics + hourly paths |
+| `.../baseline_strengthening/baseline_strengthening_report.json` | Cost grid + ranked summaries |
 | `.../summary.json` / `portfolio_sharpe_report.json` / `metrics_report.csv` | LGBM campaign metrics |
 | `docs/handoff_lit_baselines.md` | Broader lit baseline menu (optional companion) |

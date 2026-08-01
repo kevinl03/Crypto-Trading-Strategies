@@ -1,0 +1,360 @@
+{
+  "session": "C:\\Users\\Kev\\repos\\stochastic-spread-modeling\\data\\paper_trading\\July31st_8_hr",
+  "purpose": "Optional strengthening analyses: fee grid + confidence/|z|-ranked capacity fill. Not the primary headline table; keep for later use.",
+  "tau": 0.5,
+  "horizon": 1,
+  "max_open": 50,
+  "cost_grid_fifo_capacity": {
+    "lgbm_campaign_fifo_capacity": {
+      "n": 7973,
+      "definition": "net_bps = direction * spread_delta_bps - c  (c = round-turn bps)",
+      "gross_mean_bps": -0.7087369873322463,
+      "gross_win_rate": 0.35519879593628495,
+      "by_cost_bps": {
+        "0.0": {
+          "mean_net_bps": -0.7087369873322463,
+          "median_net_bps": 0.0,
+          "win_rate": 0.35519879593628495,
+          "per_trade_sharpe": -0.0957653291504989,
+          "frac_surviving_positive_mean": false
+        },
+        "5.0": {
+          "mean_net_bps": -5.708736987332246,
+          "median_net_bps": -5.0,
+          "win_rate": 0.06835570048915088,
+          "per_trade_sharpe": -0.7713708842589513,
+          "frac_surviving_positive_mean": false
+        },
+        "10.0": {
+          "mean_net_bps": -10.708736987332246,
+          "median_net_bps": -10.0,
+          "win_rate": 0.023328734478866173,
+          "per_trade_sharpe": -1.4469764393674038,
+          "frac_surviving_positive_mean": false
+        },
+        "15.0": {
+          "mean_net_bps": -15.708736987332246,
+          "median_net_bps": -15.0,
+          "win_rate": 0.00877963125548727,
+          "per_trade_sharpe": -2.122581994475856,
+          "frac_surviving_positive_mean": false
+        }
+      },
+      "break_even_round_turn_bps": -0.7087369873322463
+    },
+    "mechanical_persistence_fifo_capacity": {
+      "n": 8550,
+      "definition": "net_bps = direction * spread_delta_bps - c  (c = round-turn bps)",
+      "gross_mean_bps": -2.153515789473684,
+      "gross_win_rate": 0.18128654970760233,
+      "by_cost_bps": {
+        "0.0": {
+          "mean_net_bps": -2.153515789473684,
+          "median_net_bps": -1.0700000000000003,
+          "win_rate": 0.18128654970760233,
+          "per_trade_sharpe": -0.4023249782073471,
+          "frac_surviving_positive_mean": false
+        },
+        "5.0": {
+          "mean_net_bps": -7.153515789473684,
+          "median_net_bps": -6.07,
+          "win_rate": 0.03064327485380117,
+          "per_trade_sharpe": -1.336436954943015,
+          "frac_surviving_positive_mean": false
+        },
+        "10.0": {
+          "mean_net_bps": -12.153515789473685,
+          "median_net_bps": -11.07,
+          "win_rate": 0.010292397660818714,
+          "per_trade_sharpe": -2.2705489316786833,
+          "frac_surviving_positive_mean": false
+        },
+        "15.0": {
+          "mean_net_bps": -17.153515789473683,
+          "median_net_bps": -16.07,
+          "win_rate": 0.0038596491228070177,
+          "per_trade_sharpe": -3.204660908414351,
+          "frac_surviving_positive_mean": false
+        }
+      },
+      "break_even_round_turn_bps": -2.153515789473684
+    },
+    "mechanical_mean_reversion_fifo_capacity": {
+      "n": 8550,
+      "definition": "net_bps = direction * spread_delta_bps - c  (c = round-turn bps)",
+      "gross_mean_bps": 2.153515789473684,
+      "gross_win_rate": 0.6221052631578947,
+      "by_cost_bps": {
+        "0.0": {
+          "mean_net_bps": 2.153515789473684,
+          "median_net_bps": 1.0700000000000003,
+          "win_rate": 0.6221052631578947,
+          "per_trade_sharpe": 0.4023249782073471,
+          "frac_surviving_positive_mean": true
+        },
+        "5.0": {
+          "mean_net_bps": -2.846484210526316,
+          "median_net_bps": -3.9299999999999997,
+          "win_rate": 0.20713450292397662,
+          "per_trade_sharpe": -0.5317869985283209,
+          "frac_surviving_positive_mean": false
+        },
+        "10.0": {
+          "mean_net_bps": -7.846484210526314,
+          "median_net_bps": -8.93,
+          "win_rate": 0.06935672514619882,
+          "per_trade_sharpe": -1.4658989752639886,
+          "frac_surviving_positive_mean": false
+        },
+        "15.0": {
+          "mean_net_bps": -12.846484210526315,
+          "median_net_bps": -13.93,
+          "win_rate": 0.017543859649122806,
+          "per_trade_sharpe": -2.400010951999657,
+          "frac_surviving_positive_mean": false
+        }
+      },
+      "break_even_round_turn_bps": 2.153515789473684
+    }
+  },
+  "ranked_capacity": {
+    "lgbm_campaign_fifo_reference": {
+      "n_closed": 7973,
+      "dir_acc": 0.7688448513733852,
+      "mean_pnl_proxy": 0.7462294334920675,
+      "note": "Live campaign fill order (encounter order), max_open=50"
+    },
+    "lgbm_ranked_by_abs_pred": {
+      "label": "lgbm_ranked_capacity",
+      "n_closed": 7973,
+      "dir_acc": 0.7756177097704754,
+      "mean_pnl_proxy": 0.7743214411567843,
+      "median_pnl_proxy": 0.8272998744682082,
+      "per_trade_sharpe": 0.6948094213277182,
+      "forecast_on_entries": {
+        "r2_z_t_predicts_z_fwd": 0.1913511746199632,
+        "mae": 0.7765360026407699,
+        "rmse": 1.20867990121982,
+        "dir_acc_sign_match": 0.7752414398595259
+      },
+      "sharpe": {
+        "A_closed_only_hourly_pnl": {
+          "sharpe": 2.3220407600666118,
+          "n_periods": 6,
+          "mean_pnl": 1028.9441417238402
+        },
+        "B_hourly_equity_pnl_with_open_mtm": {
+          "sharpe": 2.3489368250962777,
+          "n_periods": 6,
+          "mean_pnl": 1028.9441417238402
+        },
+        "C_hourly_return_capital_max_open": {
+          "sharpe": 2.348936825096278,
+          "max_open_capital": 50
+        }
+      },
+      "cost_grid": {
+        "n": 7973,
+        "definition": "net_bps = direction * spread_delta_bps - c  (c = round-turn bps)",
+        "gross_mean_bps": -0.7834516493164431,
+        "gross_win_rate": 0.35444625611438607,
+        "by_cost_bps": {
+          "0.0": {
+            "mean_net_bps": -0.7834516493164431,
+            "median_net_bps": 0.0,
+            "win_rate": 0.35444625611438607,
+            "per_trade_sharpe": -0.10326561518090092,
+            "frac_surviving_positive_mean": false
+          },
+          "5.0": {
+            "mean_net_bps": -5.783451649316442,
+            "median_net_bps": -5.0,
+            "win_rate": 0.06823027718550106,
+            "per_trade_sharpe": -0.7623082968256427,
+            "frac_surviving_positive_mean": false
+          },
+          "10.0": {
+            "mean_net_bps": -10.783451649316442,
+            "median_net_bps": -10.0,
+            "win_rate": 0.0228270412642669,
+            "per_trade_sharpe": -1.4213509784703846,
+            "frac_surviving_positive_mean": false
+          },
+          "15.0": {
+            "mean_net_bps": -15.783451649316442,
+            "median_net_bps": -15.0,
+            "win_rate": 0.008528784648187633,
+            "per_trade_sharpe": -2.0803936601151265,
+            "frac_surviving_positive_mean": false
+          }
+        },
+        "break_even_round_turn_bps": -0.7834516493164431
+      },
+      "capacity_meta": {
+        "candidates": 8775,
+        "skipped_pair_busy": 0,
+        "skipped_at_capacity": 802,
+        "n_still_open_unsettled": 0,
+        "max_open": 50,
+        "rank_by": "pred",
+        "tau": 0.5
+      }
+    },
+    "mechanical_persistence_ranked_by_abs_z": {
+      "label": "mech_persistence_ranked",
+      "n_closed": 8550,
+      "dir_acc": 0.6945029239766082,
+      "mean_pnl_proxy": 0.7308837089884781,
+      "median_pnl_proxy": 0.7042836484640704,
+      "per_trade_sharpe": 0.5917095840814411,
+      "forecast_on_entries": {
+        "r2_z_t_predicts_z_fwd": -0.8514218273434253,
+        "mae": 1.4341199981413868,
+        "rmse": 1.911542047109377,
+        "dir_acc_sign_match": 0.6945029239766082
+      },
+      "sharpe": {
+        "A_closed_only_hourly_pnl": {
+          "sharpe": 2.4497296701674265,
+          "n_periods": 6,
+          "mean_pnl": 1041.5092853085814
+        },
+        "B_hourly_equity_pnl_with_open_mtm": {
+          "sharpe": 2.6154981129647887,
+          "n_periods": 6,
+          "mean_pnl": 1041.5092853085814
+        },
+        "C_hourly_return_capital_max_open": {
+          "sharpe": 2.6154981129647887,
+          "max_open_capital": 50
+        }
+      },
+      "cost_grid": {
+        "n": 8550,
+        "definition": "net_bps = direction * spread_delta_bps - c  (c = round-turn bps)",
+        "gross_mean_bps": -3.9673052631578956,
+        "gross_win_rate": 0.0991812865497076,
+        "by_cost_bps": {
+          "0.0": {
+            "mean_net_bps": -3.9673052631578956,
+            "median_net_bps": -2.41,
+            "win_rate": 0.0991812865497076,
+            "per_trade_sharpe": -0.5681884924763126,
+            "frac_surviving_positive_mean": false
+          },
+          "5.0": {
+            "mean_net_bps": -8.967305263157895,
+            "median_net_bps": -7.41,
+            "win_rate": 0.018830409356725145,
+            "per_trade_sharpe": -1.2842771909598343,
+            "frac_surviving_positive_mean": false
+          },
+          "10.0": {
+            "mean_net_bps": -13.967305263157893,
+            "median_net_bps": -12.41,
+            "win_rate": 0.005263157894736842,
+            "per_trade_sharpe": -2.000365889443356,
+            "frac_surviving_positive_mean": false
+          },
+          "15.0": {
+            "mean_net_bps": -18.967305263157893,
+            "median_net_bps": -17.41,
+            "win_rate": 0.0011695906432748538,
+            "per_trade_sharpe": -2.7164545879268776,
+            "frac_surviving_positive_mean": false
+          }
+        },
+        "break_even_round_turn_bps": -3.9673052631578956
+      },
+      "capacity_meta": {
+        "candidates": 37296,
+        "skipped_pair_busy": 0,
+        "skipped_at_capacity": 28746,
+        "n_still_open_unsettled": 0,
+        "max_open": 50,
+        "rank_by": "zscore",
+        "tau": 0.5
+      }
+    },
+    "mechanical_mean_reversion_ranked_by_abs_z": {
+      "label": "mech_mean_reversion_ranked",
+      "n_closed": 8550,
+      "dir_acc": 0.3054970760233918,
+      "mean_pnl_proxy": -0.7308837089884781,
+      "median_pnl_proxy": -0.7042836484640704,
+      "per_trade_sharpe": -0.5917095840814411,
+      "forecast_on_entries": {
+        "r2_z_t_predicts_z_fwd": -0.8514218273434253,
+        "mae": 1.4341199981413868,
+        "rmse": 1.911542047109377,
+        "dir_acc_sign_match": 0.6945029239766082
+      },
+      "sharpe": {
+        "A_closed_only_hourly_pnl": {
+          "sharpe": -2.4497296701674265,
+          "n_periods": 6,
+          "mean_pnl": -1041.5092853085814
+        },
+        "B_hourly_equity_pnl_with_open_mtm": {
+          "sharpe": -2.6154981129647887,
+          "n_periods": 6,
+          "mean_pnl": -1041.5092853085814
+        },
+        "C_hourly_return_capital_max_open": {
+          "sharpe": -2.6154981129647887,
+          "max_open_capital": 50
+        }
+      },
+      "cost_grid": {
+        "n": 8550,
+        "definition": "net_bps = direction * spread_delta_bps - c  (c = round-turn bps)",
+        "gross_mean_bps": 3.9673052631578956,
+        "gross_win_rate": 0.76,
+        "by_cost_bps": {
+          "0.0": {
+            "mean_net_bps": 3.9673052631578956,
+            "median_net_bps": 2.41,
+            "win_rate": 0.76,
+            "per_trade_sharpe": 0.5681884924763126,
+            "frac_surviving_positive_mean": true
+          },
+          "5.0": {
+            "mean_net_bps": -1.0326947368421053,
+            "median_net_bps": -2.59,
+            "win_rate": 0.271812865497076,
+            "per_trade_sharpe": -0.14790020600720924,
+            "frac_surviving_positive_mean": false
+          },
+          "10.0": {
+            "mean_net_bps": -6.032694736842106,
+            "median_net_bps": -7.59,
+            "win_rate": 0.10187134502923977,
+            "per_trade_sharpe": -0.8639889044907311,
+            "frac_surviving_positive_mean": false
+          },
+          "15.0": {
+            "mean_net_bps": -11.032694736842107,
+            "median_net_bps": -12.59,
+            "win_rate": 0.04725146198830409,
+            "per_trade_sharpe": -1.580077602974253,
+            "frac_surviving_positive_mean": false
+          }
+        },
+        "break_even_round_turn_bps": 3.9673052631578956
+      },
+      "capacity_meta": {
+        "candidates": 37296,
+        "skipped_pair_busy": 0,
+        "skipped_at_capacity": 28746,
+        "n_still_open_unsettled": 0,
+        "max_open": 50,
+        "rank_by": "zscore",
+        "tau": 0.5
+      }
+    }
+  },
+  "how_to_read": {
+    "cost_grid": "Compare mean_net_bps and win_rate across c. Higher mean pnl selection should survive costs longer.",
+    "ranked_capacity": "Fairer scarce-slot peer: LGBM fills by |pred|, mechanical by |z|. Compare DirAcc / mean_pnl_proxy / Sharpe B under max_open."
+  }
+}
