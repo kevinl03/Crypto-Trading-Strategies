@@ -173,6 +173,62 @@ Rough live-collection intuition: multiple multi-day CEX windows (Jun–Jul 2026)
 
 ---
 
+## Literature Review — Key Papers
+
+**Direct HFT Crypto Pairs / Spread Trading**
+
+1. Fischer, Krauss & Deinert (2019) — Statistical Arbitrage in Cryptocurrency Markets
+MDPI: https://www.mdpi.com/1911-8074/12/1/31
+Trained a random forest on 40 coins at 1-minute granularity to predict which coin outperforms the cross-sectional median; bought top-3, shorted bottom-3, held for 120 minutes. Found 7.1 bps/day after 15 bps/half-turn costs and Sharpe 2.55, but crucially showed alpha drops from 20.5 bps to 3.8 bps with a 1-minute execution delay and disappears entirely by minute 5. Gap: predicts cross-sectional rank rather than the z-score of a pairwise spread; no orderbook, funding rate, or OI features; not cross-exchange.
+
+2. Fil & Kristoufek (2020) — Pairs Trading in Cryptocurrency Markets
+Semantic Scholar: https://www.semanticscholar.org/paper/Pairs-Trading-in-Cryptocurrency-Markets-Fil-Kristoufek/5d311f01c4b1bb7981c05eb5af28ff12d306d7bc
+Applied distance and cointegration methods at 5-minute, 1-hour, and daily frequencies on 26 Binance coins; found 11.61% monthly return at 5-minute frequency vs. –0.07% at daily, but results were highly sensitive to transaction cost assumptions. Gap: purely rule-based z-score thresholds, no model predicting z-score; single-exchange only; no microstructure features.
+
+3. Tadi & Kortchemski (2021) — Evaluation of Dynamic Cointegration-Based Pairs Trading in Cryptocurrency Markets
+Emerald: https://www.emerald.com/insight/content/doi/10.1108/SEF-06-2020-0235/full/html
+Used Engle-Granger and Johansen cointegration with OU half-life calibration on BitMEX 1-minute data; z-score entry/exit with basket trading yielding Sharpe 7.94. Reported total P&L in XBT, number of trades, and OU half-life. Gap: fully rule-based entry/exit on z-score threshold; no predictive model; single exchange (BitMEX perpetuals only).
+
+4. Ko, Lin, Do et al. (2023) — Pairs Trading in Cryptocurrency Markets: A Comparative Study of Statistical Methods
+Taylor & Francis: https://www.tandfonline.com/doi/full/10.1080/10293523.2023.2268386
+Most comprehensive multi-method benchmark: compared six pair-selection approaches (cointegration, correlation, distance, Hurst exponent, SDE residual, fluctuation behaviour) at 1-min, 5-min, and 60-min on 30 Binance coins in Q1 2022; distance method yielded 208–236% gross total return across frequencies. Reported 11 criteria including total return, Sharpe, MDD, number of trades, average trade duration, and win rate. Gap: rule-based z-score signals only; single exchange; no predictive model; Q1 2022 was unusually volatile, inflating gross returns.
+
+5. Tadi & Witzany (2025) — Copula-Based Trading of Cointegrated Cryptocurrency Pairs
+Springer: https://link.springer.com/article/10.1186/s40854-024-00702-7
+Tested copula-based signal on 5-minute Binance data across 20 pairs and 104 monthly trading cycles (2021–2023); achieved 35–37% annualized returns and Sharpe ~0.95 after costs, benchmarked against cointegration baseline, return-based copula, and buy-and-hold. Most rigorous cost-inclusive multi-year crypto pairs paper in the set. Gap: rule-based entry/exit; single exchange; no model predicting future spread value or direction.
+
+6. Palazzi (2025) — Trading Games: Beating Passive Strategies in the Bullish Crypto Market
+Wiley: https://onlinelibrary.wiley.com/doi/full/10.1002/fut.70018
+Cointegration Z-score pairs trading with optimized parameter sweep, adaptive trailing stop-loss and volatility filtering on 10 major cryptos from 2019–2024; 37 of 90 pairs found cointegrated; consistently outperformed passive buy-and-hold with low market exposure. Reported Sharpe, cumulative return, MDD by consensus mechanism. Gap: rule-based; single exchange; no ML model.
+
+7. Tsoku & Makatjane (2026) — Deep Learning-Based Pairs Trading: Real-Time Forecasting of Co-Integrated Cryptocurrency Pairs
+Frontiers: https://www.frontiersin.org/journals/applied-mathematics-and-statistics/articles/10.3389/fams.2026.1749337/full
+The only crypto paper that trains a model (DNN+LSTM ensemble) to directly forecast spread dynamics on cointegrated crypto pairs (BNB, ETH, LTC, XRP, USDT); uses dynamic Johansen tests, reports RMSE/MAE/MAPE, signal accuracy, and 99% prediction intervals. Closest existing paper to the present work. Gap: lower frequency (not minute-level); single exchange; no orderbook/funding/OI features; no cross-exchange spread; does not report directional accuracy, Sharpe, win rate, or profit-per-trade as primary metrics.
+
+**Adjacent: ML Models Trained to Predict Spread Value or Direction**
+
+8. Shen et al. (2022) — Stock Index Spot–Futures Arbitrage Prediction Using Machine Learning Models
+PubMed/MDPI: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9601484/
+Best methodological analogue for dual-metric reporting: compared LASSO, XGBoost, BPNN, LSTM on predicting the CSI 300 spot-futures arbitrage spread interval; LSTM achieved R² 92.09%, MAPE 0.70%, RMSE 0.00813, and 58.18% arbitrage trading return; also broke down performance by bull/bear regime. Gap: equity index futures spread (slow-moving, structured), not crypto; R² of 92% is not a realistic target for noisy cross-exchange crypto spreads; no microstructure features.
+
+9. Sarmento et al. (2024) — Machine Learning-Enhanced Pairs Trading
+MDPI Forecasting: https://www.mdpi.com/2571-9394/6/2/24
+Most methodologically similar paper in terms of frequency and ML approach: applied BiLSTM with attention, Transformer, N-BEATS, N-HiTS, CNN, and TCN to 1-minute Brazilian stock price ratios (price ratio = equivalent of spread); found hybrid reversion+ML yields highest profit-per-trade, with model abstention (skip trades when predicted magnitude is small) further improving quality. Gap: equities not crypto; single exchange (same stock, ON vs PN share class); no orderbook, funding, OI, or cross-venue features; does not report R², Sharpe, or directional accuracy as primary metrics.
+
+10. Liou, Liu & Cheng (2024) — Price Spread Prediction in HFT Pairs Trading Using Deep Learning
+ScienceDirect: https://www.sciencedirect.com/science/article/abs/pii/S1057521924007257
+Trained deep learning models with XGBoost feature selection on Taiwan intraday LOB data to predict the relationship between price spread and boundaries; model entry/exit signals improved win rate and stable profits vs. rule-based baseline. Gap: equities; single exchange; no R², Sharpe, or directional accuracy reported as headline metrics; no cross-exchange features.
+
+11. Perrone et al. (2026) — Pairs Trading with Time-Series Deep Learning Models
+ScienceDirect: https://www.sciencedirect.com/science/article/pii/S2405918826000024
+Reformulated statistical arbitrage as a panel-level spread residual prediction task; compared LSTM, Informer, Autoformer, iTransformer, Scaleformer, Chronos, AdaBoost; transformer-based models dominated on Sharpe and AUC; AUC used as threshold-independent directional quality metric. Gap: daily/equity data; no crypto; no microstructure features; Sharpe improvements driven by model choice more than frequency.
+
+12. Han & Li (2024) — LSTM for Arbitrage Spread Optimization
+PMC: https://pmc.ncbi.nlm.nih.gov/articles/PMC11784865/
+Used LSTM not to replace the rule-based signal but as a trade filter — skip predicted-unprofitable trades before execution; significantly outperformed unfiltered CSI 300 strategy in net returns. Most useful framing for a hybrid rule+ML system. Gap: Chinese equity futures; no crypto; filter-only use (not direct spread prediction); single exchange.
+
+---
+
 ## Figures (already generated)
 
 | File | Story |
