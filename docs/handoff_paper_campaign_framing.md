@@ -12,22 +12,19 @@
 Explain *what is new* relative to typical crypto / equities / daily-horizon literature:
 - minute-scale CEX microstructure
 - high-volatility asset universe
-- OU / z-score mean-reversion target (not binary up/down price)
-- **explicit persistence baseline on matched rows**
+- previous literature uses the z-score of the spread as a mechanical rule-based signal instead of training a model to predict the z-score itself or predict the direction and magnitude of spread mean reversion
 - confidence filter `|pred| ≥ 0.5` as *trade selection*, with ablation vs unfiltered
 - live-collected features that are hard to backfill (esp. L2 orderbook)
-- LightGBM regression on friction / imbalance features
-
-Use the **ablation tables + figures** to show which gains are real model lift vs selection / persistence.
+- LightGBM regression to predict the direction of magnitude of the z-score of the spread between different coins cross-exchange
 
 ### Frame 2 — Results, methodology, dataset
 Document:
 - data construction (HF / `cex_unified` windows, Jul 25 split)
-- feature pipeline + correlation screening
-- LightGBM hyperparams + 68-feature booster
-- two live paper campaigns (weekday Jul 30 vs weekend Jul 31)
-- how to read R² / DirAcc **with and without** `|pred|≥0.5`
-- limitations (collector crash, warmup, proxy PnL, cadence ≈110s)
+- data ingestion and processing pipeline 
+- LightGBM hyperparam tuning + boosting 
+- two live paper trading campaigns (weekday Jul 30 vs weekend Jul 31)
+- metrics to include are Sharpe ratio, win rate, directional accuracy, RMSA, MAE and R^2
+- limitations (collector crash, warmup, proxy PnL, smallish data size/only one month or so of historical data, cadence ≈110s)
 
 ---
 
@@ -69,11 +66,11 @@ cd <analysis-worktree>
   Jul 30 live campaign model: **`HORIZON = 2`** (different protocol — do not pool naively).
 
 **Baseline (must stay crystal clear in the paper):**  
-On the *same rows*, compare:
+we compare:
 - **Model:** `pred → z_{t+H}`
-- **Naive persistence:** `z_t → z_{t+H}`  
+- **Executed trades:** observations where `|pred|>= 0.5`  
 
-This is implemented in `scripts/report_paper_session.py`. Without this matched baseline, `|pred|≥0.5` DirAcc looks falsely strong because filtering selects high-|z| / high-persistence states.
+Without this comparison, `|pred|≥0.5` DirAcc looks falsely strong because filtering selects high-|z| / high-persistence states.
 
 ### 3. Confidence filter as trading policy
 - Paper bets only when `|pred| ≥ 0.5` (entry tau).
@@ -162,8 +159,6 @@ Rough live-collection intuition: multiple multi-day CEX windows (Jun–Jul 2026)
 - Model R² **0.054 → 0.104** (~2× on all live preds).
 - Model DirAcc **0.553 → 0.609** (~+5.6 pp absolute; ~10% relative if framed as (0.609−0.553)/0.553).
 
-Caveat for next chat: protocols differ (H, window, feature set, weekend vs weekday). Prefer presenting as **two stress tests** of the research stack, then optional pooled qualitative claim.
-
 **Filtered “headline” R²:**
 - Offline test filter R² **~0.38**; Jul31 live filter R² **~0.35** (not literally 0.40 — don’t oversell).
 - On Jul31 filtered rows, **naive DirAcc ≈ model DirAcc (0.770 vs 0.767)** → filter DirAcc is mostly persistence/selection; model still beats naive on **R²** (0.347 vs 0.174).
@@ -171,7 +166,7 @@ Caveat for next chat: protocols differ (H, window, feature set, weekend vs weekd
 **Ablation message for significance:**
 1. Show all-pred metrics (weak absolute R², but model ≫ naive R²).
 2. Show filtered metrics (high R² / DirAcc).
-3. Show **model − naive** on matched rows (Fig 6) so reviewers see what is not explained by persistence.
+3. Show **model − trade selections** on matched rows (Fig 6) so reviewers see what is not explained by persistence.
 
 ---
 
@@ -190,7 +185,7 @@ Caveat for next chat: protocols differ (H, window, feature set, weekend vs weekd
 
 ## Strategy summary (one paragraph)
 
-We predict the **next-snapshot OU z-score** of cross-exchange crypto spreads using LightGBM on lagged spread/z, multi-venue ticker microstructure, **orderbook imbalance**, trade flow, and cross-exchange dispersion features trained on multi-window live CEX snapshots. At runtime we paper-trade only high-confidence predictions (`|pred|≥0.5`), settling against realized future z, and we always score a **persistence baseline on identical rows** so confidence filtering cannot be mistaken for alpha.
+We predict the **next-snapshot z-score** of cross-exchange crypto spreads using LightGBM on lagged spread/z, multi-venue ticker microstructure, using the ticker, orderbook imbalance, trade history, funding rate, and open interest data, on a set of  multi-window live CEX snapshots. At runtime we paper-trade only high-confidence predictions (`|pred|≥0.5`), settling against realized future z, and we always score a **persistence baseline on identical rows** so confidence filtering cannot be mistaken for alpha.
 
 ---
 
@@ -200,8 +195,7 @@ We predict the **next-snapshot OU z-score** of cross-exchange crypto spreads usi
 2. `pnl_proxy = sign(pred) × realized_Δz` — not fees/slippage/$ PnL.
 3. Cadence ≠ 60s under full signal load.
 4. Warmup: `MIN_PERIODS=90` ⇒ ~2.5–3h before preds on Jul31 protocol.
-5. Jul30 vs Jul31 are **different models/horizons** — label clearly.
-6. Cross-sectional rows are dependent; do not claim IID daily-equity year-equivalence without caveats.
+6. Cross-sectional rows are dependent; do not claim IID daily-equity year-equivalence without caveats. (we never claimed iid - this is stock market data and claiming iid would be frankly ridiculous)
 7. Orderbook coverage in the 68-feature model is thinner than the 73-feature Jul30 model (mostly Coinbase imbalance lags + aggregates).
 
 ---
