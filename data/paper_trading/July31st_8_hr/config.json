@@ -1,0 +1,14 @@
+{
+  "model": "C:\\Users\\Kev\\repos\\stochastic-spread-modeling-analysis\\statarb\\outputs\\statarb_lgbm.txt",
+  "run_dir": "C:\\Users\\Kev\\repos\\stochastic-spread-modeling\\data\\statarb\\20260801_025316",
+  "hours": 11.39,
+  "entry_tau": 0.5,
+  "horizon": 1,
+  "zscore_window": 300,
+  "started_at": "2026-08-01T02:55:33.562048+00:00",
+  "jsonl_shard_max_lines": 50000,
+  "hours_planned_total": 12,
+  "deadline_utc": "2026-08-01T14:55:33Z",
+  "extended_at": "2026-08-01T03:12:11.9966508Z",
+  "restarted_at": "2026-08-01T03:31:57.148689+00:00"
+}

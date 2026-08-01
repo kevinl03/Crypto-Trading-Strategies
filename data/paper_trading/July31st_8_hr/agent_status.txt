@@ -1,0 +1,28 @@
+LGBM paper-trading session (jul25model / NEW protocol) — EXTENDED TO 12h
+======================================================
+start_time_utc (original): 2026-08-01T02:55:33Z
+deadline_utc (extended): 2026-08-01T14:55:33Z
+extension_note: session extended from 8h to 12h total from original start; restarted at 2026-07-31 20:12:11 -07:00 with remaining ~11.73h
+collector_pid: 11148
+paper_trader_pid: 31928
+watchdog_pid: 21080
+model: C:\Users\Kev\repos\stochastic-spread-modeling-analysis\statarb\outputs\statarb_lgbm.txt
+run_dir: C:\Users\Kev\repos\stochastic-spread-modeling\data\statarb\20260801_025316
+output_dir: C:\Users\Kev\repos\stochastic-spread-modeling\data\paper_trading\July31st_8_hr
+collector_log: C:\Users\Kev\repos\stochastic-spread-modeling\data\logs\collector_paper_jul25model_12h.log
+collector_err: C:\Users\Kev\repos\stochastic-spread-modeling\data\logs\collector_paper_jul25model_12h.err.log
+paper_log: C:\Users\Kev\repos\stochastic-spread-modeling\data\logs\paper_lgbm_jul25model_12h.log
+paper_err: C:\Users\Kev\repos\stochastic-spread-modeling\data\logs\paper_lgbm_jul25model_12h.err.log
+watchdog_script: C:\Users\Kev\repos\stochastic-spread-modeling-analysis\scripts\watch_paper_8h.ps1
+watchdog_console: C:\Users\Kev\repos\stochastic-spread-modeling\data\logs\watchdog_paper_12h_console.log
+
+protocol_constants:
+  ZSCORE_WINDOW = 300
+  MIN_PERIODS = 90
+  N_LAGS = 3
+  HORIZON = 1
+  entry_tau = 0.5
+  poll_sec = 20
+  hours = 12 (extended; paper --hours set to remaining wall-clock until deadline)
+
+SessionStartUtc (watchdog): 2026-08-01T02:55:33Z (unchanged)
