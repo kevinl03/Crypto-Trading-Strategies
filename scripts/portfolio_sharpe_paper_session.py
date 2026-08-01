@@ -1,4 +1,4 @@
-﻿"""Portfolio Sharpe for LGBM paper sessions, lit-aligned variants.
+"""Portfolio Sharpe for LGBM paper sessions, lit-aligned variants.
 
 Literature baselines (issue #62 / Tadi & Kortchemski 2021, HF pairs papers):
   - Rf = 0
@@ -223,10 +223,10 @@ def main() -> None:
         {(r.coin, r.pair, int(r.snapshot_idx)): float(r.zscore) for r in z_panel.itertuples()},
         z_panel.groupby("snapshot_idx")["ts"].max().sort_index(),
     )
-    # positions still open after last close: entry ok, exit after t_end ΓÇö summary had n_open
+    # positions still open after last close: entry ok, exit after t_end — summary had n_open
     still_open = trades[trades["exit_ts"] > t_end]
     # Actually closed file only has closed; open bets not in trades.jsonl!
-    # Open inventory at end is NOT in trades.jsonl ΓÇö only closed settles.
+    # Open inventory at end is NOT in trades.jsonl — only closed settles.
     # So MTM during session uses in-progress trades (entry < t < exit).
     # Terminal open book from paper trader is invisible here unless we have open snapshot.
     # Within-session straddles ARE captured.
