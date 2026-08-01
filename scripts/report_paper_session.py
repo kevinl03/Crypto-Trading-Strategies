@@ -5,7 +5,7 @@ regression + directional metrics, including the naive `z_t -> z_{t+HORIZON}`
 baseline on identical rows so the model's true increment is visible.
 
 Usage:
-    python scripts/report_paper_session.py data/paper_trading/lgbm_jul25model_20260731
+    python scripts/report_paper_session.py data/paper_trading/July31st_8_hr
 """
 from __future__ import annotations
 

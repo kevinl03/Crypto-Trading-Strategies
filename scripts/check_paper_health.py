@@ -8,7 +8,7 @@ from pathlib import Path
 
 REPO = Path(r"C:\Users\Kev\repos\stochastic-spread-modeling")
 RUN = REPO / "data" / "statarb" / "20260801_025316"
-OUT = REPO / "data" / "paper_trading" / "lgbm_jul25model_20260731"
+OUT = REPO / "data" / "paper_trading" / "July31st_8_hr"
 DEADLINE = datetime(2026, 8, 1, 14, 55, 33, tzinfo=timezone.utc)
 WARMUP_SNAPS = 90
 

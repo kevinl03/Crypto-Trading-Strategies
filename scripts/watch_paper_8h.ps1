@@ -12,7 +12,7 @@ $PyPaper = Join-Path $Analysis ".venv\Scripts\python.exe"
 # Current session: cex_gbm_new Jul25-split model (68 feats, HORIZON=1 / N_LAGS=3 / ZSCORE=300)
 $Model = Join-Path $Analysis "statarb\outputs\statarb_lgbm.txt"
 $RunDir = Join-Path $Repo "data\statarb\20260801_025316"
-$OutDir = Join-Path $Repo "data\paper_trading\lgbm_jul25model_20260731"
+$OutDir = Join-Path $Repo "data\paper_trading\July31st_8_hr"
 $LogDir = Join-Path $Repo "data\logs"
 $DeadlineUtc = [datetime]::Parse("2026-08-01T14:55:33Z").ToUniversalTime()  # ~12h from paper start
 $SessionStartUtc = [datetime]::Parse("2026-08-01T02:55:33Z").ToUniversalTime()
