@@ -25,7 +25,16 @@ On the Jul 31 live paper session, under the **same** horizon (H=1), settlement p
 | PnL | `direction × exit_z` | same | same |
 | Inventory | `max_open=50` | fair peer: same; ablation: unconstrained | same |
 
-Persistence is the closest no-model twin to lag-dominated forecasts. Mean-reversion is the textbook HF pairs / OU-style direction (Liou rule-based peer; Fil/Tadi-style z triggers).
+### Persistence vs mean-reversion (same entries, opposite bet)
+
+Both mechanical peers use the **same** entry rule: trade when \(|z_t| \ge 0.5\), hold one snapshot, settle with `pnl_proxy = direction × z_{t+1}`. They differ **only** in `direction`:
+
+| Peer | Direction | Plain-English bet |
+|---|---|---|
+| **Persistence** | \(\mathrm{sign}(z_t)\) | “The spread z keeps its current sign” — if \(z_t>0\), bet exit z stays positive |
+| **Mean-reversion** | \(-\mathrm{sign}(z_t)\) | “The spread z flips / fades” — if \(z_t>0\), bet exit z goes negative (classic pairs fade) |
+
+So mean-reversion is not a different filter or different trades list under capacity; it is the **sign-flipped** book on the same slots. At H=1 on Jul 31, large \(|z|\) tends to continue → persistence is profitable in z-units and mean-reversion is approximately its mirror (DirAcc ~30.7%, mean `pnl_proxy` negative). Persistence is the closest no-model twin to lag-dominated forecasts; mean-reversion is the textbook HF pairs / OU-style direction (Liou rule-based peer).
 
 ---
 
@@ -70,7 +79,7 @@ Use these as **baseline types** and reporting norms, not as numbers to race.
 | Paper / line | Their baseline / comparator pattern | What we report in the same spirit |
 |---|---|---|
 | **Liou et al. (2024)** | Deep / ML model vs **rule-based** pairs | Mechanical \|z\|≥τ with persistence **and** mean-reversion on the same panel |
-| **Fil & Kristoufek (2020)** | Distance vs coint.; **gross vs costs**; multi-freq | Mechanical z threshold as rule peer; cost grid still to add (0/5/10/15 bps) |
+| **Fil & Kristoufek (2020)** | Distance vs coint.; **gross vs costs**; multi-freq | Mechanical z threshold as rule peer; fee/cost work deferred until bps unit matches economic book |
 | **Fischer, Krauss & Deinert (2019)** | Performance under **execution delay** | Delay ablation still to add (1–3 snaps); hold here is already ~1 snap |
 | **Sarmento et al. (2024)** | Hybrid rules; **abstention** lifts profit-per-trade | Always-score vs \|pred\|≥0.5 (shipping); mechanical has no learned abstention |
 | **Shen et al. (2022)** | Dual **R² + trading** metrics; regimes | Dual table: R²/DirAcc **and** DirAcc/mean pnl/Sharpe B |
@@ -88,7 +97,7 @@ Use these as **baseline types** and reporting norms, not as numbers to race.
 | Abstention \|pred\|≥0.5 vs always-score | Done (campaign ablation) |
 | Mechanical \|z\| persistence + mean-reversion (trading) | **Done (this branch)** |
 | Capacity-matched portfolio Sharpe B | Done for LGBM + mechanical |
-| Cost grid (gross vs net bps) | **Computed (optional)** — see Strengthening |
+| Cost grid (gross vs net bps) | Script/artifact only — **not** used in paper framing yet (unit mismatch) |
 | Ranked capacity (\|pred\| / \|z\|) | **Computed (optional)** — see Strengthening |
 | Execution-delay curve | Open |
 | Lag-OLS / full-feature Ridge | Open (forecast ladder) |
@@ -141,17 +150,11 @@ python scripts/baseline_strengthening_jul31.py data/paper_trading/July31st_8_hr
 Artifacts: `data/paper_trading/July31st_8_hr/baseline_strengthening/`  
 These are **not** required for the primary claim table above; keep them when we want a sharper peer or fee discussion.
 
-### A. Cost grid (FIFO capacity books)
+### A. Cost / bps grid — deferred from narrative (artifact only)
 
-Definition: \(\mathrm{net\_bps} = \mathrm{direction} \times \Delta\mathrm{spread\_bps} - c\) for round-turn \(c \in \{0,5,10,15\}\).
+A `direction × Δspread_bps − c` cost grid was computed by `baseline_strengthening_jul31.py` and is stored in `baseline_strengthening_report.json` for later engineering. **Do not put those bps win rates or mean-bps numbers in the paper claim table.**
 
-| Book (max_open=50) | Gross mean bps | Win rate (c=0) | Mean net @ 5 bps | Win rate @ 5 bps |
-|---|---:|---:|---:|---:|
-| LightGBM campaign | −0.71 | 35.5% | −5.71 | 6.8% |
-| Mechanical persistence | −2.15 | 18.1% | −7.15 | 3.1% |
-| Mechanical mean-reversion | +2.15 | 62.2% | −2.85 | 20.7% |
-
-**Read carefully:** On this session the **bps** proxy and the **z** proxy disagree in sign for LGBM/persistence (gross bps negative while mean `pnl_proxy` is positive — already noted in Jul 31 results). Still useful: under the same bps definition, LGBM’s gross mean (−0.71) is **less negative** than persistence mechanical (−2.15). Mean-reversion looks better in bps precisely because its direction flips `direction×Δspread`; its **z-proxy** book remains negative. Do not mix bps-net and z-Sharpe in one “winner” sentence without stating the unit.
+Reason: on Jul 31 that bps proxy **disagrees in sign** with the campaign’s primary settlement unit (`pnl_proxy` in z-scores). In particular, mean-reversion can look “high win rate” in bps simply because its direction is flipped relative to persistence, while its **z-proxy** book is the one that loses (DirAcc 30.7%, mean `pnl_proxy` −0.44). Mixing bps-net win rate with z-based DirAcc/Sharpe makes the model look worse for the wrong reason. Revisit fees only after the economic unit is locked (aligned bps or dollar PnL).
 
 ### B. Ranked capacity fill (`max_open=50`)
 
