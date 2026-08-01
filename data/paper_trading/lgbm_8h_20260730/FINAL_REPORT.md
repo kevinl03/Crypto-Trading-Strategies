@@ -1,7 +1,7 @@
 # 8h live LGBM paper-trading session — 2026-07-30
 
 **Window:** `2026-07-30T07:56:05Z` → `2026-07-30T15:56:20Z` (8.0h, unattended)
-**Model:** `statarb/outputs_ob_fix/statarb_lgbm.txt` (LightGBM, 73 features, `coin`/`pair` native categoricals)
+**Model:** `statarb/outputs_ob_fix/statarb_lgbm.txt` trained from `statarb/cex_gbm_new_live_8h_july30.ipynb` (LightGBM, 73 features, `coin`/`pair` native categoricals)
 **Data:** live collector run `data/statarb/20260730_075605` (23 volatile coins × 6 venues)
 **Entry rule:** open when `|pred| >= 0.5`, settle after `HORIZON = 2` snapshots against realized z-score
 **Target:** z-score of `spread_bps` at `t+2` (identical to training target)

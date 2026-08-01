@@ -1,9 +1,10 @@
 """Rebuild Tania's two experiments on the full dataset.
 
-Both variants start from the current cex_gbm_new.ipynb, so they inherit the
-Jul 22-28 train window, local-first parquet loading, the orderbook slippage_bps
-fix, and the naive persistence baseline. That keeps the only differences the
-ones she actually made:
+Both variants start from cex_gbm_new_live_8h_july30.ipynb (the notebook that
+trained the 8h live paper-trading model), so they inherit the Jul 22-28 train
+window, local-first parquet loading, the orderbook slippage_bps fix, and the
+naive persistence baseline. That keeps the only differences the ones she
+actually made:
 
   cex_gbm_new_TEST_full.ipynb    fe5ca43 "get rid of data cleaning step"
                                  -> cleaning / log / winsor cell disabled
@@ -22,7 +23,7 @@ from pathlib import Path
 
 import nbformat
 
-SRC = Path("cex_gbm_new.ipynb")
+SRC = Path("cex_gbm_new_live_8h_july30.ipynb")
 CONFIG_CELL = 3
 LOAD_TABLES_CELL = 4
 CLEANING_CELL = 25

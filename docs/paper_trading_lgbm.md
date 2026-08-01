@@ -10,7 +10,7 @@ The trader tails a running `collect_statarb_data` JSONL run rather than opening 
 connections, so collection and inference stay decoupled and a trader restart never loses market data.
 
 1. **Ingest** — byte-offset tail of `spread_matrix`, `ticker`, `orderbook`, `trades` JSONL files.
-2. **Rebuild features** — the same transforms as `statarb/cex_gbm_new.ipynb`: rolling z-score
+2. **Rebuild features** — the same transforms as `statarb/cex_gbm_new_live_8h_july30.ipynb` (the notebook that trained the 8h campaign model): rolling z-score
    (`ZSCORE_WINDOW=120`, `MIN_PERIODS=30`), two lags per signal, long→wide pivot per exchange, and the
    cross-exchange dispersion/rank/imbalance block. Venue set is `TOP_EXCHANGES` (6 venues).
 3. **Predict** — `model.predict()` on the 73 model features, with `coin`/`pair` restored to the booster's

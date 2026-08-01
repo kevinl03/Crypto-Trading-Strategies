@@ -1,7 +1,7 @@
 # Model improvement experiment results
 
 Scripts: [`run_improve_experiments.py`](../run_improve_experiments.py)  
-Notebook protocol updated in [`cex_gbm_new.ipynb`](../cex_gbm_new.ipynb)  
+Notebook protocol updated in [`cex_gbm_new_live_8h_july30.ipynb`](../cex_gbm_new_live_8h_july30.ipynb)  
 Unified data: LSR + liquidations copied via [`data/_build_cex_unified.py`](../../../stochastic-spread-modeling/data/_build_cex_unified.py)
 
 ## 1. Protocol fix (chronological)

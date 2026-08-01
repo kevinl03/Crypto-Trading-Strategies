@@ -1,8 +1,8 @@
-"""Build cex_gbm_more_data.ipynb from cex_gbm_new.ipynb (local-first + HF fallback)."""
+"""Build cex_gbm_more_data.ipynb from cex_gbm_new_live_8h_july30.ipynb."""
 import json
 from pathlib import Path
 
-src_path = Path(__file__).with_name("cex_gbm_new.ipynb")
+src_path = Path(__file__).with_name("cex_gbm_new_live_8h_july30.ipynb")
 dst_path = Path(__file__).with_name("cex_gbm_more_data.ipynb")
 nb = json.loads(src_path.read_text(encoding="utf-8"))
 
