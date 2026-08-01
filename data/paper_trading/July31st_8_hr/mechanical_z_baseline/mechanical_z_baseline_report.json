@@ -1,0 +1,525 @@
+{
+  "session": "C:\\Users\\Kev\\repos\\stochastic-spread-modeling\\data\\paper_trading\\July31st_8_hr",
+  "policy": {
+    "name": "mechanical_abs_z",
+    "enter": "|z_t| >= 0.5",
+    "horizon": 1,
+    "settle": "pnl_proxy = direction * z_{t+H}",
+    "direction_modes": [
+      "persistence",
+      "mean_reversion"
+    ]
+  },
+  "n_signal_rows": 59340,
+  "n_rows_with_z_fwd": 58995,
+  "persistence": {
+    "direction": "sign(z_t)",
+    "unconstrained": {
+      "label": "unconstrained",
+      "n_closed": 37296,
+      "dir_acc": 0.6624839124839125,
+      "mean_pnl_proxy": 0.3908214566743503,
+      "median_pnl_proxy": 0.5398188404990133,
+      "per_trade_sharpe": 0.36712214652893227,
+      "forecast_on_entries": {
+        "r2_z_t_predicts_z_fwd": -0.4607066682624268,
+        "mae": 0.9508517009635505,
+        "rmse": 1.368754370464174,
+        "dir_acc_sign_match": 0.6624839124839125
+      },
+      "sharpe": {
+        "A_closed_only_hourly_pnl": {
+          "sharpe": 2.467473482795272,
+          "n_periods": 6,
+          "mean_pnl": 2429.3461746877615
+        },
+        "B_hourly_equity_pnl_with_open_mtm": {
+          "sharpe": 2.687921714549582,
+          "n_periods": 6,
+          "mean_pnl": 2429.3461746877615
+        },
+        "C_hourly_return_capital_max_open": {
+          "sharpe": 2.6879217145495815,
+          "max_open_capital": 50
+        }
+      },
+      "hourly_path": [
+        {
+          "t": "2026-08-01T06:00:00+00:00",
+          "equity": 834.3001629653081,
+          "realized_cum": 577.3287471137273,
+          "open_mtm": 256.9714158515808,
+          "n_open": 218,
+          "pnl": 834.3001629653081
+        },
+        {
+          "t": "2026-08-01T07:00:00+00:00",
+          "equity": 3118.230544216954,
+          "realized_cum": 2888.0881199645064,
+          "open_mtm": 230.1424242524475,
+          "n_open": 205,
+          "pnl": 2283.930381251646
+        },
+        {
+          "t": "2026-08-01T08:00:00+00:00",
+          "equity": 6248.382093782995,
+          "realized_cum": 5948.16330147375,
+          "open_mtm": 300.21879230924543,
+          "n_open": 239,
+          "pnl": 3130.151549566041
+        },
+        {
+          "t": "2026-08-01T09:00:00+00:00",
+          "equity": 9372.049006072013,
+          "realized_cum": 9112.588979329077,
+          "open_mtm": 259.46002674293663,
+          "n_open": 207,
+          "pnl": 3123.666912289018
+        },
+        {
+          "t": "2026-08-01T10:00:00+00:00",
+          "equity": 12467.07689149215,
+          "realized_cum": 12219.561557722216,
+          "open_mtm": 247.51533376993353,
+          "n_open": 201,
+          "pnl": 3095.027885420137
+        },
+        {
+          "t": "2026-08-01T11:00:00+00:00",
+          "equity": 14576.07704812657,
+          "realized_cum": 14576.07704812657,
+          "open_mtm": 0.0,
+          "n_open": 0,
+          "pnl": 2109.00015663442
+        }
+      ]
+    },
+    "capacity_matched": {
+      "label": "max_open=50",
+      "n_closed": 8550,
+      "dir_acc": 0.6933333333333334,
+      "mean_pnl_proxy": 0.43655849617402565,
+      "median_pnl_proxy": 0.561684384522601,
+      "per_trade_sharpe": 0.42490342318192836,
+      "forecast_on_entries": {
+        "r2_z_t_predicts_z_fwd": -0.327592441008137,
+        "mae": 0.8767410760582538,
+        "rmse": 1.2835313775465702,
+        "dir_acc_sign_match": 0.6933333333333334
+      },
+      "sharpe": {
+        "A_closed_only_hourly_pnl": {
+          "sharpe": 2.432445969667123,
+          "n_periods": 6,
+          "mean_pnl": 622.0958570479866
+        },
+        "B_hourly_equity_pnl_with_open_mtm": {
+          "sharpe": 2.634695939556819,
+          "n_periods": 6,
+          "mean_pnl": 622.0958570479866
+        },
+        "C_hourly_return_capital_max_open": {
+          "sharpe": 2.6346959395568192,
+          "max_open_capital": 50
+        }
+      },
+      "hourly_path": [
+        {
+          "t": "2026-08-01T06:00:00+00:00",
+          "equity": 191.51342004712237,
+          "realized_cum": 130.54656931347924,
+          "open_mtm": 60.966850733643135,
+          "n_open": 50,
+          "pnl": 191.51342004712237
+        },
+        {
+          "t": "2026-08-01T07:00:00+00:00",
+          "equity": 907.0220593915968,
+          "realized_cum": 848.5507847938161,
+          "open_mtm": 58.47127459778075,
+          "n_open": 50,
+          "pnl": 715.5086393444744
+        },
+        {
+          "t": "2026-08-01T08:00:00+00:00",
+          "equity": 1669.6998791520243,
+          "realized_cum": 1615.173637635122,
+          "open_mtm": 54.52624151690233,
+          "n_open": 50,
+          "pnl": 762.6778197604275
+        },
+        {
+          "t": "2026-08-01T09:00:00+00:00",
+          "equity": 2459.3443477479113,
+          "realized_cum": 2408.1453671836352,
+          "open_mtm": 51.19898056427612,
+          "n_open": 50,
+          "pnl": 789.644468595887
+        },
+        {
+          "t": "2026-08-01T10:00:00+00:00",
+          "equity": 3230.813311312037,
+          "realized_cum": 3177.395750481564,
+          "open_mtm": 53.41756083047294,
+          "n_open": 50,
+          "pnl": 771.4689635641257
+        },
+        {
+          "t": "2026-08-01T11:00:00+00:00",
+          "equity": 3732.5751422879193,
+          "realized_cum": 3732.5751422879193,
+          "open_mtm": 0.0,
+          "n_open": 0,
+          "pnl": 501.7618309758823
+        }
+      ],
+      "capacity_meta": {
+        "candidates_abs_z_ge_tau": 37296,
+        "skipped_pair_busy": 0,
+        "skipped_at_capacity": 28746,
+        "n_still_open_unsettled": 0,
+        "max_open": 50,
+        "direction_mode": "persistence"
+      }
+    }
+  },
+  "mean_reversion": {
+    "direction": "-sign(z_t)",
+    "unconstrained": {
+      "label": "unconstrained",
+      "n_closed": 37296,
+      "dir_acc": 0.3375160875160875,
+      "mean_pnl_proxy": -0.3908214566743503,
+      "median_pnl_proxy": -0.5398188404990133,
+      "per_trade_sharpe": -0.36712214652893227,
+      "forecast_on_entries": {
+        "r2_z_t_predicts_z_fwd": -0.4607066682624268,
+        "mae": 0.9508517009635505,
+        "rmse": 1.368754370464174,
+        "dir_acc_sign_match": 0.6624839124839125
+      },
+      "sharpe": {
+        "A_closed_only_hourly_pnl": {
+          "sharpe": -2.467473482795272,
+          "n_periods": 6,
+          "mean_pnl": -2429.3461746877615
+        },
+        "B_hourly_equity_pnl_with_open_mtm": {
+          "sharpe": -2.687921714549582,
+          "n_periods": 6,
+          "mean_pnl": -2429.3461746877615
+        },
+        "C_hourly_return_capital_max_open": {
+          "sharpe": -2.6879217145495815,
+          "max_open_capital": 50
+        }
+      },
+      "hourly_path": [
+        {
+          "t": "2026-08-01T06:00:00+00:00",
+          "equity": -834.3001629653081,
+          "realized_cum": -577.3287471137273,
+          "open_mtm": -256.9714158515808,
+          "n_open": 218,
+          "pnl": -834.3001629653081
+        },
+        {
+          "t": "2026-08-01T07:00:00+00:00",
+          "equity": -3118.230544216954,
+          "realized_cum": -2888.0881199645064,
+          "open_mtm": -230.1424242524475,
+          "n_open": 205,
+          "pnl": -2283.930381251646
+        },
+        {
+          "t": "2026-08-01T08:00:00+00:00",
+          "equity": -6248.382093782995,
+          "realized_cum": -5948.16330147375,
+          "open_mtm": -300.21879230924543,
+          "n_open": 239,
+          "pnl": -3130.151549566041
+        },
+        {
+          "t": "2026-08-01T09:00:00+00:00",
+          "equity": -9372.049006072013,
+          "realized_cum": -9112.588979329077,
+          "open_mtm": -259.46002674293663,
+          "n_open": 207,
+          "pnl": -3123.666912289018
+        },
+        {
+          "t": "2026-08-01T10:00:00+00:00",
+          "equity": -12467.07689149215,
+          "realized_cum": -12219.561557722216,
+          "open_mtm": -247.51533376993353,
+          "n_open": 201,
+          "pnl": -3095.027885420137
+        },
+        {
+          "t": "2026-08-01T11:00:00+00:00",
+          "equity": -14576.07704812657,
+          "realized_cum": -14576.07704812657,
+          "open_mtm": 0.0,
+          "n_open": 0,
+          "pnl": -2109.00015663442
+        }
+      ]
+    },
+    "capacity_matched": {
+      "label": "max_open=50",
+      "n_closed": 8550,
+      "dir_acc": 0.30666666666666664,
+      "mean_pnl_proxy": -0.43655849617402565,
+      "median_pnl_proxy": -0.561684384522601,
+      "per_trade_sharpe": -0.42490342318192836,
+      "forecast_on_entries": {
+        "r2_z_t_predicts_z_fwd": -0.327592441008137,
+        "mae": 0.8767410760582538,
+        "rmse": 1.2835313775465702,
+        "dir_acc_sign_match": 0.6933333333333334
+      },
+      "sharpe": {
+        "A_closed_only_hourly_pnl": {
+          "sharpe": -2.432445969667123,
+          "n_periods": 6,
+          "mean_pnl": -622.0958570479866
+        },
+        "B_hourly_equity_pnl_with_open_mtm": {
+          "sharpe": -2.634695939556819,
+          "n_periods": 6,
+          "mean_pnl": -622.0958570479866
+        },
+        "C_hourly_return_capital_max_open": {
+          "sharpe": -2.6346959395568192,
+          "max_open_capital": 50
+        }
+      },
+      "hourly_path": [
+        {
+          "t": "2026-08-01T06:00:00+00:00",
+          "equity": -191.51342004712237,
+          "realized_cum": -130.54656931347924,
+          "open_mtm": -60.966850733643135,
+          "n_open": 50,
+          "pnl": -191.51342004712237
+        },
+        {
+          "t": "2026-08-01T07:00:00+00:00",
+          "equity": -907.0220593915968,
+          "realized_cum": -848.5507847938161,
+          "open_mtm": -58.47127459778075,
+          "n_open": 50,
+          "pnl": -715.5086393444744
+        },
+        {
+          "t": "2026-08-01T08:00:00+00:00",
+          "equity": -1669.6998791520243,
+          "realized_cum": -1615.173637635122,
+          "open_mtm": -54.52624151690233,
+          "n_open": 50,
+          "pnl": -762.6778197604275
+        },
+        {
+          "t": "2026-08-01T09:00:00+00:00",
+          "equity": -2459.3443477479113,
+          "realized_cum": -2408.1453671836352,
+          "open_mtm": -51.19898056427612,
+          "n_open": 50,
+          "pnl": -789.644468595887
+        },
+        {
+          "t": "2026-08-01T10:00:00+00:00",
+          "equity": -3230.813311312037,
+          "realized_cum": -3177.395750481564,
+          "open_mtm": -53.41756083047294,
+          "n_open": 50,
+          "pnl": -771.4689635641257
+        },
+        {
+          "t": "2026-08-01T11:00:00+00:00",
+          "equity": -3732.5751422879193,
+          "realized_cum": -3732.5751422879193,
+          "open_mtm": 0.0,
+          "n_open": 0,
+          "pnl": -501.7618309758823
+        }
+      ],
+      "capacity_meta": {
+        "candidates_abs_z_ge_tau": 37296,
+        "skipped_pair_busy": 0,
+        "skipped_at_capacity": 28746,
+        "n_still_open_unsettled": 0,
+        "max_open": 50,
+        "direction_mode": "mean_reversion"
+      }
+    }
+  },
+  "unconstrained": {
+    "label": "unconstrained",
+    "n_closed": 37296,
+    "dir_acc": 0.6624839124839125,
+    "mean_pnl_proxy": 0.3908214566743503,
+    "median_pnl_proxy": 0.5398188404990133,
+    "per_trade_sharpe": 0.36712214652893227,
+    "forecast_on_entries": {
+      "r2_z_t_predicts_z_fwd": -0.4607066682624268,
+      "mae": 0.9508517009635505,
+      "rmse": 1.368754370464174,
+      "dir_acc_sign_match": 0.6624839124839125
+    },
+    "sharpe": {
+      "A_closed_only_hourly_pnl": {
+        "sharpe": 2.467473482795272,
+        "n_periods": 6,
+        "mean_pnl": 2429.3461746877615
+      },
+      "B_hourly_equity_pnl_with_open_mtm": {
+        "sharpe": 2.687921714549582,
+        "n_periods": 6,
+        "mean_pnl": 2429.3461746877615
+      },
+      "C_hourly_return_capital_max_open": {
+        "sharpe": 2.6879217145495815,
+        "max_open_capital": 50
+      }
+    },
+    "hourly_path": [
+      {
+        "t": "2026-08-01T06:00:00+00:00",
+        "equity": 834.3001629653081,
+        "realized_cum": 577.3287471137273,
+        "open_mtm": 256.9714158515808,
+        "n_open": 218,
+        "pnl": 834.3001629653081
+      },
+      {
+        "t": "2026-08-01T07:00:00+00:00",
+        "equity": 3118.230544216954,
+        "realized_cum": 2888.0881199645064,
+        "open_mtm": 230.1424242524475,
+        "n_open": 205,
+        "pnl": 2283.930381251646
+      },
+      {
+        "t": "2026-08-01T08:00:00+00:00",
+        "equity": 6248.382093782995,
+        "realized_cum": 5948.16330147375,
+        "open_mtm": 300.21879230924543,
+        "n_open": 239,
+        "pnl": 3130.151549566041
+      },
+      {
+        "t": "2026-08-01T09:00:00+00:00",
+        "equity": 9372.049006072013,
+        "realized_cum": 9112.588979329077,
+        "open_mtm": 259.46002674293663,
+        "n_open": 207,
+        "pnl": 3123.666912289018
+      },
+      {
+        "t": "2026-08-01T10:00:00+00:00",
+        "equity": 12467.07689149215,
+        "realized_cum": 12219.561557722216,
+        "open_mtm": 247.51533376993353,
+        "n_open": 201,
+        "pnl": 3095.027885420137
+      },
+      {
+        "t": "2026-08-01T11:00:00+00:00",
+        "equity": 14576.07704812657,
+        "realized_cum": 14576.07704812657,
+        "open_mtm": 0.0,
+        "n_open": 0,
+        "pnl": 2109.00015663442
+      }
+    ]
+  },
+  "capacity_matched": {
+    "label": "max_open=50",
+    "n_closed": 8550,
+    "dir_acc": 0.6933333333333334,
+    "mean_pnl_proxy": 0.43655849617402565,
+    "median_pnl_proxy": 0.561684384522601,
+    "per_trade_sharpe": 0.42490342318192836,
+    "forecast_on_entries": {
+      "r2_z_t_predicts_z_fwd": -0.327592441008137,
+      "mae": 0.8767410760582538,
+      "rmse": 1.2835313775465702,
+      "dir_acc_sign_match": 0.6933333333333334
+    },
+    "sharpe": {
+      "A_closed_only_hourly_pnl": {
+        "sharpe": 2.432445969667123,
+        "n_periods": 6,
+        "mean_pnl": 622.0958570479866
+      },
+      "B_hourly_equity_pnl_with_open_mtm": {
+        "sharpe": 2.634695939556819,
+        "n_periods": 6,
+        "mean_pnl": 622.0958570479866
+      },
+      "C_hourly_return_capital_max_open": {
+        "sharpe": 2.6346959395568192,
+        "max_open_capital": 50
+      }
+    },
+    "hourly_path": [
+      {
+        "t": "2026-08-01T06:00:00+00:00",
+        "equity": 191.51342004712237,
+        "realized_cum": 130.54656931347924,
+        "open_mtm": 60.966850733643135,
+        "n_open": 50,
+        "pnl": 191.51342004712237
+      },
+      {
+        "t": "2026-08-01T07:00:00+00:00",
+        "equity": 907.0220593915968,
+        "realized_cum": 848.5507847938161,
+        "open_mtm": 58.47127459778075,
+        "n_open": 50,
+        "pnl": 715.5086393444744
+      },
+      {
+        "t": "2026-08-01T08:00:00+00:00",
+        "equity": 1669.6998791520243,
+        "realized_cum": 1615.173637635122,
+        "open_mtm": 54.52624151690233,
+        "n_open": 50,
+        "pnl": 762.6778197604275
+      },
+      {
+        "t": "2026-08-01T09:00:00+00:00",
+        "equity": 2459.3443477479113,
+        "realized_cum": 2408.1453671836352,
+        "open_mtm": 51.19898056427612,
+        "n_open": 50,
+        "pnl": 789.644468595887
+      },
+      {
+        "t": "2026-08-01T10:00:00+00:00",
+        "equity": 3230.813311312037,
+        "realized_cum": 3177.395750481564,
+        "open_mtm": 53.41756083047294,
+        "n_open": 50,
+        "pnl": 771.4689635641257
+      },
+      {
+        "t": "2026-08-01T11:00:00+00:00",
+        "equity": 3732.5751422879193,
+        "realized_cum": 3732.5751422879193,
+        "open_mtm": 0.0,
+        "n_open": 0,
+        "pnl": 501.7618309758823
+      }
+    ],
+    "capacity_meta": {
+      "candidates_abs_z_ge_tau": 37296,
+      "skipped_pair_busy": 0,
+      "skipped_at_capacity": 28746,
+      "n_still_open_unsettled": 0,
+      "max_open": 50,
+      "direction_mode": "persistence"
+    }
+  }
+}
