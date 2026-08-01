@@ -2,8 +2,9 @@
 Live paper trading for the trained StatArb LightGBM model.
 
 Tails a running `collect_statarb_data` JSONL run, rebuilds the same features
-used in training (z-score lags + ticker/orderbook/trades + cross-exchange),
-and opens paper bets when |pred| >= entry threshold.
+used in current `cex_gbm_new` training (z-score lags + ticker/orderbook/trades
++ cross-exchange / momentum / accel), and opens paper bets when |pred| >= entry
+threshold.
 
 Settles each bet after HORIZON snapshots against the realized future z-score
 (the model's training target), logging DirAcc / PnL-proxy live.
@@ -35,11 +36,14 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 TOP_EXCHANGES = ["binance", "bybit", "okx", "coinbase", "kraken", "mexc"]
-ZSCORE_WINDOW = 120
-MIN_PERIODS = 30
-N_LAGS = 2
-HORIZON = 2
+# Match current cex_gbm_new.ipynb / statarb/outputs/statarb_lgbm.txt
+ZSCORE_WINDOW = 300
+MIN_PERIODS = 90
+N_LAGS = 3
+HORIZON = 1
 SIGNALS = ("spread_matrix", "ticker", "orderbook", "trades")
+# Rotate output JSONL shards before they grow past this many lines.
+JSONL_SHARD_MAX_LINES = 50_000
 
 
 @dataclass
@@ -82,10 +86,91 @@ class State:
     closed: List[dict] = field(default_factory=list)
     signals: List[dict] = field(default_factory=list)
     n_preds: int = 0
+    # How many in-memory rows have already been appended to disk shards.
+    n_signals_flushed: int = 0
+    n_closed_flushed: int = 0
 
 
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def jsonl_shard_path(out_dir: Path, stem: str, part: int) -> Path:
+    if part <= 0:
+        return out_dir / f"{stem}.jsonl"
+    return out_dir / f"{stem}_{part:03d}.jsonl"
+
+
+def load_jsonl_writer_state(out_dir: Path) -> dict:
+    path = out_dir / "jsonl_writer_state.json"
+    if not path.exists():
+        return {
+            "signals_part": 0,
+            "signals_lines": 0,
+            "trades_part": 0,
+            "trades_lines": 0,
+        }
+    try:
+        return json.loads(path.read_text(encoding="utf-8-sig"))
+    except json.JSONDecodeError:
+        return {
+            "signals_part": 0,
+            "signals_lines": 0,
+            "trades_part": 0,
+            "trades_lines": 0,
+        }
+
+
+def save_jsonl_writer_state(out_dir: Path, meta: dict) -> None:
+    (out_dir / "jsonl_writer_state.json").write_text(
+        json.dumps(meta, indent=2), encoding="utf-8"
+    )
+
+
+def append_jsonl_sharded(
+    out_dir: Path,
+    stem: str,
+    rows: List[dict],
+    part_key: str,
+    lines_key: str,
+    meta: dict,
+    max_lines: int = JSONL_SHARD_MAX_LINES,
+) -> None:
+    """Append rows to rotating JSONL shards; never drop older lines."""
+    if not rows:
+        return
+    part = int(meta.get(part_key, 0))
+    lines = int(meta.get(lines_key, 0))
+    idx = 0
+    while idx < len(rows):
+        path = jsonl_shard_path(out_dir, stem, part)
+        room = max_lines - lines
+        if room <= 0:
+            part += 1
+            lines = 0
+            continue
+        chunk = rows[idx : idx + room]
+        with path.open("a", encoding="utf-8") as f:
+            for row in chunk:
+                f.write(json.dumps(row) + "\n")
+        lines += len(chunk)
+        idx += len(chunk)
+        if lines >= max_lines:
+            part += 1
+            lines = 0
+    meta[part_key] = part
+    meta[lines_key] = lines
+
+
+def list_jsonl_shards(out_dir: Path, stem: str) -> List[Path]:
+    """Return shard files in write order: stem.jsonl, stem_001.jsonl, ..."""
+    primary = out_dir / f"{stem}.jsonl"
+    numbered = sorted(out_dir.glob(f"{stem}_*.jsonl"))
+    out: List[Path] = []
+    if primary.exists():
+        out.append(primary)
+    out.extend(numbered)
+    return out
 
 
 def signal_day_files(run_dir: Path, signal: str) -> List[Path]:
@@ -264,6 +349,19 @@ def add_cross_exchange_features(df: pd.DataFrame) -> pd.DataFrame:
         df["cross_flow_std"] = df[flow_cols].std(axis=1)
         df["net_flow_signal"] = df[flow_cols].mean(axis=1)
         df["flow_divergence"] = df[flow_cols].max(axis=1) - df[flow_cols].min(axis=1)
+    # Spread / z-score momentum (notebook §6) — lag5 no-ops when N_LAGS < 5
+    for lag_a, lag_b in [(1, 3), (1, 5)]:
+        if f"spread_bps_lag{lag_a}" in df.columns and f"spread_bps_lag{lag_b}" in df.columns:
+            df[f"spread_momentum_{lag_a}_{lag_b}"] = (
+                df[f"spread_bps_lag{lag_a}"] - df[f"spread_bps_lag{lag_b}"]
+            )
+        if f"zscore_lag{lag_a}" in df.columns and f"zscore_lag{lag_b}" in df.columns:
+            df[f"zscore_momentum_{lag_a}_{lag_b}"] = (
+                df[f"zscore_lag{lag_a}"] - df[f"zscore_lag{lag_b}"]
+            )
+    # Z-score acceleration (notebook §7)
+    if all(f"zscore_lag{lag}" in df.columns for lag in (1, 2, 3)):
+        df["zscore_accel"] = df["zscore_lag1"] - 2 * df["zscore_lag2"] + df["zscore_lag3"]
     return df
 
 
@@ -395,7 +493,8 @@ def score_snapshot(
     if cur.empty:
         # Spreads were ingested but fell out of the feature frame — retry next poll.
         return False
-    cur = cur.dropna(subset=["zscore_lag1", "zscore_lag2"], how="any")
+    lag_cols = [f"zscore_lag{i}" for i in range(1, N_LAGS + 1)]
+    cur = cur.dropna(subset=lag_cols, how="any")
     if cur.empty:
         return False
 
@@ -444,19 +543,28 @@ def score_snapshot(
 
 def save_checkpoint(state: State, cfg: Config, force_summary: bool = False) -> None:
     cfg.output_dir.mkdir(parents=True, exist_ok=True)
-    with (cfg.output_dir / "signals.jsonl").open("w", encoding="utf-8") as f:
-        for s in state.signals[-50000:]:
-            f.write(json.dumps(s) + "\n")
-    with (cfg.output_dir / "trades.jsonl").open("w", encoding="utf-8") as f:
-        for t in state.closed:
-            f.write(json.dumps(t) + "\n")
+    meta = load_jsonl_writer_state(cfg.output_dir)
+    new_signals = state.signals[state.n_signals_flushed :]
+    new_closed = state.closed[state.n_closed_flushed :]
+    append_jsonl_sharded(
+        cfg.output_dir, "signals", new_signals, "signals_part", "signals_lines", meta
+    )
+    append_jsonl_sharded(
+        cfg.output_dir, "trades", new_closed, "trades_part", "trades_lines", meta
+    )
+    state.n_signals_flushed = len(state.signals)
+    state.n_closed_flushed = len(state.closed)
+    save_jsonl_writer_state(cfg.output_dir, meta)
+
     summary = summarize(state, cfg)
     (cfg.output_dir / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
     if force_summary or len(state.closed) % 25 == 0:
         print(
             f"  [{utc_now()}] snaps={len(state.known_snaps)} preds={state.n_preds} "
             f"open={len(state.open_bets)} closed={len(state.closed)} "
-            f"dir_acc={summary.get('dir_acc')} pnl_proxy={summary.get('mean_pnl_proxy')}",
+            f"dir_acc={summary.get('dir_acc')} pnl_proxy={summary.get('mean_pnl_proxy')} "
+            f"jsonl_signals={meta.get('signals_part')}:{meta.get('signals_lines')} "
+            f"jsonl_trades={meta.get('trades_part')}:{meta.get('trades_lines')}",
             flush=True,
         )
 
@@ -553,21 +661,44 @@ def main() -> None:
         max_open=args.max_open,
     )
     cfg.output_dir.mkdir(parents=True, exist_ok=True)
-    (cfg.output_dir / "config.json").write_text(
-        json.dumps(
-            {
-                "model": str(cfg.model_path),
-                "run_dir": str(cfg.run_dir),
-                "hours": cfg.hours,
-                "entry_tau": cfg.entry_tau,
-                "horizon": HORIZON,
-                "zscore_window": ZSCORE_WINDOW,
-                "started_at": utc_now(),
-            },
-            indent=2,
-        ),
-        encoding="utf-8",
+    # Fresh in-memory state always replays the collector from offset 0. Archive any
+    # prior JSONL shards in this output dir so append-mode cannot duplicate rows.
+    existing_shards = list_jsonl_shards(cfg.output_dir, "signals") + list_jsonl_shards(
+        cfg.output_dir, "trades"
     )
+    if existing_shards or (cfg.output_dir / "jsonl_writer_state.json").exists():
+        bak = cfg.output_dir / f"pre_restart_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
+        bak.mkdir(parents=True, exist_ok=True)
+        for p in existing_shards:
+            p.replace(bak / p.name)
+        wstate = cfg.output_dir / "jsonl_writer_state.json"
+        if wstate.exists():
+            wstate.replace(bak / wstate.name)
+        print(f"  Archived prior JSONL shards -> {bak}", flush=True)
+
+    prev_cfg: dict = {}
+    cfg_path = cfg.output_dir / "config.json"
+    if cfg_path.exists():
+        try:
+            prev_cfg = json.loads(cfg_path.read_text(encoding="utf-8-sig"))
+        except json.JSONDecodeError:
+            prev_cfg = {}
+    cfg_doc = {
+        "model": str(cfg.model_path),
+        "run_dir": str(cfg.run_dir),
+        "hours": cfg.hours,
+        "entry_tau": cfg.entry_tau,
+        "horizon": HORIZON,
+        "zscore_window": ZSCORE_WINDOW,
+        "started_at": prev_cfg.get("started_at") or utc_now(),
+        "jsonl_shard_max_lines": JSONL_SHARD_MAX_LINES,
+    }
+    for key in ("hours_planned_total", "deadline_utc", "extended_at"):
+        if key in prev_cfg:
+            cfg_doc[key] = prev_cfg[key]
+    if prev_cfg:
+        cfg_doc["restarted_at"] = utc_now()
+    cfg_path.write_text(json.dumps(cfg_doc, indent=2), encoding="utf-8")
 
     state = State()
     deadline = time.time() + cfg.hours * 3600
