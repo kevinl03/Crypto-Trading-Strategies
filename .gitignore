@@ -30,8 +30,11 @@ data/ohlcv_live/
 
 # LaTeX build artifacts & downloaded class files
 paper/*.pdf
-!paper/sigconf-sample.pdf
-!paper/sampleteaser.pdf
+paper/acm-sample/*.aux
+paper/acm-sample/*.log
+paper/acm-sample/*.bbl
+paper/acm-sample/*.blg
+paper/acm-sample/*.out
 paper/*.aux
 paper/*.log
 paper/*.bbl

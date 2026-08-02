@@ -125,20 +125,33 @@ Remove `anonymous` and `review` options. Author info will render normally.
 
 ```
 paper/
-├── acmart.cls                                          # ACM class file v2.19
-├── ACM-Reference-Format.bst                            # Bibliography style
-├── gradient-boosting-cross-market-spread-prediction.tex  # Main paper source (old body = reference only)
-├── sigconf-sample.tex                                  # Official ACM sigconf sample
-├── sigconf-sample.pdf                                  # Compiled sample PDF
-├── sample-base.bib                                     # Sample bibliography (for sigconf-sample)
-├── sampleteaser.pdf                                    # Sample teaser image
-├── sample-franklin.png                                 # Sample figure image
-├── references.bib                                      # Bibliography database
-├── generate_figures.py                                 # Script to produce figures
-├── figures/                                            # Generated PDF figures
-│   ├── threshold_scatter.pdf
-│   ├── spread_timeseries.pdf
-│   ├── cumulative_pnl.pdf
-│   └── halflife_heatmap.pdf
-└── SUBMISSION_GUIDE.md                                 # This file
+├── acmart.cls                                            # ACM class file v2.19
+├── ACM-Reference-Format.bst                              # Bibliography style
+├── gradient-boosting-cross-market-spread-prediction.tex  # Old OU/OHLCV body (reference only)
+├── references.bib                                        # Paper bibliography
+├── generate_figures.py                                   # Script to produce figures
+├── figures/                                              # Paper figures
+├── acm-sample/                                           # Official ACM sample (isolated; not the paper)
+│   ├── sigconf-sample.tex
+│   ├── sigconf-sample.pdf
+│   ├── sample-base.bib
+│   ├── sampleteaser.pdf
+│   └── sample-franklin.png
+└── SUBMISSION_GUIDE.md
+```
+
+### Compiling
+
+**Actual paper** (from `paper/`): uses only `acmart.cls`, `references.bib`, and `figures/`. The `acm-sample/` folder is unused and does not interfere.
+
+```powershell
+cd paper
+tectonic gradient-boosting-cross-market-spread-prediction.tex
+```
+
+**ACM sample** (needs parent dir on the search path so `acmart.cls` / `.bst` resolve):
+
+```powershell
+cd paper\acm-sample
+tectonic -Z search-path=.. sigconf-sample.tex
 ```
