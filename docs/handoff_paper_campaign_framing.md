@@ -312,6 +312,73 @@ We use **gradient boosting (LightGBM)** to predict the **next-snapshot z-score**
 
 ---
 
+## Portfolio Sharpe Ratios — Jul 31 Live Session
+
+*Source branch: `analysis/jul31-sharpe-ratio` · Doc: `docs/results_jul31_live_metrics_lit.md`*
+
+### Sharpe definition
+
+Formula: `Sharpe = mean(x) / std(x)`, Rf = 0.
+
+**Mark-to-market (MTM):** value each still-open bet at current z using the same proxy as settlement (`direction × z_t`). Hourly P&L = change in equity across clock-hour boundaries — lit practice of counting unrealized inventory (cf. Tadi & Kortchemski).
+
+**Portfolio equity at time t:**
+```
+equity(t) = Σ(closed by t) pnl_proxy + Σ(still open at t)(direction × z_t)
+```
+
+### Sharpe variants (Jul 31, `|pred|≥0.5` filtered trades only)
+
+| ID | Series definition | Sharpe | Use in paper |
+|---|---|---:|---|
+| **A** | Sum of **closed** `pnl_proxy` per clock hour | **2.35** | Ablation |
+| **B** | Hourly **equity Δ** including **open MTM** | **2.41** | **Headline** |
+| **C** | B ÷ fixed capital `max_open = 50` | **2.41** | Same (constant capital cancels) |
+| **C2** | B ÷ live `n_open` each hour | **2.57** | Sensitivity (strongest hourly) |
+| **D** | Per-**snapshot** equity Δ + open MTM (n=171, ~109s bars) | **1.70** | Finer-bar robustness |
+
+**Recommended paper headline:** Hourly portfolio Sharpe = **2.41** (variant B, open MTM included).
+Report A = 2.35 as closed-only ablation and D = 1.70 as finer-bar robustness.
+
+Per-trade Sharpe (reference only): 0.67 = mean/std of individual trade `pnl_proxy` (n=7,973).
+
+### Hourly buckets — all positive
+
+| Hour end (UTC) | Realized cum. | Open MTM | n_open | Hourly equity Δ |
+|---|---:|---:|---:|---:|
+| 06:00 | 254.4 | +50.8 | 50 | +305.2 |
+| 07:00 | 1043.9 | +23.0 | 40 | +761.7 |
+| 08:00 | 2257.9 | +64.4 | 50 | +1255.5 |
+| 09:00 | 3572.7 | +71.8 | 50 | +1322.2 |
+| 10:00 | 4953.1 | +61.7 | 50 | +1370.3 |
+| 11:00 | 5949.7 | 0.0 | 0 | +934.8 |
+
+**Every observed clock hour had positive portfolio P&L.** Total settled `pnl_proxy` ≈ +5,950 z-units over 6 hours.
+
+### Non-claims (critical for judges)
+
+- Do **not** annualize as "Sharpe ≈ 220" as a primary result (n = 6 hours).
+- Do **not** claim fee-net profitability — these are gross z-proxy PnL.
+- Do **not** claim "beats Tadi 7.94" — different metric construction (multi-month capital returns vs 6h gross z-proxy).
+- Naive persistence baseline used for **R²/DirAcc only**, not Sharpe.
+
+### Literature Sharpe comparison (qualitative, definition-aware)
+
+| Paper | Their Sharpe | Comparability |
+|---|---|---|
+| Tadi & Kortchemski (2021) | 7.94 (portfolio, multi-month, Rf=0) | Closest *construction*; sample/units differ |
+| Tadi & Witzany (2025) | ~0.95 (ann., fee-aware, multi-year) | Realistic longer-sample band; fee-net live may land nearer here |
+| Fischer et al. (2019) | 2.55 (ann., after 15 bps) | Comparable regime (HF crypto) but alpha dies at 5-min delay |
+| Fil & Kristoufek (2020) | N/A (return % reported) | Extreme fee sensitivity matches our proxy warning |
+
+**Framing:** Our **2.41 hourly portfolio Sharpe** is a strong live risk-adjusted result under our proxy definition. Literature Sharpes in the 0.95–7.94 band are mostly longer-sample, capital-return Sharpes. The contribution is occupying the gap: **minute-scale crypto + learned z forecast + dual forecast/trading metrics + live execution**, not a numerical dominance claim.
+
+### Paste-ready Sharpe results paragraph
+
+> In a live paper-trading session on 2026-08-01 UTC (`July31st_8_hr`), a LightGBM model trained to forecast the next-snapshot cross-exchange spread z-score opened positions only when |ẑ| ≥ 0.5. Over 7,973 settled bets, directional accuracy was 76.9% and the coefficient of determination between predictions and realized exit z-scores was 0.35. Forming an hourly portfolio P&L series in z-units—including mark-to-market valuation of open bets as direction × z_t—yields an hourly Sharpe ratio of 2.41 (2.35 using closed trades only; Rf = 0). Every observed clock hour had positive portfolio P&L. These figures are gross of fees and are not annualized; they characterize risk-adjusted stability of the live book under a z-score settlement proxy.
+
+---
+
 ## Suggested commit note for maintainers
 
 Keep this handoff on `paper-planning`. Campaign figures/scripts/data stay beside `data/paper_trading/July31st_8_hr` and the Jul30 session folder (historically on `experiment/paper-trading-live-testing`). On `paper/icaif26-template-update`: start from `paper/acm-sample/sigconf-sample.tex` into a **new** GBT `.tex`; keep `stochastic-cross-venue-ohlcv-trading.tex` as the old OU reference.
