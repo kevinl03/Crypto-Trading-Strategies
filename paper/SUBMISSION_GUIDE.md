@@ -127,8 +127,12 @@ Remove `anonymous` and `review` options. Author info will render normally.
 paper/
 ├── acmart.cls                                          # ACM class file v2.19
 ├── ACM-Reference-Format.bst                            # Bibliography style
-├── gradient-boosting-cross-market-spread-prediction.tex  # Main paper source
+├── gradient-boosting-cross-market-spread-prediction.tex  # Main paper source (old body = reference only)
 ├── sigconf-sample.tex                                  # Official ACM sigconf sample
+├── sigconf-sample.pdf                                  # Compiled sample PDF
+├── sample-base.bib                                     # Sample bibliography (for sigconf-sample)
+├── sampleteaser.pdf                                    # Sample teaser image
+├── sample-franklin.png                                 # Sample figure image
 ├── references.bib                                      # Bibliography database
 ├── generate_figures.py                                 # Script to produce figures
 ├── figures/                                            # Generated PDF figures
