@@ -1,8 +1,39 @@
 # Handoff: Paper campaign framing & results compilation
 
-**Branch:** `experiment/paper-trading-live-testing`  
-**Purpose of this doc:** Guide a *new* chat that will revise an older draft paper using this campaign’s data, figures, and ablation narrative.  
+**Planning branch:** `paper-planning` (this doc)  
+**Live-campaign data branch (historical):** `experiment/paper-trading-live-testing`  
+**ICAIF template / paper source branch:** `paper/icaif26-template-update`  
+**Purpose of this doc:** Guide a *new* chat that will rewrite the paper using this campaign’s data, figures, and ablation narrative under the current framing.  
 **Do not treat this as the paper itself** — it is framing guidance + a source-of-truth index.
+
+---
+
+## Current paper framing (authoritative)
+
+| Item | Value |
+|---|---|
+| **Working title** | Gradient Boosting for High-Frequency Cryptocurrency Cross-Market Spread Prediction in Volatility-Driven Pairs Trading |
+| **LaTeX source** | `paper/gradient-boosting-cross-market-spread-prediction.tex` (on `paper/icaif26-template-update`) |
+| **Venue** | ICAIF '26 (ACM sigconf), Milan, Italy — double-blind |
+| **Hard limit** | **8 pages total** incl. figures + references; no appendices / supplementary materials |
+| **Deadline** | August 9, 2026, 23:59 AOE |
+| **Template** | ACM `acmart` v2.19, `\documentclass[sigconf,anonymous,review]{acmart}` — see `paper/SUBMISSION_GUIDE.md` |
+| **Clean sample** | `paper/sigconf-sample.tex` |
+
+### What this paper *is*
+- **Machine learning:** LightGBM = **gradient boosting** (tree ensemble). Predictions are deterministic given fixed features/model; training can be made reproducible with seeds.
+- **Task:** regress / predict the **forward rolling z-score** of the **same-asset cross-exchange spread** (not Geometric Brownian Motion; not OU SDE trading).
+- **Features:** ticker mid/BA, L2 orderbook imbalance, trade flow, funding, OI, lagged spread/z — **OHLCV is off** (`LOAD_TABLES['ohlcv']=False`).
+- **Policy:** trade only when `|pred| ≥ 0.5`; always compare to a **persistence / rule-based z-score baseline** on matched rows.
+
+### What this paper is *not* (deprecated framing)
+- Not “stochastic spread modeling” via Ornstein–Uhlenbeck parameter trading.
+- Not an OHLCV-candle primary pipeline (filename/title must not imply OHLCV).
+- Not **Geometric Brownian Motion** — do not abbreviate the method as “GBM” in the paper title/body without saying **gradient boosting** / LightGBM (finance audiences read GBM as the SDE). Prefer “gradient boosting” or “LightGBM” in prose.
+
+### Related branches
+- Rewrite content from this handoff into `paper/gradient-boosting-cross-market-spread-prediction.tex` on `paper/icaif26-template-update`.
+- Keep campaign metrics/figures paths below as the empirical backbone.
 
 ---
 
@@ -12,10 +43,10 @@
 Explain *what is new* relative to typical crypto / equities / daily-horizon literature:
 - minute-scale CEX microstructure
 - high-volatility asset universe
-- previous literature uses the z-score of the spread as a mechanical rule-based signal instead of training a model to predict the z-score itself or predict the direction and magnitude of spread mean reversion
+- previous literature uses the z-score of the spread as a mechanical rule-based signal instead of training a **gradient-boosting** model to predict the future z-score (direction *and* magnitude of short-horizon spread dynamics)
 - confidence filter `|pred| ≥ 0.5` as *trade selection*, with ablation vs unfiltered
 - live-collected features that are hard to backfill (esp. L2 orderbook)
-- LightGBM regression to predict the direction of magnitude of the z-score of the spread between different coins cross-exchange
+- LightGBM regression on cross-exchange same-asset spreads (not single-venue cointegrated *different*-asset pairs)
 
 ### Frame 2 — Results, methodology, dataset
 Document:
@@ -23,12 +54,13 @@ Document:
 - data ingestion and processing pipeline 
 - LightGBM hyperparam tuning + boosting 
 - two live paper trading campaigns (weekday Jul 30 vs weekend Jul 31)
-- metrics to include are Sharpe ratio, win rate, directional accuracy, RMSA, MAE and R^2
+- metrics to include are Sharpe ratio, win rate, directional accuracy, RMSE, MAE and R²
 - limitations (collector crash, warmup, proxy PnL, smallish data size/only one month or so of historical data, cadence ≈110s)
+- stay inside the **8-page** ICAIF limit (no appendix dump)
 
 ---
 
-## Source-of-truth paths (this branch)
+## Source-of-truth paths (campaign data; see also template branch)
 
 | Artifact | Path |
 |---|---|
@@ -105,8 +137,8 @@ Rough live-collection intuition: multiple multi-day CEX windows (Jun–Jul 2026)
 
 **Market-friction angle:** orderbook **imbalance** (bid- vs ask-heavy) as a continuous regressor for short-horizon z movement — microstructure friction, not a binary classifier.
 
-### 6. LightGBM on large tabular microstructure
-- Single multi-output-style tabular GBM with `coin` / `pair` categoricals.
+### 6. LightGBM (gradient boosting) on large tabular microstructure
+- Single multi-output-style tabular **gradient-boosting** model with `coin` / `pair` categoricals (say “gradient boosting / LightGBM” in the paper — not bare “GBM”).
 - Lag features + cross-exchange dispersion/ranks + momentum / `zscore_accel`.
 - Correlation screen in notebook (`corr_target`; lag inter-correlation heatmap — “covariance/correlation” story for redundancy of lagged z).
 
@@ -244,7 +276,7 @@ Used LSTM not to replace the rule-based signal but as a trade filter — skip pr
 
 ## Strategy summary (one paragraph)
 
-We predict the **next-snapshot z-score** of cross-exchange crypto spreads using LightGBM on lagged spread/z, multi-venue ticker microstructure, using the ticker, orderbook imbalance, trade history, funding rate, and open interest data, on a set of  multi-window live CEX snapshots. At runtime we paper-trade only high-confidence predictions (`|pred|≥0.5`), settling against realized future z, and we always score a **persistence baseline on identical rows** so confidence filtering cannot be mistaken for alpha.
+We use **gradient boosting (LightGBM)** to predict the **next-snapshot z-score** of same-asset **cross-exchange** crypto spreads from lagged spread/z and live CEX microstructure (ticker, orderbook imbalance, trades, funding, open interest — **not OHLCV**). At runtime we paper-trade only high-confidence predictions (`|pred|≥0.5`), settle against realized future z, and always score a **persistence / rule-based z-score baseline on identical rows** so confidence filtering cannot be mistaken for alpha.
 
 ---
 
@@ -256,21 +288,24 @@ We predict the **next-snapshot z-score** of cross-exchange crypto spreads using 
 4. Warmup: `MIN_PERIODS=90` ⇒ ~2.5–3h before preds on Jul31 protocol.
 6. Cross-sectional rows are dependent; do not claim IID daily-equity year-equivalence without caveats. (we never claimed iid - this is stock market data and claiming iid would be frankly ridiculous)
 7. Orderbook coverage in the 68-feature model is thinner than the 73-feature Jul30 model (mostly Coinbase imbalance lags + aggregates).
+8. **Page budget:** ICAIF '26 is 8 pages total — prioritize Frame 1 novelty + ablation honesty over exhaustive tables.
 
 ---
 
 ## Checklist for the next chat
 
-1. Open this branch; read this handoff + `metrics_report.csv` for both sessions.  
+1. Open `paper-planning`; read this handoff + `metrics_report.csv` for both sessions.  
 2. Pull figures from `docs/paper_campaign_figures/`.  
-3. Rewrite paper sections along **Frame 1** then **Frame 2**.  
-4. Keep baseline + ablation front-and-center.  
-5. Soften any “40% R² / 10 years of S&P” claims into precise, defensible wording.  
-6. Optionally re-run `report_paper_session.py` / figure script after any metric definition changes.  
-7. If needed, add Jul30 `signals.jsonl` analysis (folder may lack full signals — trades + metrics exist).
+3. On `paper/icaif26-template-update`, rewrite `paper/gradient-boosting-cross-market-spread-prediction.tex` along **Frame 1** then **Frame 2** (start from `sigconf-sample.tex` / `SUBMISSION_GUIDE.md` for ACM compliance).  
+4. Keep gradient-boosting / LightGBM wording; avoid OU/OHLCV/“stochastic GBM” titles.  
+5. Keep baseline + ablation front-and-center.  
+6. Soften any “40% R² / 10 years of S&P” claims into precise, defensible wording.  
+7. Fit **≤ 8 pages**; double-blind (`anonymous,review`); no appendices.  
+8. Optionally re-run `report_paper_session.py` / figure script after any metric definition changes.  
+9. If needed, add Jul30 `signals.jsonl` analysis (folder may lack full signals — trades + metrics exist).
 
 ---
 
 ## Suggested commit note for maintainers
 
-This handoff + figures + generator script belong on `experiment/paper-trading-live-testing` beside `data/paper_trading/July31st_8_hr` and the Jul30 session folder.
+Keep this handoff on `paper-planning`. Campaign figures/scripts/data stay beside `data/paper_trading/July31st_8_hr` and the Jul30 session folder (historically on `experiment/paper-trading-live-testing`). The ACM-ready LaTeX lives on `paper/icaif26-template-update` as `gradient-boosting-cross-market-spread-prediction.tex`.
