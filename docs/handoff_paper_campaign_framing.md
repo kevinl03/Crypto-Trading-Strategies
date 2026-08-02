@@ -12,18 +12,19 @@
 
 | Item | Value |
 |---|---|
-| **Working title** | Gradient Boosting for High-Frequency Cryptocurrency Cross-Market Spread Prediction in Volatility-Driven Pairs Trading |
-| **LaTeX source (to regenerate)** | `paper/gradient-boosting-cross-market-spread-prediction.tex` on `paper/icaif26-template-update` |
+| **Working title (new paper)** | Gradient Boosting for High-Frequency Cryptocurrency Cross-Market Spread Prediction in Volatility-Driven Pairs Trading |
+| **New LaTeX (to create)** | e.g. `paper/gradient-boosting-cross-market-spread-prediction.tex` on `paper/icaif26-template-update` — **does not exist yet** |
+| **Old reference draft** | `paper/stochastic-cross-venue-ohlcv-trading.tex` — OU/OHLCV content; keep under this name |
 | **Venue** | ICAIF '26 (ACM sigconf), Milan, Italy — double-blind |
 | **Hard limit** | **8 pages total** incl. figures + references; no appendices / supplementary materials |
 | **Deadline** | August 9, 2026, 23:59 AOE |
 | **Template** | ACM `acmart` v2.19, `\documentclass[sigconf,anonymous,review]{acmart}` — see `paper/SUBMISSION_GUIDE.md` |
 | **Clean sample (start here)** | `paper/acm-sample/sigconf-sample.tex` — official ACM sample (isolated from the paper build) |
 
-### Status of the `.tex` file (important)
-- `gradient-boosting-cross-market-spread-prediction.tex` is **not** the new paper yet.
-- Body content is still the **old OU / OHLCV draft**; only the **filename + title** have been updated for the new framing.
-- Treat that file as **reference / scrap material** when rewriting. **Regenerate** the paper from `paper/acm-sample/sigconf-sample.tex` + this handoff + campaign metrics/figures — do not polish the old body in place as if it were the submission draft. The `acm-sample/` folder is isolated and does **not** affect compiling the real paper.
+### Status of the `.tex` files (important)
+- `stochastic-cross-venue-ohlcv-trading.tex` is the **old OU / OHLCV paper**. Filename and title match that content — keep it as **reference only**.
+- The **new gradient-boosting (LightGBM) ICAIF paper** will be a **separate new `.tex`** created during regeneration (suggested name: `gradient-boosting-cross-market-spread-prediction.tex`).
+- **Regenerate** from `paper/acm-sample/sigconf-sample.tex` + this handoff + campaign metrics/figures — do **not** overwrite the stochastic reference draft in place. The `acm-sample/` folder is isolated and does **not** affect compiling either paper.
 
 ### What this paper *is*
 - **Machine learning:** LightGBM = **gradient boosting** (tree ensemble). Predictions are deterministic given fixed features/model; training can be made reproducible with seeds.
@@ -37,7 +38,7 @@
 - Not **Geometric Brownian Motion** — do not abbreviate the method as “GBM” in the paper title/body without saying **gradient boosting** / LightGBM (finance audiences read GBM as the SDE). Prefer “gradient boosting” or “LightGBM” in prose.
 
 ### Related branches
-- **Regenerate** content into a new ACM-compliant draft on `paper/icaif26-template-update` (start from `paper/acm-sample/sigconf-sample.tex`; keep the old filled `.tex` only as reference).
+- **Regenerate** a **new** ACM-compliant GBT draft on `paper/icaif26-template-update` (start from `paper/acm-sample/sigconf-sample.tex`; leave `stochastic-cross-venue-ohlcv-trading.tex` untouched as the old OU reference).
 - Keep campaign metrics/figures paths below as the empirical backbone.
 
 ---
@@ -301,7 +302,7 @@ We use **gradient boosting (LightGBM)** to predict the **next-snapshot z-score**
 
 1. Open `paper-planning`; read this handoff + `metrics_report.csv` for both sessions.  
 2. Pull figures from `docs/paper_campaign_figures/`.  
-3. On `paper/icaif26-template-update`, **regenerate** the paper from `paper/acm-sample/sigconf-sample.tex` + `SUBMISSION_GUIDE.md` using Frame 1/2 and this handoff — do **not** treat the current `gradient-boosting-cross-market-spread-prediction.tex` body as the draft (old OU/OHLCV text; reference only).  
+3. On `paper/icaif26-template-update`, **create a new** GBT `.tex` from `paper/acm-sample/sigconf-sample.tex` + `SUBMISSION_GUIDE.md` using Frame 1/2 and this handoff — leave `stochastic-cross-venue-ohlcv-trading.tex` as the old OU/OHLCV reference.  
 4. Keep gradient-boosting / LightGBM wording; avoid OU/OHLCV/“stochastic GBM” titles.  
 5. Keep baseline + ablation front-and-center.  
 6. Soften any “40% R² / 10 years of S&P” claims into precise, defensible wording.  
@@ -313,4 +314,4 @@ We use **gradient boosting (LightGBM)** to predict the **next-snapshot z-score**
 
 ## Suggested commit note for maintainers
 
-Keep this handoff on `paper-planning`. Campaign figures/scripts/data stay beside `data/paper_trading/July31st_8_hr` and the Jul30 session folder (historically on `experiment/paper-trading-live-testing`). On `paper/icaif26-template-update`: start from `paper/acm-sample/sigconf-sample.tex`; the filled `gradient-boosting-cross-market-spread-prediction.tex` is **old-content reference only** until a full rewrite replaces it.
+Keep this handoff on `paper-planning`. Campaign figures/scripts/data stay beside `data/paper_trading/July31st_8_hr` and the Jul30 session folder (historically on `experiment/paper-trading-live-testing`). On `paper/icaif26-template-update`: start from `paper/acm-sample/sigconf-sample.tex` into a **new** GBT `.tex`; keep `stochastic-cross-venue-ohlcv-trading.tex` as the old OU reference.
