@@ -125,15 +125,16 @@ Remove `anonymous` and `review` options. Author info will render normally.
 
 ```
 paper/
-├── acmart.cls                              # ACM class file v2.19
-├── ACM-Reference-Format.bst               # Bibliography style
-├── stochastic-cross-venue-ohlcv-trading.tex  # Main paper source
-├── references.bib                          # Bibliography database
-├── generate_figures.py                     # Script to produce figures
-├── figures/                                # Generated PDF figures (not yet created)
+├── acmart.cls                                          # ACM class file v2.19
+├── ACM-Reference-Format.bst                            # Bibliography style
+├── gradient-boosting-cross-market-spread-prediction.tex  # Main paper source
+├── sigconf-sample.tex                                  # Official ACM sigconf sample
+├── references.bib                                      # Bibliography database
+├── generate_figures.py                                 # Script to produce figures
+├── figures/                                            # Generated PDF figures
 │   ├── threshold_scatter.pdf
 │   ├── spread_timeseries.pdf
 │   ├── cumulative_pnl.pdf
 │   └── halflife_heatmap.pdf
-└── SUBMISSION_GUIDE.md                     # This file
+└── SUBMISSION_GUIDE.md                                 # This file
 ```
