@@ -127,7 +127,7 @@ Remove `anonymous` and `review` options. Author info will render normally.
 paper/
 ├── acmart.cls                                            # ACM class file v2.19
 ├── ACM-Reference-Format.bst                              # Bibliography style
-├── gradient-boosting-cross-market-spread-prediction.tex  # Old OU/OHLCV body (reference only)
+├── stochastic-cross-venue-ohlcv-trading.tex              # Old OU/OHLCV draft (reference only; matches content)
 ├── references.bib                                        # Paper bibliography
 ├── generate_figures.py                                   # Script to produce figures
 ├── figures/                                              # Paper figures
@@ -140,13 +140,15 @@ paper/
 └── SUBMISSION_GUIDE.md
 ```
 
+The **new ICAIF submission** (gradient boosting / LightGBM) will be a **new** `.tex` file created during regeneration (e.g. `gradient-boosting-cross-market-spread-prediction.tex`), started from `acm-sample/sigconf-sample.tex`. Do not overwrite the stochastic reference draft in place.
+
 ### Compiling
 
-**Actual paper** (from `paper/`): uses only `acmart.cls`, `references.bib`, and `figures/`. The `acm-sample/` folder is unused and does not interfere.
+**Old reference draft** (from `paper/`): uses only `acmart.cls`, `references.bib`, and `figures/`. The `acm-sample/` folder is unused and does not interfere.
 
 ```powershell
 cd paper
-tectonic gradient-boosting-cross-market-spread-prediction.tex
+tectonic stochastic-cross-venue-ohlcv-trading.tex
 ```
 
 **ACM sample** (needs parent dir on the search path so `acmart.cls` / `.bst` resolve):
