@@ -1,0 +1,69 @@
+# Literature Review — Paper Abstracts
+
+Papers organized by comparison axis relative to our gradient-boosting cross-exchange spread prediction paper.
+
+---
+
+## `rule_based_z_score_crypto/` — Rule-based z-score/cointegration signals on crypto (no ML spread prediction)
+
+### 1. Fil & Kristoufek (2020) — Pairs Trading in Cryptocurrency Markets
+- **Source:** IEEE Access 8:172644–172651 | [DOI](https://doi.org/10.1109/access.2020.3024619)
+- **Abstract:** Pairs trading is a strategy based on exploiting mean reversion in prices of securities. Even though these strategies have been shown to perform well for equities, their performance is unknown for the field of cryptocurrencies, usually perceived as inefficient and predictable. We apply the distance and cointegration methods to a basket of 26 liquid cryptocurrencies traded on the Binance exchange, specifically at 5-minute, 1-hour and daily frequencies. In our backtests, the strategies underperform classical benchmarks. However, the results are quite sensitive to parameter settings and external factors such as transaction costs or execution windows. Higher-frequency trading delivers significantly better performance, and while the most common daily distance method returns −0.07% monthly, this increases to 11.61% monthly for 5-minute frequency. Additionally, we find evidence of simple mean-reverting behavior in intraday prices that is missing in daily data, and which provides further support for the inefficiency of cryptocurrency markets.
+
+### 2. Tadi & Kortchemski (2021) — Evaluation of Dynamic Cointegration-Based Pairs Trading Strategy in the Cryptocurrency Market
+- **Source:** arXiv:2109.10662 | [Link](https://arxiv.org/abs/2109.10662)
+- **Abstract:** This research aims to demonstrate a dynamic cointegration-based pairs trading strategy, including an optimal look-back window framework in the cryptocurrency market, and evaluate its return and risk by applying three different scenarios. We employ the Engle-Granger methodology, the Kapetanios-Snell-Shin (KSS) test, and the Johansen test as cointegration tests in different scenarios. We calibrate the mean-reversion speed of the Ornstein-Uhlenbeck process to obtain the half-life used for the asset selection phase and look-back window estimation. By considering the main limitations in the market microstructure, our strategy exceeds the naive buy-and-hold approach in the Bitmex exchange. Another significant finding is that we implement a numerous collection of cryptocurrency coins to formulate the model's spread, which improves the risk-adjusted profitability of the pairs trading strategy. Besides, the strategy's maximum drawdown level is reasonably low, which makes it useful to be deployed.
+
+### 3. Tadi & Witzany (2025) — Copula-Based Trading of Cointegrated Cryptocurrency Pairs
+- **Source:** Financial Innovation 11:40, Springer | [DOI](https://doi.org/10.1186/s40854-024-00702-7) | arXiv:2305.06961
+- **Abstract:** This research introduces a novel pairs trading strategy based on copulas for cointegrated pairs of cryptocurrencies. To identify the most suitable pairs, the study employs linear and non-linear cointegration tests along with a correlation coefficient measure and fits different copula families to generate trading signals formulated from a reference asset for analyzing the mispricing index. The strategy's performance is then evaluated by conducting back-testing for various triggers of opening positions, assessing its returns and risks. The findings indicate that the proposed method outperforms buy-and-hold trading strategies in terms of both profitability and risk-adjusted returns.
+
+### 4. Ko, Lin, Do et al. (2023) — Pairs Trading Strategies in Cryptocurrency Markets: A Comparative Study
+- **Source:** Eng. Proc. 2023, 38, 74, MDPI | [DOI](https://doi.org/10.3390/engproc2023038074)
+- **Abstract:** Pairs trading is a popular quantitative trading strategy with the advantage of a similarity in price movement to financial assets. Assuming that the price spreads of trading pairs are mean-reverting, this strategy exploits the disequilibrium in financial markets to find arbitrage investment opportunities. We examine the profitability of pairs trading for 26 cryptocurrencies traded on the Binance exchange at high frequencies of 1, 5, and 60 min. In addition to the traditional statistical methods of distance, correlation, cointegration, and stochastic differential residual (SDR), we focus on two evolutionary algorithms: genetic algorithm (GA) and non-dominated sorting genetic algorithm II (NSGA-II). During the 79-trading-day period from 11 January to 31 March 2018, NSGA-II showed the best results at all frequencies, with an average return of 2.84%. Among the statistical models, SDR ranks first, whereas Correlation ranks last, with average returns of 1.63% and −0.48%, respectively.
+
+### 5. Palazzi (2025) — Trading Games: Beating Passive Strategies in the Bullish Crypto Market
+- **Source:** Journal of Futures Markets 45:1911–1933, Wiley | [DOI](https://doi.org/10.1002/fut.70018)
+- **Abstract:** This study examines the effectiveness of cointegrated pairs trading in cryptocurrency markets, introducing systematic parameter optimization within the trading framework. The analysis is conducted using a dataset comprising ten major cryptocurrencies, selected based on market capitalization and consensus mechanism, spanning the period from January 2019 to May 2024. The methodology incorporates dynamic risk management through adaptive trailing stop-loss and volatility filtering mechanisms. Empirical results demonstrate that the pairs trading strategy consistently outperforms conventional pairs trading and passive approaches, generating significant risk-adjusted excess returns, while maintaining low market exposure.
+
+---
+
+## `ml_hf_crypto/` — ML on HF crypto (closest peers, but different task or missing cross-exchange/microstructure)
+
+### 6. Fischer, Krauss & Deinert (2019) — Statistical Arbitrage in Cryptocurrency Markets
+- **Source:** J. Risk Financial Manag. 12(1):31, MDPI | [DOI](https://doi.org/10.3390/jrfm12010031)
+- **Abstract:** Machine learning research has gained momentum—also in finance. With our paper, we pose the question how such a statistical arbitrage approach would fare in the cryptocurrency space on minute-binned data. Specifically, we train a random forest on lagged returns of 40 cryptocurrency coins, with the objective to predict whether a coin outperforms the cross-sectional median of all 40 coins over the subsequent 120 min. We buy the coins with the top-3 predictions and short-sell the coins with the flop-3 predictions, only to reverse the positions after 120 min. During the out-of-sample period of our backtest, ranging from 18 June 2018 to 17 September 2018, and after more than 100,000 trades, we find statistically and economically significant returns of 7.1 bps per day, after transaction costs of 15 bps per half-turn. While this finding poses a challenge to the semi-strong form of market efficiency, we critically discuss it in light of limits to arbitrage, focusing on total volume constraints of the presented intraday-strategy.
+
+### 7. Liou, Liu & Cheng (2024) — Price Spread Prediction in High-Frequency Pairs Trading Using Deep Learning
+- **Source:** International Review of Financial Analysis 97:103725, Elsevier | [DOI](https://doi.org/10.1016/j.irfa.2024.103725)
+- **Abstract:** High-Frequency Trading (HFT) leverages advanced algorithms and high-speed data transmission to execute a large volume of trades within extremely short timeframes and generate profit. However, predicting stock prices in this context is challenging due to the frequent fluctuations in bid and ask conditions within financial markets. Institutional investors often employ pairs trading strategies to mitigate the systemic risk associated with single products, simultaneously buying and selling highly correlated financial instruments to profit from fluctuations in abnormal price spreads. In this study, we utilized intraday continuous trading data from the Taiwan Stock Exchange, integrating commonly used stock market features relevant to HFT. By employing XGBoost for feature selection and combining it with deep learning models, we aimed to predict the relationship between price spreads and boundaries in pairs trading, thereby generating entry and exit signals. Although accurately predicting the relationship between price spreads and boundaries presents significant challenges, the model effectively learned the pattern of price spread changes. Applying the model's entry and exit signals in pairs trading demonstrated that this strategy can enhance win rates and achieve stable profits in the volatile intraday market environment.
+
+### 8. Tsoku & Makatjane (2026) — Deep Learning-Based Pairs Trading: Real-Time Forecasting of Co-Integrated Cryptocurrency Pairs
+- **Source:** Frontiers in Applied Mathematics and Statistics 12:1749337 | [DOI](https://doi.org/10.3389/fams.2026.1749337)
+- **Abstract:** Statistical arbitrage strategies, including pairs trading, rely on identifying co-movements and static long-term equilibrium relationships between assets, where conventional methods fail to capture non-stationary dynamics, hence reducing trading effectiveness. This study addresses this challenge by employing a dynamic co-integration approach combined with deep learning techniques to select suitable cryptocurrency pairs and forecast spread dynamics. The study examines multiple cryptocurrencies, namely: BNB, Ethereum, Litecoin, Ripple, and USDT, using dynamic Johansen co-integration tests to identify pairs with time-varying equilibrium relationships, and model the spread through a Dynamic Weighted Ensemble of Deep Neural Network and Long Short-Term Memory. Forecasting accuracy, trading performance, and predictive uncertainty are evaluated using error metrics, trading outcomes, and 99% prediction intervals. The results indicate that only those cryptocurrencies with dynamically coherent relationships are suitable for mean-reversion strategies. The Dynamic Weighted Ensemble achieves the best predictive accuracy, while LSTM captures proportional temporal dynamics effectively.
+
+---
+
+## `ml_spread_prediction_equities/` — ML predicting spread value (same task family, but equities not crypto)
+
+### 9. Han & Li (2024) — An LSTM-Based Optimization Algorithm for Enhancing Quantitative Arbitrage Trading
+- **Source:** PeerJ Computer Science 10:e2164 | [DOI](https://doi.org/10.7717/peerj-cs.2164)
+- **Abstract:** Arbitrage trading is a common quantitative trading strategy that leverages the long-term cointegration relationships between multiple related assets to conduct spread trading for profit. However, in real quantitative trading, determining the cointegration relationship based on the Engle-Granger two-step method imposes stringent conditions for the cointegration to hold, which can easily be disrupted by price fluctuations or trend characteristics presented by the linear combination, leading to the failure of the arbitrage strategy and significant losses. To address this issue, this article proposes an optimized strategy based on long-short-term memory (LSTM), termed Dynamic-LSTM Arb (DLA), which can classify the trend movements of linear combinations between multiple assets. It assists the Engle-Granger two-step method in determining cointegration relationships when clear upward or downward non-stationary trend characteristics emerge. Training results indicate that our proposed optimization model can successfully filter out unprofitable trades. Through trading tests on a backtesting platform, a theoretical return of 23% was achieved over a 10-day futures trading period at a 1-min level, significantly outperforming the benchmark strategy and the returns of the CSI 300 Index during the same period.
+
+---
+
+## `rl_alternatives/` — RL / GA-based alternatives (different methodology family for the same economic task)
+
+### 10. Ning & Lee (2024) — Advanced Statistical Arbitrage with Reinforcement Learning
+- **Source:** arXiv:2403.12180 | [Link](https://arxiv.org/abs/2403.12180)
+- **Abstract:** Statistical arbitrage is a prevalent trading strategy which takes advantage of mean reverse property of spread of paired stocks. Studies on this strategy often rely heavily on model assumption. In this study, we introduce an innovative model-free and reinforcement learning based framework for statistical arbitrage. For the construction of mean reversion spreads, we establish an empirical reversion time metric and optimize asset coefficients by minimizing this empirical mean reversion time. In the trading phase, we employ a reinforcement learning framework to identify the optimal mean reversion strategy. Diverging from traditional mean reversion strategies that primarily focus on price deviations from a long-term mean, our methodology creatively constructs the state space to encapsulate the recent trends in price movements. Additionally, the reward function is carefully tailored to reflect the unique characteristics of mean reversion trading.
+
+---
+
+## Papers NOT yet downloaded
+
+| # | Paper | Reason | Link |
+|---|-------|--------|------|
+| — | Sarmento et al. (2024) — Machine Learning-Enhanced Pairs Trading | Downloaded PDF had wrong authors (Hadad et al.); need correct version | [DOI](https://doi.org/10.3390/forecast6020024) |
+| — | Shen et al. (2022) — Stock Index Spot–Futures Arbitrage Prediction Using ML Models | Wrong PDF was downloaded (quantum physics paper with same DOI prefix); need manual download | [PMC](https://pmc.ncbi.nlm.nih.gov/articles/PMC9601484/) |
+| — | Perrone et al. (2026) — Pairs Trading with Time-Series Deep Learning Models | ScienceDirect paywall | [ScienceDirect](https://doi.org/10.1016/j.jfds.2026.100177) |
