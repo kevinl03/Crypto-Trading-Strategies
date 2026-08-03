@@ -14,9 +14,9 @@ Unlike traditional pairs trading where the spread between \emph{different} asset
 
 We normalize the spread into a rolling z-score:
 \begin{equation}
-    z_t = \frac{S_t - \bar{S}_w}{\hat{\sigma}_w}
+    z_t = \frac{S_t - \hat{\mu}_w}{\hat{\sigma}_w}
 \end{equation}
-where $\bar{S}_w$ and $\hat{\sigma}_w$ are the rolling mean and standard deviation over a window of $w$ snapshots, with a minimum period requirement before the z-score is defined.
+where $\hat{\mu}_w$ and $\hat{\sigma}_w$ are the estimated rolling mean and standard deviation over a window of $w$ snapshots, with a minimum period requirement before the z-score is defined.
 
 \subsection{Supervised Prediction Target}
 
@@ -26,7 +26,7 @@ The model's target is the \emph{future} z-score at horizon $H$:
 \end{equation}
 computed via $\texttt{groupby(coin, pair).zscore.shift(-H)}$ on the training panel. This is a regression target, not a binary classification. The model predicts both the direction and magnitude of the z-score $H$ snapshots ahead, enabling the confidence filter to select trades where the predicted movement is large.
 
-For the production model used in the Jul~31 campaign, $H = 1$ (predict the next snapshot's z-score), $w = 300$ snapshots, and $\text{MIN\_PERIODS} = 90$.
+For the prediction model used in the Jul~31 campaign, $H = 1$ (predict the next snapshot's z-score), $w = 300$ snapshots, and $\text{MIN\_PERIODS} = 90$.
 
 \subsection{Feature Engineering}\label{sec:features}
 
@@ -85,14 +85,14 @@ Features that capture the state of the multi-venue market as a whole:
 
 $\texttt{coin}$ and $\texttt{pair}$ (exchange-pair label) are encoded as LightGBM native categoricals, allowing the model to learn asset-specific and venue-pair-specific dynamics without separate per-pair models.
 
-The production model uses 68~features in total. OHLCV candle features are explicitly excluded ($\texttt{LOAD\_TABLES['ohlcv']=False}$) because the live microstructure signals (ticker, orderbook, trades) provide strictly more information at the snapshot level.
+The prediction model uses 68~features in total. OHLCV candle features are explicitly excluded ($\texttt{LOAD\_TABLES['ohlcv']=False}$) because the live microstructure signals (ticker, orderbook, trades) provide strictly more information at the snapshot level.
 
 \subsection{Model: LightGBM Gradient Boosting}\label{sec:lgbm}
 
 We train a single LightGBM~\cite{ke2017lightgbm} regression model on the pooled panel of all (coin, exchange-pair, snapshot) observations. The objective is squared error minimization on $y_t = z_{t+H}$.
 
 \begin{table}[h]
-\caption{LightGBM hyperparameters for the production model.}
+\caption{LightGBM hyperparameters for the prediction model.}
 \label{tab:hyperparams}
 \begin{tabular}{lr}
 \toprule
@@ -135,7 +135,7 @@ We report both forecast quality and trading performance metrics:
     \item \textbf{R$^2$} (coefficient of determination): fraction of variance in the realized $z_{t+H}$ explained by the model's predictions. Reported on all predictions and on the filtered subset.
     \item \textbf{Directional accuracy (DirAcc)}: fraction of predictions where $\text{sign}(\hat{z}) = \text{sign}(z_{t+H})$.
     \item \textbf{Mean pnl\_proxy}: average $\text{direction} \times z_{t+H}$ across settled trades.
-    \item \textbf{Hourly portfolio Sharpe ratio}: $\text{mean}(\Delta\text{equity}_h) / \text{std}(\Delta\text{equity}_h)$ where hourly equity includes realized closed-trade profits plus mark-to-market valuation of open positions as $\text{direction} \times z_t$. Risk-free rate is zero.
+    \item \textbf{Hourly portfolio Sharpe ratio}: $\text{mean}(\Delta\text{equity}_h) / \text{std}(\Delta\text{equity}_h)$ where hourly equity includes realized closed-trade profits plus mark-to-market valuation of open positions as $\text{direction} \times z_t$. Risk-free rate is zero because the z-unit proxy has no currency denomination and represents forecast quality rather than economic returns.
 \end{itemize}
 
 All metrics are computed with a matched \textbf{naive persistence baseline} ($\hat{z}_{t+H} \leftarrow z_t$) scored on the identical row set, ensuring that gains from the confidence filter cannot be mistaken for model skill.

@@ -23,7 +23,7 @@ Our key findings are:
     scarce inventory slots are allocated; the profit ratio is not, narrowing to
     roughly 6\% when both policies fill slots greedily by signal strength.
 
-    \item The confidence filter ($|\hat{z}| \geq 0.5$) acts as a learned abstention mechanism, lifting R$^2$ by 0.19--0.25 by selecting the 10--15\% of predictions in high-signal regimes. On these filtered rows, directional accuracy is largely explained by persistence in high-$|z|$ states; the model's incremental value is in capturing the magnitude of future z-score movements.
+    \item The confidence filter ($|\hat{z}| \geq 0.5$) lifts R$^2$ by 0.19--0.25 by selecting the 10--15\% of predictions in high-signal regimes. On these filtered rows, directional accuracy is largely explained by persistence in high-$|z|$ states; the model's incremental value is in capturing the magnitude of future z-score movements.
 
     \item The result is a forecasting result and not a trading result. Scored in
     basis points of realized spread change rather than z-units, none of the

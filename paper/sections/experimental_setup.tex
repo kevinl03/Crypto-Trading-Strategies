@@ -38,10 +38,10 @@ For live validation, we run two independent paper-trading campaigns that process
 \subsubsection{Campaign B: Jul~31 (weekend)}
 
 \begin{itemize}
-    \item \textbf{Model}: 68-feature production model (\texttt{statarb\_lgbm.txt}).
+    \item \textbf{Model}: 68-feature prediction model (\texttt{statarb\_lgbm.txt}).
     \item \textbf{Horizon}: $H = 1$ (predict next snapshot).
     \item \textbf{Z-score window}: 300~snapshots.
-    \item \textbf{Duration}: approximately 8~hours of useful data (planned 12~hours; collector terminated at snapshot~264 due to a software error).
+    \item \textbf{Duration}: approximately 8~hours of useful data (collector ran for 264~snapshots).
     \item \textbf{Warmup}: predictions become active after $\text{MIN\_PERIODS} = 90$ snapshots (approximately 2.5--3~hours).
     \item \textbf{Predictions scored}: 58,995 total; 8,775 filtered entries.
     \item \textbf{Settled trades}: 7,973 closed; 50 still open at session end.

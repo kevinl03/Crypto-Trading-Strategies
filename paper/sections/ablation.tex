@@ -12,6 +12,7 @@ The $|\hat{z}| \geq 0.5$ confidence filter is a design choice that restricts tra
 \begin{table}[h]
 \caption{Effect of the $|\hat{z}| \geq 0.5$ confidence filter on model R$^2$ across campaigns.}
 \label{tab:filter_ablation}
+\small
 \begin{tabular}{lrrrr}
 \toprule
 \textbf{Campaign} & \textbf{All R$^2$} & \textbf{Filtered R$^2$} & \textbf{$\Delta$} & \textbf{\% rows filtered} \\
@@ -23,7 +24,7 @@ Offline test   & 0.133 & 0.383 & +0.250 & --- \\
 \end{tabular}
 \end{table}
 
-The filter consistently lifts R$^2$ by approximately 0.2--0.25 across all evaluation settings, as shown in Figure~\ref{fig:filter_lift}. Importantly, this lift is not free: the filtered subset constitutes only 10--15\% of all predictions, meaning 85--90\% of snapshot/pair observations are declined. The filter acts as a learned abstention mechanism, analogous to the ``skip low-magnitude predictions'' strategy shown to improve profit-per-trade in Sarmento et al.~\cite{sarmento2024ml}.
+The filter consistently lifts R$^2$ by approximately 0.2--0.25 across all evaluation settings, as shown in Figure~\ref{fig:filter_lift}. Importantly, this lift is not free: the filtered subset constitutes only 10--15\% of all predictions, meaning 85--90\% of snapshot/pair observations are declined. The filter strategy parallels the ``skip low-magnitude predictions'' approach shown to improve profit-per-trade in Sarmento et al.~\cite{sarmento2024ml}.
 
 \begin{figure}[h]
 \centering

@@ -37,6 +37,7 @@ An earlier 73-feature model with horizon $H=2$ and z-score window~120 was deploy
 \begin{table}[h]
 \caption{Jul~30 live campaign: model vs naive persistence.}
 \label{tab:jul30}
+\small
 \begin{tabular}{lrrrrr}
 \toprule
 \textbf{Set} & \textbf{n} & \textbf{Model R$^2$} & \textbf{Model Dir.} & \textbf{Naive R$^2$} & \textbf{Naive Dir.} \\
@@ -49,11 +50,12 @@ $|\hat{z}|\geq0.5$ & 5{,}054  & 0.248  & 76.5\% & $-$0.045 & 75.4\% \\
 
 \subsubsection{Campaign~B (Jul~31, weekend)}
 
-The production 68-feature model with horizon $H=1$ and z-score window~300 was deployed for an 8-hour session. Predictions became active approximately 3~hours into the session after the 90-snapshot rolling z-score warmup period. Table~\ref{tab:jul31} reports model and naive persistence metrics.
+The prediction 68-feature model with horizon $H=1$ and z-score window~300 was deployed for an 8-hour session. Predictions became active approximately 3~hours into the session after the 90-snapshot rolling z-score warmup period. Table~\ref{tab:jul31} reports model and naive persistence metrics.
 
 \begin{table}[h]
 \caption{Jul~31 live campaign: model vs naive persistence.}
 \label{tab:jul31}
+\small
 \begin{tabular}{lrrrrr}
 \toprule
 \textbf{Set} & \textbf{n} & \textbf{Model R$^2$} & \textbf{Model Dir.} & \textbf{Naive R$^2$} & \textbf{Naive Dir.} \\
@@ -120,6 +122,8 @@ To isolate the value of the learned forecast from the confidence filter, we repl
     \item \textbf{Mean-reversion}: $\text{direction} = -\text{sign}(z_t)$. The classical pairs-trading direction, betting the spread will revert toward zero.
 \end{itemize}
 
+Table~\ref{tab:baselines} reports the capacity-matched baseline comparison, which is the primary evidence for the model's improvement over rule-based z-score thresholds.
+
 \begin{table}[h]
 \caption{Capacity-matched baseline comparison on Jul~31 ($\text{max\_open}=50$). Directional accuracy and mean per-trade profit are the primary comparison metrics.}
 \label{tab:baselines}
@@ -134,7 +138,7 @@ Mech.\ mean-reversion  & $-\text{sign}(z_t)$     & 8{,}550  & 30.7\%          & 
 \end{tabular}
 \end{table}
 
-The learned policy improves directional accuracy by 7.6~percentage points and mean per-trade profit by 71\% over mechanical persistence on comparable trade counts. Classical mean-reversion, the direction assumed by rule-based z-score pairs-trading systems throughout the literature, produces negative returns at this hold horizon. At minute-scale granularity, large $|z|$ states are more likely to persist for one additional snapshot than to revert.
+As shown in Table~\ref{tab:baselines}, the learned policy improves directional accuracy by 7.6~percentage points and mean per-trade profit by 71\% over mechanical persistence on comparable trade counts. Classical mean-reversion, the direction assumed by rule-based z-score pairs-trading systems throughout the literature, produces negative returns at this hold horizon. At minute-scale granularity, large $|z|$ states are more likely to persist for one additional snapshot than to revert.
 
 Figure~\ref{fig:cumpnl} shows the cumulative z-unit profit trajectory for the learned policy and both mechanical baselines over the Jul~31 session.
 

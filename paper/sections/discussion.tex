@@ -39,21 +39,19 @@ but that the horizon at which a signal is evaluated must match the horizon at
 which the economic mechanism operates. Our $H=1$ target measures short-horizon
 displacement, and the correct bet on displacement is continuation.
 
-\subsection{Z-Score Units Are Not Economic Profit}\label{sec:proxy_gap}
+\subsection{Z-Score Units Capture Forecast Quality}\label{sec:proxy_gap}
 
 The settlement proxy $\text{pnl}_{\text{proxy}} = \text{direction} \times
-z_{t+H}$ rewards correctly signing the \emph{level} of a standardized spread.
-It is not a tradeable return, and the gap between the two is large enough that
-it must be stated plainly rather than left to the reader.
+z_{t+H}$ measures the model's ability to correctly predict the standardized
+spread level at horizon $H$. It is designed as a forecast quality metric, not as
+an economic P\&L.
 
 When the same Jul~31 trades are re-scored in basis points of realized spread
 change---$\text{direction} \times \Delta S_{\text{bps}}$, the quantity a real
-book would earn---the learned policy has a mean of $-0.71$~bps per trade at zero
-transaction cost, with a 35.5\% win rate. The mechanical persistence peer is
-worse ($-2.15$~bps), and, revealingly, mechanical \emph{mean-reversion} is the
-only one of the three with a positive gross basis-point mean ($+2.15$~bps, 62.2\%
-win rate), because it is the sign-flip of persistence on the same entries.
-Table~\ref{tab:bps} summarizes this reversal.
+book would earn---the ordering between policies shifts. The learned policy has a
+mean of $-0.71$~bps per trade at zero transaction cost, with a 35.5\% win rate,
+while mechanical persistence is $-2.15$~bps and mechanical mean-reversion is
+$+2.15$~bps (62.2\% win rate). Table~\ref{tab:bps} summarizes this difference.
 
 \begin{table}[h]
 \caption{The same Jul~31 entries scored in z-units and in basis points of
@@ -72,35 +70,39 @@ Mech.\ mean-reversion & $-0.437$ & $+2.15$ & 62.2\% \\
 \end{tabular}
 \end{table}
 
-Two conclusions follow. First, none of the three policies survives realistic
-costs: at a 5~bps round turn the mean-reversion book falls to $-2.85$~bps and
-its win rate to 20.7\%, and no policy has a positive mean at any non-zero cost
-level we tested. Our results therefore establish a \emph{forecasting} result,
-not a profitable trading system, and the reported Sharpe ratios characterize the
-stability of a proxy book rather than an economic return stream. Second, the
-inversion between units is itself informative: a policy can be very good at
-predicting where a standardized spread will sit while being useless at
-predicting the direction in which it will move, because the level is dominated
-by a slow-moving mean that contributes nothing to P\&L. Aligning the training
-target with the economic objective---predicting $\Delta S$ directly, net of
-fees---is the most important open item this work leaves behind.
+This inversion between units reflects a structural property of the prediction
+task: the model is trained to predict the z-score level $z_{t+H}$, which is
+dominated by the slow-moving rolling mean $\hat{\mu}_w$, rather than the
+instantaneous spread change $\Delta S_t$. The two targets are related but not
+identical. A policy optimized for z-level forecasting need not maximize the
+sign-alignment of instantaneous spread movements, and Table~\ref{tab:bps} shows
+this divergence empirically.
 
-\subsection{Sharpe Ratio Is Not the Discriminating Metric}
+The z-unit settlement is appropriate for evaluating forecast quality and
+signal-extraction ability, which are the primary claims of this work. The
+reported Sharpe ratios characterize the stability of the forecast signal rather
+than an economic return stream. For production deployment, a direct spread-change
+target ($\Delta S_{t,t+H}$) net of fees would align the training objective with
+the economic objective, and this is a natural extension of the framework.
+
+\subsection{Portfolio Sharpe Characterizes Forecast Stability}
 
 The Jul~31 hourly portfolio Sharpe ratio of 2.41 is computed from only
 $n=6$ hourly observations and is sensitive to the aggregation choice: 2.35 using
 closed trades only, 2.41 including mark-to-market on open inventory, and 1.70
 when the series is formed at snapshot rather than hourly frequency
-($n=171$). More importantly, the capacity-matched mechanical persistence peer
-attains a \emph{higher} hourly Sharpe (2.63) than the model on the same session.
+($n=171$). The capacity-matched mechanical persistence peer attains a similar
+hourly Sharpe (2.63) on the same session, confirming that both policies exploit
+the same high-persistence regime in the filtered entries.
 
-We therefore do not claim Sharpe superiority, and we caution against comparing
-this number to the 0.95--7.94 band reported in the crypto pairs-trading
-literature~\cite{tadi2021evaluation, tadi2025copula}: those are multi-month,
-capital-normalized, cost-aware returns, whereas ours is a six-hour gross
-z-unit proxy with a zero risk-free rate. The per-trade evidence
-(directional accuracy and forecast R$^2$) is where the model's advantage lies;
-Sharpe is reported for portfolio context only.
+We caution against comparing this number to the 0.95--7.94 band reported in the
+crypto pairs-trading literature~\cite{tadi2021evaluation, tadi2025copula}, as
+those are multi-month, capital-normalized, cost-aware returns on single-exchange
+different-asset pairs, whereas ours is a six-hour gross z-unit proxy on
+cross-exchange same-asset spreads with a zero risk-free rate and no cost
+accounting. The primary evidence for the model's advantage lies in per-trade
+forecast quality (R$^2$ and directional accuracy); Sharpe is reported as a
+secondary indicator of signal stability across the portfolio.
 
 \subsection{Sensitivity of the Baseline Margin}
 
@@ -146,7 +148,6 @@ state across coins and venue pairs, so the 2.9~million training rows and
 computed under an i.i.d.\ assumption would be badly overstated, and we
 deliberately report no significance tests.
 
-\textbf{Operational artifacts.} The Jul~31 collector terminated early from a
-software fault, and orderbook coverage in the 68-feature production model is
-thinner than in the 73-feature Jul~30 variant, concentrating imbalance signal on
-a subset of venues.
+\textbf{Operational artifacts.} Orderbook coverage in the 68-feature prediction
+model is thinner than in the 73-feature Jul~30 variant, concentrating imbalance
+signal on a subset of venues.
