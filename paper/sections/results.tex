@@ -117,22 +117,14 @@ As shown in Table~\ref{tab:baselines}, the learned policy improves directional a
 
 The model's advantage is concentrated in \emph{magnitude} rather than \emph{sign}: on Jul~31 filtered entries the two methods are indistinguishable on directional accuracy (76.7\% vs 77.0\%), but the model explains twice as much variance (R$^2$ 0.347 vs 0.174). Conditional on entering, the learned forecast ranks and sizes deviations better than thresholding the current z-score.
 
-Figure~\ref{fig:cumpnl} shows the cumulative z-unit profit trajectory for the learned policy and both mechanical baselines over the Jul~31 session.
+Figure~\ref{fig:baseline_compare} visualizes the directional accuracy and mean per-trade profit for all three policies under matched capacity constraints.
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=\columnwidth]{figures/fig5_cum_pnl_proxy_jul31.png}
-\caption{Cumulative z-unit proxy P\&L over the Jul~31 session. Note that this is
-a proxy in z-score units gross of costs, not a currency return; see
-Section~\ref{sec:proxy_gap}.}
-\Description{Line chart of cumulative proxy profit in z-score units on the
-vertical axis against session time on the horizontal axis. The learned LightGBM
-policy rises steadily and close to linearly to roughly six thousand z-units by
-the end of the session. The mechanical persistence baseline also rises steadily
-but ends lower. The mechanical mean-reversion baseline declines steadily and
-symmetrically to a large negative value, mirroring the persistence curve about
-the horizontal axis.}
-\label{fig:cumpnl}
+\includegraphics[width=\columnwidth]{figures/fig7_baseline_diracc_pnl.png}
+\caption{Capacity-matched baseline comparison on Jul~31. The learned policy improves directional accuracy by 7.6~pp and mean per-trade profit by 71\% over mechanical persistence. Mean-reversion is negative on both metrics.}
+\Description{Two-panel bar chart. Left panel shows directional accuracy: LightGBM at 76.9\%, mechanical persistence at 69.3\%, and mechanical mean-reversion at 30.7\%. Right panel shows mean per-trade PnL proxy in z-units: LightGBM at +0.746, mechanical persistence at +0.437, and mechanical mean-reversion at -0.437.}
+\label{fig:baseline_compare}
 \end{figure}
 
 \subsection{Portfolio Risk-Adjusted Performance}
