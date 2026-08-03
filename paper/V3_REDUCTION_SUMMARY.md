@@ -52,29 +52,39 @@
 
 ---
 
-### 🟢 Minor Compressions: Cut 0.3 pages
+### 🟢 Data Collection & Code Details: Cut 0.6 pages
+
+**Strategy**: Reference GitHub repository instead of documenting implementation details in paper
 
 | Section | Action | Pages Saved |
 |---------|--------|-------------|
-| Introduction 1.1 Dataset | Compress 2 paragraphs → 1 paragraph | 0.1p |
+| Introduction 1.1 Dataset | Replace signal enumeration with brief summary + repo reference | 0.2p |
+| Exp Setup 4.1 Data Collection | Replace detailed REST API/JSONL implementation with repo reference | 0.2p |
+| Exp Setup 4.2 Asset Universe | Remove asset examples, add repo reference | 0.05p |
+| Exp Setup 4.3 Train/Test Split | Remove code variable names (\texttt{snapshot\_idx}, indices) | 0.05p |
+| Exp Setup 4.6 Reproducibility | Replace script enumeration with repo reference | 0.1p |
 | Results 5.2 (Figure 2) | **DELETE** scatter plot + paragraph | 0.15p |
 | Conclusion 8.1 Future Work | Compress 3 sentences → 1 sentence | 0.05p |
 
-**Subtotal**: 0.3 pages
+**Subtotal**: 0.8 pages
+
+**Rationale**: Papers should focus on methodology/results, not code documentation. All implementation details are available in the open-source repository.
 
 ---
 
-## Total Impact: 2.8 Pages Cut
+## Total Impact: 3.3 Pages Cut
 
 | Priority | Section | Cut |
 |----------|---------|-----|
 | **Priority 1** | Related Work | 1.0p |
 | **Priority 2** | Discussion | 1.0p |
 | **Priority 3** | Ablation | 0.5p |
-| **Priority 4** | Minor | 0.3p |
-| **TOTAL** | | **2.8p** |
+| **Priority 4** | Data/Code Details | 0.8p |
+| **TOTAL** | | **3.3p** |
 
-*0.2 page buffer remains for adjustments*
+*0.3 page buffer remains for adjustments*
+
+**Key Addition**: Compressing data collection and code implementation details (Priority 4) adds 0.5 pages of cuts, since these details are fully documented in the open-source GitHub repository.
 
 ---
 
@@ -94,6 +104,8 @@
 | **Our V3 (target)** | 1.0p ✓ | 2.25p ✓ | 1.0p ✓ | 1.0p ✓ |
 
 **Key Finding**: We are 1-2 pages over on Related Work and Discussion compared to literature norms. Results section size is appropriate.
+
+**Additional Insight**: Literature papers rarely document implementation details in-text when code is publicly available. They reference repositories and focus on methodology/results instead.
 
 ---
 
@@ -115,6 +127,13 @@
 - Section 7.3: Z-Score Units (3 paragraphs → 2 paragraphs)
 - Section 7.4: Sharpe Ratio (2 paragraphs → 1 paragraph)
 - Section 6.3: Feature Importance (remove enumerated list)
+
+### Implementation Details Moved to GitHub (70%+ reduction):
+- Introduction 1.1: Signal family enumeration → brief summary
+- Exp Setup 4.1: Collector implementation, REST API details, JSONL storage → repo reference
+- Exp Setup 4.2: Asset selection examples (BTC, ETH, SOL, meme coins) → repo reference
+- Exp Setup 4.3: Code variable names (\texttt{snapshot\_idx}, index 3584) → removed
+- Exp Setup 4.6: Script enumeration (training notebook, trading loop, replay script) → repo reference
 
 ---
 

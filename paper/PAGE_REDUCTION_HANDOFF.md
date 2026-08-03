@@ -190,30 +190,56 @@ Based on section complexity and line counts:
 
 ---
 
-### Priority 4: Minor Compressions (~0.2 pages)
+### Priority 4: Data Collection & Code Implementation Details (~0.5 pages)
+
+**Rationale**: Implementation details are fully documented in the open-source GitHub repository. Papers should focus on methodology and results, not code documentation.
 
 1. **Introduction Section 1.1 "Dataset and Non-Backfillable Features"**
-   - Compress from 2 paragraphs to 1 paragraph
-   - Focus: Non-backfillable property (core contribution), de-emphasize signal family enumeration (already in Table 2)
+   - **Current**: Enumerates all 9 signal families in detail, collection cadence, asset selection
+   - **Compress to**: "Our live collector snapshots orderbook, trade, and funding data across 23 assets and 6 exchanges at ~1-minute granularity. The non-backfillable property (orderbooks and trades cannot be reconstructed from historical APIs) is the dataset's defining feature. See \datasetref for collection details."
+   - **Impact**: ~0.2 pages
+
+2. **Experimental Setup Section 4.1 "Data Collection"**
+   - **Current**: Detailed REST API polling strategy, all 9 signal families enumerated with technical details, JSONL storage format
+   - **Compress to**: "Data collection protocol and signal schema are documented in the GitHub repository accompanying \datasetref. The collector polls 9 signal families (orderbook, trades, ticker, funding, open interest, withdrawal status, exchange status, spread matrices, OHLCV) at ~60s target cadence."
+   - **Impact**: ~0.2 pages
+
+3. **Experimental Setup Section 4.2 "Asset Universe"**
+   - **Current**: Detailed selection criteria, specific asset examples (BTC, ETH, SOL, meme coins)
+   - **Compress to**: "The 23-asset universe was selected for high cross-exchange spread volatility and multi-venue liquidity. See repository for full asset list."
+   - **Impact**: ~0.05 pages
+
+4. **Experimental Setup Section 4.3 "Train/Test Split"**
+   - **Current**: Implementation details (\texttt{snapshot\_idx} cutoff at index 3584, specific collection run dates)
+   - **Compress to**: Remove code variable names and index numbers, keep chronological split methodology
+   - **Impact**: ~0.05 pages
+
+5. **Experimental Setup Section 4.6 "Reproducibility"**
+   - **Current**: Detailed enumeration of scripts (training notebook, live trading loop, session reporting, mechanical-baseline replay, output directories)
+   - **Compress to**: "All training, evaluation, and baseline scripts are available in the dataset repository. LightGBM training is reproducible given the hyperparameters in Table~\ref{tab:hyperparams}."
    - **Impact**: ~0.1 pages
 
-2. **Experimental Setup Section 4.4 "Live Paper-Trading Protocol"**
-   - **Reviewer note**: "i wonder if it might be useful to remove campaign A?"
-   - **Decision**: Keep both campaigns for robustness, but compress Campaign A description to 2 bullets (already done in V2)
-   - **Alternative**: If still overbudget, remove Campaign A entirely and all references to Jul 30
-   - **Impact**: If removed, ~0.3 pages saved
-
-3. **Results Section 5.2 "Live Paper-Trading Campaigns"**
+6. **Results Section 5.2 "Live Paper-Trading Campaigns"**
    - **Reviewer note**: "reconsider using/commenting on figure 2 at all. I think it depletes our credibility"
    - **Decision**: Remove Figure 2 (scatter plot) and its paragraph
    - **Impact**: ~0.15 pages
 
-4. **Conclusion Section 8.1 "Future Work"**
+7. **Conclusion Section 8.1 "Future Work"**
    - Compress from 3 sentences to 1 sentence
    - **Reviewer note**: "should end the conclusion on a positive note, not on the threats to validity section"
    - **Impact**: ~0.05 pages
 
-**Total Minor Cuts**: ~0.3 pages (or ~0.6 pages if Campaign A removed)
+**Total Data/Code Compression**: ~0.6 pages
+
+### Priority 5: Campaign A Removal (Backup, if needed)
+
+8. **Experimental Setup Section 4.4 "Live Paper-Trading Protocol"**
+   - **Reviewer note**: "i wonder if it might be useful to remove campaign A?"
+   - **Decision**: Keep both campaigns for robustness unless still overbudget after Priorities 1-4
+   - **Alternative**: Remove Campaign A entirely and all references to Jul 30
+   - **Impact**: If removed, ~0.3 pages saved
+
+**Total Minor + Backup Cuts**: ~0.6 pages (or ~0.9 pages if Campaign A removed)
 
 ---
 
@@ -224,10 +250,10 @@ Based on section complexity and line counts:
 | **Related Work** | 2.0p | 1.0p | **1.0p** | Delete 2.4, 2.5; compress 2.1, 2.2 |
 | **Discussion** | 2.0p | 1.0p | **1.0p** | Merge 7.1→Results; delete 7.2, 7.5; compress 7.3, 7.4 |
 | **Ablation** | 1.5p | 1.0p | **0.5p** | Delete 6.2; compress 6.3; merge 6.4→Results |
-| **Minor** | — | — | **0.3p** | Compress intro, remove Fig 2, compress conclusion |
-| **TOTAL** | 11.0p | 8.0p | **2.8p** | (0.2p buffer for adjustments) |
+| **Data/Code** | — | — | **0.6p** | Compress collection details, reference GitHub repo |
+| **TOTAL** | 11.0p | 8.0p | **3.1p** | (0.1p buffer for adjustments) |
 
-**If still overbudget after above**: Remove Campaign A entirely from Sections 4.4, 5.2, and all figures/tables → saves additional 0.3–0.5 pages
+**If still overbudget after above**: Remove Campaign A entirely from Sections 4.4, 5.2, and all figures/tables → saves additional 0.3 pages
 
 ---
 
@@ -261,16 +287,24 @@ Based on section complexity and line counts:
 17. Compress `conclusion.tex` Section 8.1 to single sentence
 18. Remove redundant phrases throughout (e.g., "as shown in Figure X" when obvious)
 
-### Step 6: Compile and Measure
-19. Compile V3 PDF: `tectonic --outdir _build_v3 gradient-boosting-cross-market-spread-prediction.tex`
-20. Check page count
-21. If >8 pages: Remove Campaign A from Sections 4.4, 5.2 and all jul30 references
-22. If <8 pages: Selectively restore content from Step 1 deletions (priority: 2.4 > 2.5 > 7.5)
+### Step 6: Remove Figures
+19. Remove Figure 2 (scatter plot) from `results.tex` and its associated paragraph
+20. Consider: If overbudget, remove Figure 1 from ablation (keep table only)
 
-### Step 7: Commit V3
-23. Name output: `gradient-boosting-cross-market-spread-prediction-v3.pdf`
-24. Commit with message: "V3: Reduce to 8 pages (cut related work, discussion, ablation redundancies)"
-25. Push to `origin/paper/draft-initial-sections`
+### Step 7: Minor Text Reductions
+21. Compress `conclusion.tex` Section 8.1 to single sentence
+22. Remove redundant phrases throughout
+
+### Step 8: Compile and Measure
+23. Compile V3 PDF: `tectonic --outdir _build_v3 gradient-boosting-cross-market-spread-prediction.tex`
+24. Check page count
+25. If >8 pages: Remove Campaign A from Sections 4.4, 5.2 and all jul30 references
+26. If <8 pages: Selectively restore content from Step 1 deletions (priority: 2.4 > 2.5 > 7.5)
+
+### Step 9: Commit V3
+27. Name output: `gradient-boosting-cross-market-spread-prediction-v3.pdf`
+28. Commit with message: "V3: Reduce to 8 pages (cut related work, discussion, ablation, compress code details)"
+29. Push to `origin/paper/draft-initial-sections`
 
 ---
 
