@@ -5,6 +5,15 @@
 
 In this section I will check all in-text citations against the pdf of the cited paper to ensure that a) the citation matches a claim/result from the cited paper, b) the authorship, title, etc are properly attributed, and c) if there are any missing citations that should be added. 
 
+There are a few papers missing from the citations/in-text. They have been verified and can be added in the citation list. The links are below: 
+
+1. Sarmento et al. - https://www.mdpi.com/2571-9394/6/2/24
+
+2. Shen et al. - https://pmc.ncbi.nlm.nih.gov/articles/PMC9601484/
+
+3. Perrone et al. - https://www.sciencedirect.com/science/article/pii/S2405918826000024
+
+
 ____
 
 ## Paper Content 
@@ -70,11 +79,11 @@ In this section I check the content in terms of problem framing/explanation, con
 
 #### 2.3 ML-Enhanced Pairs Trading on Equities
 
-1. FIX THE CITATION FOR SARMENTO ET AL!! 
+1. FIX THE CITATION FOR SARMENTO ET AL!! (the link is: https://www.mdpi.com/2571-9394/6/2/24), claims from the paper are good 
 
-2. FIX CITATION FOR SHEN ET AL!!! 
+2. FIX CITATION FOR SHEN ET AL!!! (the link is: https://pmc.ncbi.nlm.nih.gov/articles/PMC9601484/), claims/citations made in the paper are correct
 
-3. FIX CITATION FOR PERRONE ET AL!!!!! 
+3. FIX CITATION FOR PERRONE ET AL!!!!! (the link is: https://www.sciencedirect.com/science/article/pii/S2405918826000024), claims in the paper are all ok
 
 4. in the last paragraph here can we also make note of a similarity between us and their work, rather than only citing differences. 
 
@@ -182,7 +191,7 @@ ok
 
 #### 6.1 Confidence Filter 
 
-1. AGAIN SARMENTO ET AL WHAT IS THE CITATION
+1. AGAIN SARMENTO ET AL WHAT IS THE CITATION (https://www.mdpi.com/2571-9394/6/2/24 - as above)
 
 2. change the framing of rhe last paragraph. yes it's true that the dir_acc comes a lot from the persistence of high z-scores, but we need to give more emphasis to the fact that the model is predicting magnitude accurately BEFORE we talk about why dir_acc is comparable to naive persistence 
 
@@ -258,3 +267,12 @@ ____
 
 This is stylistic in terms of font sizes and spacing, table width and alignment, and images. 
 
+1. CCS Concepts - there is inconsistency in the boldface and italics here 
+
+2. Please be sure to use hat for estimated values (eg. $\hat{z}$) and to follow proper statistical conventions for this as stated above. 
+
+3. Table 1 is overly wide and exits its column
+
+4. multiple issues with lines escaping their columns 
+
+5. Table 4 and 5 and 6 are all too wide and breaks the col
