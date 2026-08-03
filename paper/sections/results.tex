@@ -70,17 +70,44 @@ Figure~\ref{fig:ablation} summarizes model and naive R$^2$ and directional accur
 \centering
 \includegraphics[width=\columnwidth]{figures/fig1_ablation_r2_diracc.png}
 \caption{Model vs naive R$^2$ and directional accuracy across campaigns and filter conditions. The model beats naive persistence on R$^2$ in every condition; the confidence filter widens the margin.}
+\Description{Paired bar chart with two panels. The left panel plots the
+coefficient of determination on a vertical axis running from about minus 0.55 to
+0.35, for four groups along the horizontal axis: Jul 30 all predictions, Jul 30
+filtered, Jul 31 all predictions, Jul 31 filtered. Model bars are 0.05, 0.25,
+0.10 and 0.35 and are positive in all four groups. Naive persistence bars are
+minus 0.55, minus 0.05, minus 0.34 and 0.17, and are negative in three of the
+four groups. The right panel plots directional accuracy on a vertical axis from
+zero to one hundred percent for the same four groups. Model bars are 55.3, 76.5,
+60.9 and 76.7 percent; naive bars are 62.3, 75.4, 65.6 and 77.0 percent. The
+naive bar exceeds the model bar in the two unfiltered groups and the bars are
+nearly equal in the two filtered groups.}
 \label{fig:ablation}
 \end{figure}
 
 Across both campaigns, the model achieves positive R$^2$ where naive persistence is negative or near zero, demonstrating that the learned forecast captures spread dynamics beyond simple autocorrelation. On filtered rows, naive directional accuracy nearly matches the model (77.0\% vs 76.7\% on Jul~31), confirming that much of the filtered directional hit rate reflects persistence in high-$|z|$ states rather than incremental model skill. However, the model's R$^2$ advantage on the same rows (0.347 vs 0.174) shows that it captures the \emph{magnitude} of z-score movements, not merely their sign.
 
-Figure~\ref{fig:scatter} plots predicted versus realized z-scores for the Jul~31 filtered entries, illustrating the regression fit underlying R$^2 = 0.347$.
+Figure~\ref{fig:scatter} plots predicted against realized z-scores for all
+58{,}995 scored Jul~31 predictions. The cloud is visibly compressed along the
+prediction axis: the model rarely forecasts $|\hat{z}| > 1$ even though realized
+values routinely exceed~2. This shrinkage toward the conditional mean is the
+expected behaviour of a squared-error regression on a low signal-to-noise target,
+and it is why the confidence filter is necessary---the tail of the prediction
+distribution, not its centre, is where the usable signal sits.
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=\columnwidth]{figures/fig2_pred_vs_realized_jul31.png}
-\caption{Predicted vs realized z-scores on Jul~31 filtered entries ($|\hat{z}| \geq 0.5$). The model captures both direction and magnitude of short-horizon z-score dynamics.}
+\caption{Predicted vs realized z-scores for all Jul~31 predictions. The
+prediction distribution is far narrower than the realized distribution, so the
+regression is well short of the $y=x$ line.}
+\Description{Scatter plot of realized forward z-score at horizon one on the
+vertical axis against predicted z-score on the horizontal axis, both axes running
+from minus 3 to 3, with a dashed forty-five degree reference line. An inset
+reports n equals 58,995, R squared 0.104, correlation 0.326, and directional
+accuracy 60.9 percent. The point cloud is strongly compressed horizontally: most
+predictions fall between minus 1 and 1 while realized values spread across the
+full minus 3 to 3 range, producing a vertically elongated cloud centred near the
+origin that is much flatter than the reference line.}
 \label{fig:scatter}
 \end{figure}
 
@@ -114,7 +141,16 @@ Figure~\ref{fig:cumpnl} shows the cumulative z-unit profit trajectory for the le
 \begin{figure}[h]
 \centering
 \includegraphics[width=\columnwidth]{figures/fig5_cum_pnl_proxy_jul31.png}
-\caption{Cumulative z-unit proxy PnL over the Jul~31 session. The learned policy (solid) accumulates profit faster and more consistently than mechanical persistence (dashed). Mean-reversion (dotted) is uniformly negative.}
+\caption{Cumulative z-unit proxy P\&L over the Jul~31 session. Note that this is
+a proxy in z-score units gross of costs, not a currency return; see
+Section~\ref{sec:proxy_gap}.}
+\Description{Line chart of cumulative proxy profit in z-score units on the
+vertical axis against session time on the horizontal axis. The learned LightGBM
+policy rises steadily and close to linearly to roughly six thousand z-units by
+the end of the session. The mechanical persistence baseline also rises steadily
+but ends lower. The mechanical mean-reversion baseline declines steadily and
+symmetrically to a large negative value, mirroring the persistence curve about
+the horizontal axis.}
 \label{fig:cumpnl}
 \end{figure}
 

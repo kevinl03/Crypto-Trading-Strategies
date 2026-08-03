@@ -29,6 +29,11 @@ The filter consistently lifts R$^2$ by approximately 0.2--0.25 across all evalua
 \centering
 \includegraphics[width=\columnwidth]{figures/fig3_filter_r2_lift.png}
 \caption{Model R$^2$ before and after the $|\hat{z}| \geq 0.5$ confidence filter. The filter selects predictions in high-signal regimes, lifting R$^2$ by +0.19 to +0.25 across both live campaigns.}
+\Description{Grouped bar chart of model R squared on a vertical axis from zero to
+0.35 for the two live campaigns. For Jul 30 the all-predictions bar is 0.054 and
+the filtered bar is 0.248, a rise of 0.194. For Jul 31 the all-predictions bar is
+0.104 and the filtered bar is 0.347, a rise of 0.243. In both campaigns the
+filtered bar is roughly three times the height of the unfiltered bar.}
 \label{fig:filter_lift}
 \end{figure}
 
@@ -42,6 +47,12 @@ The baseline comparison in Section~\ref{sec:results} shows that the model's lear
 \centering
 \includegraphics[width=\columnwidth]{figures/fig6_model_minus_naive_diracc.png}
 \caption{Directional accuracy gap: model minus naive persistence. On filtered rows, the gap is near zero (the filter selects high-persistence states where both methods succeed). The model's primary advantage is R$^2$ on magnitude, not directional hit rate on filtered entries.}
+\Description{Bar chart of the difference in directional accuracy between the model
+and naive persistence, in percentage points, with bars above the zero line
+favouring the model. The two unfiltered bars are clearly negative at about minus
+7.1 percentage points for Jul 30 and minus 4.7 for Jul 31. The two filtered bars
+are close to zero: slightly positive at about plus 1.1 for Jul 30 and slightly
+negative at about minus 0.3 for Jul 31.}
 \label{fig:edge}
 \end{figure}
 
@@ -54,21 +65,62 @@ The model uses 68~features spanning lagged z-scores, spread dynamics, orderbook 
 \begin{figure}[h]
 \centering
 \includegraphics[width=\columnwidth]{figures/fig4_feature_importance_top20.png}
-\caption{Top~20 features by LightGBM split gain. Lagged z-scores dominate, followed by spread momentum and cross-exchange dispersion. Orderbook imbalance features appear prominently in positions 15--20.}
+\caption{Top~20 features by LightGBM split gain. Gain is overwhelmingly
+concentrated in the lagged z-score and spread terms; microstructure features
+enter only in the lower half of the ranking.}
+\Description{Horizontal bar chart of the twenty highest-gain features, ordered
+from largest at the top. The first bar, lagged z-score at lag one, reaches about
+930,000 gain. Lagged z-score at lags three and two follow at about 400,000 and
+325,000. Spread momentum, the coin categorical, lagged spread in basis points,
+z-score acceleration, z-score momentum, the pair categorical, and two further
+lagged spread terms range from about 115,000 down to 42,000. The remaining nine
+bars are all below about 20,000 and are visually near-zero against the first bar;
+they comprise per-venue bid-ask spread lags for Coinbase, Kraken and Bybit,
+cross-venue mid-price range and standard deviation, two Coinbase orderbook
+imbalance lags, the tightest bid-ask indicator, and a Kraken price rank.}
 \label{fig:importance}
 \end{figure}
 
-Three feature groups emerge:
+Three groups emerge, but their contributions are of very different orders of
+magnitude:
 
 \begin{enumerate}
-    \item \textbf{Lagged z-scores and spread dynamics} (positions 1--3, 6, 8--10): \texttt{zscore\_lag\{1,2,3\}}, \texttt{spread\_bps\_lag\{1,2,3\}}, \texttt{zscore\_accel}, and momentum features dominate with an order-of-magnitude more split gain than other groups. This is expected: the recent z-score trajectory is the strongest single predictor of the next z-score.
+    \item \textbf{Lagged z-scores and spread dynamics} (ranks 1--4, 6--8, 10--11):
+    \texttt{zscore\_lag\{1,2,3\}}, \texttt{spread\_bps\_lag\{1,2,3\}},
+    \texttt{spread\_momentum\_1\_3}, \texttt{zscore\_momentum\_1\_3}, and
+    \texttt{zscore\_accel}. These dominate completely. \texttt{zscore\_lag1}
+    alone carries roughly two orders of magnitude more split gain than any
+    microstructure feature.
 
-    \item \textbf{Cross-exchange dispersion} (positions 12--13): \texttt{cross\_mid\_range} and \texttt{cross\_mid\_std} capture the instantaneous spread of mid-prices across venues. These features are unique to the cross-exchange setting and are not available in single-venue pairs-trading systems.
+    \item \textbf{Categorical identifiers} (ranks 5 and 9): \texttt{coin} and
+    \texttt{pair} let the model learn asset-specific and venue-pair-specific
+    dynamics without separate per-pair models. Notably, \texttt{coin} outranks
+    every microstructure feature, indicating that a substantial part of the
+    model's advantage over a single pooled autoregression is simply conditioning
+    on which asset and venue pair is being traded.
 
-    \item \textbf{Orderbook imbalance and trade flow} (positions 11, 15, 17, 20): \texttt{ob\_imbalance\_lag\{2,3\}\_coinbase}, \texttt{tk\_spread\_bps} lags, and \texttt{tightest\_ba} contribute meaningful split gain. The L2 orderbook captures the top~20 price levels on each side, from which we derive an imbalance ratio reflecting the relative depth of bids versus asks. This ratio acts as a directional pressure signal: when ask-side volume substantially exceeds bid-side volume, the market is absorbing more selling pressure, which informs the model's prediction of where the z-score will move next. These features cannot be reconstructed from historical OHLCV or ticker data. Public exchange APIs serve historical candlestick data, but \emph{not} historical order books, quotes, or trade-level prints. Every orderbook and trade-flow observation in our dataset exists only because it was collected live, and cannot be backfilled retroactively for any past window.
+    \item \textbf{Microstructure and cross-venue dispersion} (ranks 12--20):
+    per-venue bid-ask spread lags (\texttt{tk\_spread\_bps\_lag3\_coinbase},
+    \texttt{tk\_spread\_bps\_lag1\_kraken}, \texttt{tk\_spread\_bps\_lag3\_bybit}),
+    cross-venue dispersion (\texttt{cross\_mid\_range},
+    \texttt{cross\_mid\_std}), orderbook imbalance
+    (\texttt{ob\_imbalance\_lag\{2,3\}\_coinbase}), and the liquidity extremes
+    \texttt{tightest\_ba} and \texttt{price\_rank\_kraken}.
 \end{enumerate}
 
-The \texttt{coin} and \texttt{pair} categoricals (positions 4--5, 9) allow the model to learn asset-specific and venue-pair-specific z-score dynamics without separate per-pair models, effectively conditioning on the structural characteristics of each cross-exchange relationship.
+We draw a deliberately conservative conclusion from this ranking. The model is,
+to a first approximation, an autoregression on the recent z-score trajectory
+conditioned on asset and venue-pair identity, with microstructure features
+supplying a small correction. Only two of the twenty highest-gain features are
+orderbook imbalance terms, both on a single venue, and no trade-flow, funding-rate,
+or open-interest feature appears in the top~20 at all. The cross-venue dispersion
+features (\texttt{cross\_mid\_range}, \texttt{cross\_mid\_std}) are genuinely
+unavailable to single-venue systems, and the orderbook features are genuinely
+non-backfillable, but neither group is doing the bulk of the predictive work
+here. Establishing how much of the R$^2$ these features are responsible for
+requires a leave-one-group-out retraining study that we have not run; the split-gain
+ranking alone cannot settle it, since gain is confounded by the strong
+correlation among the lagged z-score terms.
 
 \subsection{Generalization: Train vs Test}
 

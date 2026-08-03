@@ -68,4 +68,8 @@ These represent the two canonical directions a rule-based z-score system can tak
 
 \subsection{Reproducibility}
 
-The dataset is publicly available at \url{https://huggingface.co/datasets/SFU-fintech-AI/statarb-crypto-research}. The training notebook (\texttt{statarb/cex\_gbm\_new.ipynb}), live trader (\texttt{experiments/paper\_trade\_lgbm.py}), reporting scripts (\texttt{scripts/report\_paper\_session.py}, \texttt{scripts/portfolio\_sharpe\_paper\_session.py}), and campaign output directories are included in the repository. LightGBM training is reproducible given fixed seeds and the provided hyperparameters.
+The dataset is available through \datasetref. The training notebook, live trading
+loop, session reporting scripts, mechanical-baseline replay script, and the raw
+per-campaign output directories (trade logs, signal shards, and metric reports)
+accompany the dataset release. LightGBM training is reproducible given fixed seeds
+and the hyperparameters in Table~\ref{tab:hyperparams}.
