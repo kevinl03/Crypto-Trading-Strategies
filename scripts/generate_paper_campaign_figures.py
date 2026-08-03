@@ -218,21 +218,25 @@ def fig3_filter_r2_lift():
                 textcoords="offset points",
             )
     for i, (b, a) in enumerate(zip(before, after)):
+        mid_x = x[i] + width / 4
         ax.annotate(
-            f"Δ={a - b:+.3f}",
-            (x[i], max(b, a)),
+            f"Δ = {a - b:+.3f}",
+            (mid_x, a),
             ha="center",
             va="bottom",
-            fontsize=8,
+            fontsize=9,
+            fontweight="bold",
             color="#333",
-            xytext=(0, 14),
+            xytext=(0, 18),
             textcoords="offset points",
+            arrowprops=dict(arrowstyle="-", color="#999", lw=0.8),
         )
     ax.set_xticks(x)
     ax.set_xticklabels(camps)
     ax.set_ylabel("Model R²")
     ax.set_title("Filter lift: model R² before vs after |pred|≥0.5")
     ax.axhline(0, color="0.4", lw=0.8)
+    ax.set_ylim(0, max(after) * 1.35)
     ax.legend(frameon=False)
     out = OUT / "fig3_filter_r2_lift.png"
     fig.savefig(out, bbox_inches="tight")
@@ -240,19 +244,20 @@ def fig3_filter_r2_lift():
     return out
 
 
-def fig4_feature_importance(top_n: int = 20):
+def fig4_feature_importance(top_n: int = 10):
     fi_path = ROOT / "statarb" / "outputs" / "feature_importance.csv"
     if not fi_path.exists():
-        print(f"SKIP fig4: missing {fi_path}")
+        fi_path = ROOT / "statarb" / "outputs_ob_fix" / "feature_importance.csv"
+    if not fi_path.exists():
+        print(f"SKIP fig4: missing feature_importance.csv")
         return None
     fi = pd.read_csv(fi_path)
-    # normalize column names
     cols = {c.lower(): c for c in fi.columns}
     feat_col = cols.get("feature", list(fi.columns)[0])
     imp_col = cols.get("importance", list(fi.columns)[1])
     fi = fi.sort_values(imp_col, ascending=False).head(top_n).iloc[::-1]
 
-    fig, ax = plt.subplots(figsize=(8, 6), constrained_layout=True)
+    fig, ax = plt.subplots(figsize=(8, 4.5), constrained_layout=True)
     ax.barh(fi[feat_col], fi[imp_col], color="#3182bd")
     ax.set_xlabel("Importance (gain)")
     ax.set_title(f"Top {top_n} feature importances")

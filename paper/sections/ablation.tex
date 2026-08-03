@@ -40,26 +40,23 @@ A critical caveat: much of the filtered directional accuracy is explained by per
 
 \subsection{Feature Importance: Role of Microstructure Inputs}
 
-Figure~\ref{fig:importance} shows the top~20 of the model's 68~features by LightGBM split gain.
+Figure~\ref{fig:importance} shows the top~10 of the model's 68~features by LightGBM split gain.
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=\columnwidth]{figures/fig4_feature_importance_top20.png}
-\caption{Top~20 features by LightGBM split gain. Gain is overwhelmingly
-concentrated in the lagged z-score and spread terms; microstructure features
-enter only in the lower half of the ranking.}
-\Description{Horizontal bar chart of the twenty highest-gain features, ordered
+\caption{Top~10 features by LightGBM split gain. Gain is overwhelmingly
+concentrated in lagged z-scores and spread terms; microstructure features
+appear only in the lower ranks.}
+\Description{Horizontal bar chart of the ten highest-gain features, ordered
 from largest at the top. The first bar, lagged z-score at lag one, reaches about
-930,000 gain. Lagged z-score at lags three and two follow at about 400,000 and
-325,000. Spread momentum, the coin categorical, lagged spread in basis points,
-z-score acceleration, z-score momentum, the pair categorical, and two further
-lagged spread terms range from about 115,000 down to 42,000. The remaining nine
-bars are all below about 20,000 and are visually near-zero against the first bar;
-they comprise per-venue bid-ask spread lags for Coinbase, Kraken and Bybit,
-cross-venue mid-price range and standard deviation, two Coinbase orderbook
-imbalance lags, the tightest bid-ask indicator, and a Kraken price rank.}
+1,660,000 gain. Lagged z-score at lag two follows at about 1,040,000. Spread
+in basis points at lag two, coin categorical, spread at lag one, and pair
+categorical range from about 310,000 down to 190,000. The remaining four bars
+are near-zero against the top features: trade buy-sell ratio lags for Kraken
+and Coinbase, cross-venue mid-price range, and Coinbase orderbook imbalance.}
 \label{fig:importance}
 \end{figure}
 
-The model is, to a first approximation, an autoregression on the recent z-score trajectory conditioned on asset and venue-pair identity, with microstructure features supplying a small correction. Lagged z-scores and spread dynamics dominate the top~10 by split gain; microstructure and cross-venue dispersion features (per-venue bid-ask spreads, orderbook imbalance, \texttt{cross\_mid\_range}) enter only in the lower half of the ranking. Only two of the twenty highest-gain features are orderbook imbalance terms, and no trade-flow, funding-rate, or open-interest feature appears in the top~20. The cross-venue dispersion and orderbook features are genuinely unavailable to single-venue or backtest-only systems, but establishing their marginal contribution to R$^2$ requires a leave-one-group-out retraining study that we have not run.
+The model is, to a first approximation, an autoregression on the recent z-score trajectory conditioned on asset and venue-pair identity, with microstructure features supplying a small correction. Lagged z-scores and spread dynamics dominate the ranking; microstructure and cross-venue dispersion features enter only in the bottom four positions. Only one of the ten highest-gain features is an orderbook imbalance term, and no funding-rate or open-interest feature appears in the top~10. The cross-venue dispersion and orderbook features are genuinely unavailable to single-venue or backtest-only systems, but establishing their marginal contribution to R$^2$ requires a leave-one-group-out retraining study that we have not run.
 
