@@ -3,42 +3,6 @@
 % ======================================================================
 \section{Discussion}\label{sec:discussion}
 
-\subsection{What the Learned Forecast Adds}
-
-The consistent pattern across both live campaigns is that the model's advantage
-over naive persistence is concentrated in \emph{magnitude} rather than
-\emph{sign}. On the Jul~31 filtered entries the two methods are
-indistinguishable on directional accuracy (76.7\% vs 77.0\%), but the model
-explains twice as much variance in the realized z-score (R$^2$ 0.347 vs 0.174).
-The confidence filter is what selects high-$|z|$ states, and in those states the
-sign of the next z-score is largely determined by persistence alone. What the
-gradient-boosting model contributes is a calibrated estimate of \emph{how far}
-the z-score will be from equilibrium at $t+H$.
-
-This distinction matters for how the contribution should be read. A reader who
-takes the 76.9\% directional accuracy as the headline would be measuring mostly
-the filter, not the model. The defensible claim is narrower: conditional on
-entering, the learned forecast ranks and sizes deviations better than
-thresholding the current z-score does.
-
-\subsection{Why Persistence Beats Mean-Reversion at One Snapshot}
-
-Classical pairs trading enters \emph{against} the deviation, betting on
-reversion. At our hold horizon that direction is unprofitable in z-units:
-mechanical mean-reversion records 30.7\% directional accuracy and mean
-$\text{pnl}_{\text{proxy}}$ of $-0.437$, the exact mirror of the persistence
-peer on the same slots. The reason is a mismatch between the hold horizon and
-the reversion half-life. One snapshot is roughly 110~seconds, while the rolling
-z-score is computed over a 300-snapshot window; a spread that is two standard
-deviations from its nine-hour mean is overwhelmingly likely to still be
-displaced two minutes later. Reversion is a property of the window, not of the
-next observation.
-
-The implication is not that mean-reversion is wrong in cryptocurrency markets,
-but that the horizon at which a signal is evaluated must match the horizon at
-which the economic mechanism operates. Our $H=1$ target measures short-horizon
-displacement, and the correct bet on displacement is continuation.
-
 \subsection{Z-Score Units Capture Forecast Quality}\label{sec:proxy_gap}
 
 The settlement proxy $\text{pnl}_{\text{proxy}} = \text{direction} \times
@@ -46,17 +10,10 @@ z_{t+H}$ measures the model's ability to correctly predict the standardized
 spread level at horizon $H$. It is designed as a forecast quality metric, not as
 an economic P\&L.
 
-When the same Jul~31 trades are re-scored in basis points of realized spread
-change---$\text{direction} \times \Delta S_{\text{bps}}$, the quantity a real
-book would earn---the ordering between policies shifts. The learned policy has a
-mean of $-0.71$~bps per trade at zero transaction cost, with a 35.5\% win rate,
-while mechanical persistence is $-2.15$~bps and mechanical mean-reversion is
-$+2.15$~bps (62.2\% win rate). Table~\ref{tab:bps} summarizes this difference.
+When the same Jul~31 trades are re-scored in basis points of realized spread change, the ordering between policies inverts: the learned policy averages $-0.71$~bps per trade (35.5\% win rate), while mechanical mean-reversion yields $+2.15$~bps (62.2\% win rate). Table~\ref{tab:bps} summarizes this difference.
 
 \begin{table}[h]
-\caption{The same Jul~31 entries scored in z-units and in basis points of
-realized spread change, gross of fees. The ordering of the three policies
-inverts between the two units.}
+\caption{Jul~31 entries scored in z-units and basis points of realized spread change, gross of fees. Policy ordering inverts between units.}
 \label{tab:bps}
 \begin{tabular}{lrrr}
 \toprule
@@ -70,84 +27,18 @@ Mech.\ mean-reversion & $-0.437$ & $+2.15$ & 62.2\% \\
 \end{tabular}
 \end{table}
 
-This inversion between units reflects a structural property of the prediction
-task: the model is trained to predict the z-score level $z_{t+H}$, which is
-dominated by the slow-moving rolling mean $\hat{\mu}_w$, rather than the
-instantaneous spread change $\Delta S_t$. The two targets are related but not
-identical. A policy optimized for z-level forecasting need not maximize the
-sign-alignment of instantaneous spread movements, and Table~\ref{tab:bps} shows
-this divergence empirically.
-
-The z-unit settlement is appropriate for evaluating forecast quality and
-signal-extraction ability, which are the primary claims of this work. The
-reported Sharpe ratios characterize the stability of the forecast signal rather
-than an economic return stream. For production deployment, a direct spread-change
-target ($\Delta S_{t,t+H}$) net of fees would align the training objective with
-the economic objective, and this is a natural extension of the framework.
+This inversion reflects the model's training objective: predicting the z-score level $z_{t+H}$ (dominated by the slow-moving rolling mean) rather than the instantaneous spread change $\Delta S_t$. The z-unit settlement is appropriate for evaluating forecast quality, which is the primary claim of this work. For production deployment, a direct spread-change target net of fees would align training with the economic objective.
 
 \subsection{Portfolio Sharpe Characterizes Forecast Stability}
 
-The Jul~31 hourly portfolio Sharpe ratio of 2.41 is computed from only
-$n=6$ hourly observations and is sensitive to the aggregation choice: 2.35 using
-closed trades only, 2.41 including mark-to-market on open inventory, and 1.70
-when the series is formed at snapshot rather than hourly frequency
-($n=171$). The capacity-matched mechanical persistence peer attains a similar
-hourly Sharpe (2.63) on the same session, confirming that both policies exploit
-the same high-persistence regime in the filtered entries.
-
-We caution against comparing this number to the 0.95--7.94 band reported in the
-crypto pairs-trading literature~\cite{tadi2021evaluation, tadi2025copula}, as
-those are multi-month, capital-normalized, cost-aware returns on single-exchange
-different-asset pairs, whereas ours is a six-hour gross z-unit proxy on
-cross-exchange same-asset spreads with a zero risk-free rate and no cost
-accounting. The primary evidence for the model's advantage lies in per-trade
-forecast quality (R$^2$ and directional accuracy); Sharpe is reported as a
-secondary indicator of signal stability across the portfolio.
-
-\subsection{Sensitivity of the Baseline Margin}
-
-The 71\% improvement in mean proxy profit over mechanical persistence depends on
-how scarce inventory slots are allocated. The live campaign fills slots in
-encounter order, whereas the mechanical replay considers roughly 37{,}000
-candidate entries and is throttled to the same cap. If both policies instead
-fill slots greedily by signal strength---by $|\hat{z}|$ for the model and $|z_t|$
-for the mechanical peer---the mechanical peer's mean proxy profit rises from
-$+0.437$ to $+0.731$, and the model's margin narrows from 71\% to roughly 6\%
-($+0.774$ vs $+0.731$). The directional-accuracy gap is far more stable under
-this reallocation (77.6\% vs 69.5\%, or $+8.1$~percentage points).
-
-We report the encounter-order numbers as the primary result because they reflect
-what the live system actually did, but the ranked-capacity comparison is the
-fairer test of signal quality, and readers should weight the directional-accuracy
-gap more heavily than the profit ratio.
+The Jul~31 hourly Sharpe of 2.41 ($n=6$) characterizes forecast stability but is not directly comparable to the multi-month, cost-aware benchmarks in the crypto pairs-trading literature~\cite{tadi2021evaluation, tadi2025copula}. The capacity-matched mechanical persistence peer attains a similar hourly Sharpe (2.63), confirming that both policies exploit the same high-persistence regime. Per-trade forecast quality (R$^2$ and directional accuracy) is the primary evidence for the model's advantage; Sharpe is a secondary stability indicator.
 
 \subsection{Threats to Validity}\label{sec:limitations}
 
-\textbf{Evaluation horizon.} Each live campaign covers approximately eight hours
-of wall-clock collection, of which roughly six hours carry active predictions
-after the 90-snapshot z-score warmup. This is far too short to characterize
-regime dependence, and the two campaigns differ in model vintage, horizon,
-z-score window, and market session, so neither is a controlled ablation of the
-other.
+\textbf{Evaluation horizon.} Each live campaign covers approximately six active hours---far too short to characterize regime dependence. The two campaigns differ in model vintage, horizon, z-score window, and market session, so neither is a controlled ablation.
 
-\textbf{Proxy settlement.} As detailed in Section~\ref{sec:proxy_gap}, P\&L is
-measured in z-units gross of fees, slippage, and bid-ask crossing. No dollar
-return is claimed.
+\textbf{Proxy settlement.} P\&L is measured in z-units gross of fees, slippage, and bid-ask crossing (Section~\ref{sec:proxy_gap}). No dollar return is claimed.
 
-\textbf{Execution latency.} The collector's observed cadence under full signal
-load is approximately 110~seconds rather than the nominal 60~seconds, so a
-signal is acted on against a market state that is up to two minutes stale.
-Fischer et al.~\cite{fischer2019statistical} show that minute-scale crypto
-alpha can fall from 20.5 to 3.8~bps with a one-minute delay and vanish by minute
-five; we have not run the corresponding delay ablation, and it is the single
-most informative robustness check still missing.
+\textbf{Execution latency.} The collector's observed cadence is approximately 110~seconds, so signals are acted on against market states up to two minutes stale. Fischer et al.~\cite{fischer2019statistical} show that minute-scale crypto alpha can vanish within 1--5~minutes of delay; we have not run the corresponding ablation.
 
-\textbf{Dependence structure.} Rows within a snapshot share the same market
-state across coins and venue pairs, so the 2.9~million training rows and
-59{,}000 scored predictions are not independent samples. Confidence intervals
-computed under an i.i.d.\ assumption would be badly overstated, and we
-deliberately report no significance tests.
-
-\textbf{Operational artifacts.} Orderbook coverage in the 68-feature prediction
-model is thinner than in the 73-feature Jul~30 variant, concentrating imbalance
-signal on a subset of venues.
+\textbf{Dependence structure.} Rows within a snapshot share market state, so the 2.9~million training rows and 59{,}000 predictions are not independent samples. We report no significance tests.

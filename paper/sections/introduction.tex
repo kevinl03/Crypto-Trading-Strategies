@@ -11,11 +11,7 @@ We demonstrate that a gradient-boosting model (LightGBM) trained on live central
 
 \subsection{Dataset and Non-Backfillable Features}
 
-A distinguishing feature of this work is the dataset itself. Our live collector snapshots 9~concurrent signal families every 60--90~seconds across 23~assets and up to 6~exchanges: ticker quotes (best bid/ask), L2~orderbook (top~20 price levels per side), recent trades, funding rates, open interest, withdrawal status, exchange operational status, precomputed spread matrices, and OHLCV candles. The asset universe was selected for high cross-exchange spread volatility and sufficient liquidity across multiple venues. Collection spans over two months of live windows (June--July 2026) at one-minute granularity.
-
-Public exchange APIs serve historical OHLCV candles, but \emph{not} historical order books, quote-level snapshots, or trade prints. Every orderbook and trade-flow observation in our dataset exists only because it was collected live and cannot be reconstructed retroactively for any past window. This non-backfillable property means that the microstructure features central to our model are unavailable to researchers working with standard historical data sources.
-
-The resulting dataset is released publicly through \datasetref. To the best of our knowledge, no comparable public dataset provides synchronized cross-exchange L2~orderbook, trade flow, and funding rate data at minute-scale granularity for volatile cryptocurrency assets. We consider the dataset release a contribution independent of the model.
+Our live collector snapshots orderbook, trade, and funding data across 23~assets and 6~exchanges at approximately one-minute granularity. Public exchange APIs serve historical OHLCV candles, but \emph{not} historical order books, quote-level snapshots, or trade prints. Every orderbook and trade-flow observation in our dataset exists only because it was collected live and cannot be reconstructed retroactively. This non-backfillable property means that the microstructure features central to our model are unavailable to researchers working with standard historical data sources. The resulting dataset is released publicly through \datasetref; see the repository for collection details. We consider the dataset release a contribution independent of the model.
 
 \subsection{Contributions}
 

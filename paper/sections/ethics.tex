@@ -3,35 +3,6 @@
 % ======================================================================
 \section*{Ethics and Privacy Statement}
 
-This study uses only publicly available market data obtained from the public
-REST endpoints of centralized cryptocurrency exchanges. The collected records
-are aggregate market observations---quotes, aggregated order-book depth,
-anonymous trade prints, funding rates, and open interest---and contain no
-personal data, no account identifiers, and no information attributable to any
-individual trader. No human subjects were involved and no institutional review
-was required.
+This study uses only publicly available aggregate market data (quotes, orderbook depth, anonymous trade prints, funding rates) from public REST endpoints of centralized cryptocurrency exchanges. No personal data or account identifiers are present; no human subjects were involved. Data collection respected each venue's published rate limits; no authenticated or access-restricted endpoints were used.
 
-Data collection respected each venue's published rate limits; the sequential
-polling design that produces our approximately 110-second cadence is a direct
-consequence of staying within those limits rather than circumventing them. No
-authenticated, paid, or otherwise access-restricted endpoint was used, and no
-exchange terms of service were bypassed.
-
-All trading in this work is simulated. No orders were submitted to any venue, no
-capital was deployed, and the reported profit figures are proxy quantities in
-z-score units rather than realized returns. We emphasize this because research on
-trading strategies can be misread as investment advice: as documented in
-Section~\ref{sec:proxy_gap}, the strategies evaluated here are \emph{not}
-profitable once realistic transaction costs are applied, and nothing in this
-paper should be construed as a recommendation to trade.
-
-We also acknowledge the broader externalities of research into market
-inefficiencies. Cross-exchange latency arbitrage transfers value from slower
-venues and their participants to faster ones, and publishing such findings can
-accelerate that transfer. We judge the disclosure to be net beneficial because
-the inefficiencies we document are structural properties of a fragmented market
-that are already visible to well-resourced participants, and because
-transparency about which signals do \emph{not} survive costs is more likely to
-deter uninformed retail imitation than to enable it. The accompanying dataset is
-released to support reproducibility and benchmarking; it contains only the public
-market observations described above.
+All trading is simulated---no orders were submitted, no capital was deployed, and the reported profits are proxy quantities in z-score units. As documented in Section~\ref{sec:proxy_gap}, the strategies evaluated here are \emph{not} profitable once realistic transaction costs are applied. The accompanying dataset contains only the public market observations described above.

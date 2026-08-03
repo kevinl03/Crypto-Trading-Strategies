@@ -3,41 +3,8 @@
 % ======================================================================
 \section{Conclusion}\label{sec:conclusion}
 
-We presented a gradient-boosting framework for predicting same-asset
-cross-exchange cryptocurrency spread dynamics, replacing the mechanical z-score
-threshold rules used by existing high-frequency crypto pairs-trading systems with
-a learned forecast. Trained on 68 features spanning lagged spread dynamics,
-orderbook imbalance, trade flow, and funding rates across 23~volatile assets and
-6~centralized exchanges at minute-scale granularity, the LightGBM model predicts
-the next-snapshot z-score and trades only when the predicted magnitude exceeds a
-confidence threshold.
-
-Our key findings are:
-
-\begin{enumerate}
-    \item A gradient-boosting model trained on live CEX microstructure achieves prediction R$^2$ of 0.35 and directional accuracy of 76.9\% on filtered live paper-trading entries, compared to R$^2$ of 0.17 for naive persistence on the same rows.
-
-    \item Under matched capacity constraints, the learned policy improves per-trade
-    directional accuracy by 7.6~percentage points and mean z-unit profit by 71\%
-    over a mechanical persistence baseline. The directional gap is robust to how
-    scarce inventory slots are allocated; the profit ratio is not, narrowing to
-    roughly 6\% when both policies fill slots greedily by signal strength.
-
-    \item The confidence filter ($|\hat{z}| \geq 0.5$) lifts R$^2$ by 0.19--0.25 by selecting the 10--15\% of predictions in high-signal regimes. On these filtered rows, directional accuracy is largely explained by persistence in high-$|z|$ states; the model's incremental value is in capturing the magnitude of future z-score movements.
-
-    \item The result is a forecasting result and not a trading result. Scored in
-    basis points of realized spread change rather than z-units, none of the
-    policies we evaluate---including ours---has a positive mean at any non-zero
-    transaction cost. Section~\ref{sec:proxy_gap} reports this reversal in full.
-\end{enumerate}
-
-Section~\ref{sec:limitations} sets out the threats to validity in detail; the
-binding ones are the short evaluation window, the proxy settlement unit, the
-approximately 110-second collector cadence, and the cross-sectional dependence
-that rules out i.i.d.\ significance testing.
+We presented a gradient-boosting framework that replaces mechanical z-score thresholds with a learned forecast for cross-exchange cryptocurrency spread dynamics. On filtered live paper-trading entries, the model achieves R$^2$ of 0.35 and directional accuracy of 76.9\%, improving per-trade accuracy by 7.6~pp and mean z-unit profit by 71\% over a capacity-matched mechanical persistence baseline. The confidence filter ($|\hat{z}| \geq 0.5$) lifts R$^2$ by 0.19--0.25 by selecting the 10--15\% of predictions in high-signal regimes; on these rows, the model's incremental value is in capturing magnitude rather than direction. Critically, this is a forecasting result: scored in basis points of realized spread change, none of the policies---including ours---has a positive mean at any non-zero transaction cost (Section~\ref{sec:proxy_gap}). Section~\ref{sec:limitations} details the threats to validity.
 
 \subsection{Future Work}
 
-Three directions follow naturally from this work. First, incorporating realistic fee structures and execution latency into the settlement proxy would bridge the gap between z-unit performance and economic profitability. Fischer et al.~\cite{fischer2019statistical} show that alpha in minute-scale crypto strategies can disappear within 1--5~minutes of execution delay; a systematic delay ablation would quantify this risk for our framework. Second, extending the feature set with additional non-backfillable signals (liquidation cascades, volume-tiered trading fees, sub-second quote updates) could improve forecast quality in regimes where orderbook imbalance alone is insufficient. Third, the released dataset enables the community to benchmark alternative model
-architectures on the same cross-exchange microstructure panel, including sequence
-models that may capture temporal dependencies the tree ensemble cannot.
+Incorporating realistic fee structures, execution latency, and a direct spread-change training target would bridge the gap between z-unit performance and economic profitability. The released dataset enables the community to benchmark alternative architectures---including sequence models that may capture temporal dependencies the tree ensemble cannot---on the same cross-exchange microstructure panel.

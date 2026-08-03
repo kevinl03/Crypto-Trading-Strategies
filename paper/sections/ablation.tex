@@ -3,11 +3,9 @@
 % ======================================================================
 \section{Ablation Studies}\label{sec:ablation}
 
-We conduct ablation experiments to isolate the contributions of the confidence filter, the learned forecast direction, and the microstructure feature set.
-
 \subsection{Confidence Filter}
 
-The $|\hat{z}| \geq 0.5$ confidence filter is a design choice that restricts trading to predictions the model is most certain about. To quantify its effect, we compare model R$^2$ on all predictions versus the filtered subset across both live campaigns.
+The $|\hat{z}| \geq 0.5$ confidence filter restricts trading to high-confidence predictions. Table~\ref{tab:filter_ablation} quantifies its effect on R$^2$.
 
 \begin{table}[h]
 \caption{Effect of the $|\hat{z}| \geq 0.5$ confidence filter on model R$^2$ across campaigns.}
@@ -40,28 +38,9 @@ filtered bar is roughly three times the height of the unfiltered bar.}
 
 A critical caveat: much of the filtered directional accuracy is explained by persistence in high-$|z|$ states rather than incremental model skill. On Jul~31 filtered rows, naive persistence achieves 77.0\% directional accuracy versus the model's 76.7\%. The model's advantage is in R$^2$ (0.347 vs 0.174), indicating that it captures the \emph{magnitude} of future z-score movements more accurately than simply predicting that large z-scores will persist.
 
-\subsection{Learned Direction vs Mechanical Rules}
-
-The baseline comparison in Section~\ref{sec:results} shows that the model's learned direction outperforms both mechanical alternatives on per-trade quality metrics. To further illustrate this, Figure~\ref{fig:edge} decomposes the model's directional accuracy edge over naive persistence by campaign and filter condition.
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=\columnwidth]{figures/fig6_model_minus_naive_diracc.png}
-\caption{Directional accuracy gap: model minus naive persistence. On filtered rows, the gap is near zero (the filter selects high-persistence states where both methods succeed). The model's primary advantage is R$^2$ on magnitude, not directional hit rate on filtered entries.}
-\Description{Bar chart of the difference in directional accuracy between the model
-and naive persistence, in percentage points, with bars above the zero line
-favouring the model. The two unfiltered bars are clearly negative at about minus
-7.1 percentage points for Jul 30 and minus 4.7 for Jul 31. The two filtered bars
-are close to zero: slightly positive at about plus 1.1 for Jul 30 and slightly
-negative at about minus 0.3 for Jul 31.}
-\label{fig:edge}
-\end{figure}
-
-On all predictions (unfiltered), the model's directional accuracy is \emph{lower} than naive persistence ($-$7.1~pp on Jul~30; $-$4.7~pp on Jul~31), because the model sometimes predicts reversals in states where persistence is the dominant mode. On filtered rows, the gap narrows to near zero ($+$1.1~pp on Jul~30; $-$0.3~pp on Jul~31). This pattern confirms that the confidence filter selects states where both the model and persistence agree on direction; the model's incremental value in those states is its superior fit to z-score magnitude (R$^2$), not to direction alone.
-
 \subsection{Feature Importance: Role of Microstructure Inputs}
 
-The model uses 68~features spanning lagged z-scores, spread dynamics, orderbook imbalance, trade flow, bid-ask spreads, cross-exchange dispersion, funding rates, and categorical identifiers. Figure~\ref{fig:importance} shows the top~20 features by LightGBM split gain.
+Figure~\ref{fig:importance} shows the top~20 of the model's 68~features by LightGBM split gain.
 
 \begin{figure}[h]
 \centering
@@ -82,47 +61,5 @@ imbalance lags, the tightest bid-ask indicator, and a Kraken price rank.}
 \label{fig:importance}
 \end{figure}
 
-Three groups emerge, but their contributions are of very different orders of
-magnitude:
+The model is, to a first approximation, an autoregression on the recent z-score trajectory conditioned on asset and venue-pair identity, with microstructure features supplying a small correction. Lagged z-scores and spread dynamics dominate the top~10 by split gain; microstructure and cross-venue dispersion features (per-venue bid-ask spreads, orderbook imbalance, \texttt{cross\_mid\_range}) enter only in the lower half of the ranking. Only two of the twenty highest-gain features are orderbook imbalance terms, and no trade-flow, funding-rate, or open-interest feature appears in the top~20. The cross-venue dispersion and orderbook features are genuinely unavailable to single-venue or backtest-only systems, but establishing their marginal contribution to R$^2$ requires a leave-one-group-out retraining study that we have not run.
 
-\begin{enumerate}
-    \item \textbf{Lagged z-scores and spread dynamics} (ranks 1--4, 6--8, 10--11):
-    \texttt{zscore\_lag\{1,2,3\}}, \texttt{spread\_bps\_lag\{1,2,3\}},
-    \texttt{spread\_momentum\_1\_3}, \texttt{zscore\_momentum\_1\_3}, and
-    \texttt{zscore\_accel}. These dominate completely. \texttt{zscore\_lag1}
-    alone carries roughly two orders of magnitude more split gain than any
-    microstructure feature.
-
-    \item \textbf{Categorical identifiers} (ranks 5 and 9): \texttt{coin} and
-    \texttt{pair} let the model learn asset-specific and venue-pair-specific
-    dynamics without separate per-pair models. Notably, \texttt{coin} outranks
-    every microstructure feature, indicating that a substantial part of the
-    model's advantage over a single pooled autoregression is simply conditioning
-    on which asset and venue pair is being traded.
-
-    \item \textbf{Microstructure and cross-venue dispersion} (ranks 12--20):
-    per-venue bid-ask spread lags (\texttt{tk\_spread\_bps\_lag3\_coinbase},
-    \texttt{tk\_spread\_bps\_lag1\_kraken}, \texttt{tk\_spread\_bps\_lag3\_bybit}),
-    cross-venue dispersion (\texttt{cross\_mid\_range},
-    \texttt{cross\_mid\_std}), orderbook imbalance
-    (\texttt{ob\_imbalance\_lag\{2,3\}\_coinbase}), and the liquidity extremes
-    \texttt{tightest\_ba} and \texttt{price\_rank\_kraken}.
-\end{enumerate}
-
-We draw a deliberately conservative conclusion from this ranking. The model is,
-to a first approximation, an autoregression on the recent z-score trajectory
-conditioned on asset and venue-pair identity, with microstructure features
-supplying a small correction. Only two of the twenty highest-gain features are
-orderbook imbalance terms, both on a single venue, and no trade-flow, funding-rate,
-or open-interest feature appears in the top~20 at all. The cross-venue dispersion
-features (\texttt{cross\_mid\_range}, \texttt{cross\_mid\_std}) are genuinely
-unavailable to single-venue systems, and the orderbook features are genuinely
-non-backfillable, but neither group is doing the bulk of the predictive work
-here. Establishing how much of the R$^2$ these features are responsible for
-requires a leave-one-group-out retraining study that we have not run; the split-gain
-ranking alone cannot settle it, since gain is confounded by the strong
-correlation among the lagged z-score terms.
-
-\subsection{Generalization: Train vs Test}
-
-Offline train and test R$^2$ are nearly identical on the unfiltered set (0.128 vs 0.133), indicating that the model does not overfit to the training data despite a large feature space and 2,500 maximum boosting rounds. Early stopping selected iteration~74, using only 3\% of the allocated rounds. On filtered predictions, the gap widens (train 0.447 vs test 0.383), reflecting some selection of high-signal regimes that are more prevalent in training windows. The subsequent live campaigns (R$^2$ = 0.248 and 0.347 on filtered entries) confirm that the model retains predictive power on genuinely unseen market conditions collected weeks after training.
