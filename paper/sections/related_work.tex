@@ -1,0 +1,68 @@
+% ======================================================================
+%  RELATED WORK
+% ======================================================================
+\section{Related Work}\label{sec:related}
+
+We organize related work along two axes: (1)~the signal generation method (rule-based z-score thresholds vs learned models) and (2)~the market structure (single-exchange different-asset pairs vs cross-exchange same-asset spreads). Our work occupies the intersection of \emph{learned spread forecasting} and \emph{cross-exchange same-asset trading} with \emph{minute-scale microstructure features}, a combination that, to the best of our knowledge, no prior study addresses.
+
+\subsection{Rule-Based Z-Score Pairs Trading in Crypto}
+
+The dominant approach to cryptocurrency pairs trading uses rolling z-score thresholds or cointegration-derived signals to enter and exit positions mechanically. Fil and Kristoufek~\cite{fil2020pairs} apply distance and cointegration methods to 26~Binance coins at 5-minute, 1-hour, and daily frequencies, finding that 5-minute frequency dramatically outperforms daily (11.61\% vs $-$0.07\% monthly) but that results are highly sensitive to transaction cost assumptions. Tadi and Kortchemski~\cite{tadi2021evaluation} calibrate Ornstein--Uhlenbeck half-lives on BitMEX 1-minute data and trade z-score signals on baskets of different coins, achieving a Sharpe ratio of 7.94 over a multi-month evaluation. Ko et al.~\cite{ko2023pairs} provide the most comprehensive multi-method benchmark, comparing six pair-selection approaches at 1-minute, 5-minute, and 60-minute frequencies on 30~Binance coins. Tadi and Witzany~\cite{tadi2025copula} extend cointegration-based trading with copula signals on 5-minute Binance data across 104~monthly trading cycles, achieving 35--37\% annualized returns and Sharpe of approximately 0.95 after costs. Palazzi~\cite{palazzi2025trading} introduces adaptive trailing stop-loss and volatility filtering to cointegrated z-score strategies on 10~major cryptocurrencies over 2019--2024.
+
+All of these studies share three structural properties that distinguish them from our work. First, they trade \emph{different} assets on a \emph{single} exchange, where co-movement may break down permanently as fundamentals diverge. We trade the \emph{same} asset across \emph{different} exchanges, where the Law of One Price provides a structural guarantee of mean-reversion. Second, they use the z-score as a \emph{mechanical trading signal} (enter when $|z| > k$, exit when $|z| < k'$), whereas we train a model to \emph{predict the future z-score} and use that forecast as the signal. Third, none incorporate L2~orderbook, trade flow, or funding rate features, relying exclusively on price or OHLCV data that can be freely backfilled from exchange APIs.
+
+\subsection{ML Models for Spread Prediction}
+
+A smaller body of work trains models to predict spread dynamics rather than relying on threshold rules.
+
+Tsoku and Makatjane~\cite{tsoku2026dl} are the closest existing paper to our work: they train a DNN+LSTM ensemble to forecast spread dynamics on cointegrated cryptocurrency pairs, reporting RMSE, MAE, and 99\% prediction intervals. However, they operate at lower frequency (not minute-level), on a single exchange, without orderbook or funding rate features, and without reporting directional accuracy, Sharpe ratio, or profit-per-trade as primary metrics.
+
+Fischer et al.~\cite{fischer2019statistical} train a random forest on 1-minute lagged returns of 40~crypto coins to predict cross-sectional outperformance, achieving 7.1~bps/day after 15~bps costs and Sharpe~2.55. Their key finding is that alpha drops from 20.5~bps to 3.8~bps with a 1-minute execution delay and disappears by minute~5. This execution-lag sensitivity is directly relevant to our setting; our live campaigns operate with a collector cadence of approximately 110~seconds, placing us in the regime where Fischer et al.'s signal has already degraded substantially.
+
+Liou et al.~\cite{liou2024hft} train deep learning models with XGBoost feature selection on Taiwan intraday limit-order-book data to predict price spread boundaries in pairs trading, finding that model-generated entry/exit signals improve win rates over rule-based baselines. Their use of LOB features parallels our orderbook imbalance inputs, but they operate on equities on a single exchange and do not report R$^2$, Sharpe, or directional accuracy.
+
+Han and Li~\cite{han2024lstm} use LSTM not as a direct spread predictor but as a \emph{trade filter} that skips predicted-unprofitable trades before execution on CSI~300 futures. This filter-based framing is analogous to our confidence threshold ($|\hat{z}| \geq 0.5$), though we predict spread magnitude directly rather than filtering a rule-based signal.
+
+\subsection{ML-Enhanced Pairs Trading on Equities}
+
+Several recent papers apply ML to the spread prediction task on equity markets, establishing the dual-metric reporting norms (forecast quality and trading performance) that we follow.
+
+Sarmento et al.~\cite{sarmento2024ml} apply BiLSTM with attention, Transformer, and temporal convolutional models to 1-minute Brazilian stock price ratios, finding that model abstention (skipping low-magnitude predictions) improves profit-per-trade. Their abstention mechanism closely parallels our confidence filter. Shen et al.~\cite{shen2022arbitrage} compare LASSO, XGBoost, and LSTM on predicting CSI~300 spot-futures arbitrage spreads, achieving R$^2$ of 92\% with LSTM. The high R$^2$ reflects the structural, slow-moving nature of equity index futures spreads; our noisy cross-exchange crypto spreads yield R$^2$ of 0.35 on filtered entries, which we argue is a more realistic benchmark for minute-scale microstructure prediction. Perrone et al.~\cite{perrone2026pairs} reformulate statistical arbitrage as a panel-level spread prediction task and compare LSTM, Informer, and other transformer architectures on daily equity data, using AUC as a threshold-independent directional quality metric.
+
+These equity studies operate at lower frequencies, on single exchanges, and without the non-backfillable microstructure features central to our approach.
+
+\subsection{Cross-Exchange Price Dislocations}
+
+Makarov and Schoar~\cite{makarov2020trading} document large, recurrent price dislocations across crypto exchanges, with deviations larger across countries than within them, identifying capital controls as the primary barrier to arbitrage. Their observational analysis motivates our work but stops short of building a systematic trading strategy. Our framework extends their findings into a predictive model with live validation.
+
+\subsection{Reinforcement Learning for Spread Trading}
+
+Ning and Lee~\cite{ning2024rl} propose a model-free RL framework for statistical arbitrage that minimizes empirical mean-reversion time. Their state-space construction captures recent price trends rather than fixed z-score boundaries, representing a complementary methodology family. RL-based dynamic threshold optimization is a natural extension of our gradient-boosting framework.
+
+\subsection{Positioning Summary}
+
+Table~\ref{tab:positioning} summarizes the key dimensions along which our work differs from the closest related papers.
+
+\begin{table}[h]
+\caption{Positioning of this work relative to closest related papers. Columns indicate whether each study uses a learned model (vs rule-based), operates cross-exchange (vs single-venue), uses L2 orderbook or microstructure features, evaluates on live (non-backtest) data, and reports both forecast and trading metrics.}
+\label{tab:positioning}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Paper} & \textbf{Learned} & \textbf{Cross-} & \textbf{L2/} & \textbf{Live} & \textbf{Dual} \\
+ & \textbf{model} & \textbf{exch.} & \textbf{micro.} & \textbf{eval} & \textbf{metrics} \\
+\midrule
+Fil \& Kristoufek      & \texttimes & \texttimes & \texttimes & \texttimes & \texttimes \\
+Tadi \& Kortchemski     & \texttimes & \texttimes & \texttimes & \texttimes & partial \\
+Ko et al.               & \texttimes & \texttimes & \texttimes & \texttimes & \checkmark \\
+Tadi \& Witzany         & \texttimes & \texttimes & \texttimes & \texttimes & \checkmark \\
+Fischer et al.          & \checkmark & \texttimes & \texttimes & \texttimes & partial \\
+Tsoku \& Makatjane      & \checkmark & \texttimes & \texttimes & \texttimes & partial \\
+Liou et al.             & \checkmark & \texttimes & \checkmark & \texttimes & partial \\
+Han \& Li               & \checkmark & \texttimes & \texttimes & \texttimes & \texttimes \\
+\midrule
+\textbf{This work}      & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+No prior study combines all five properties. The closest papers in individual dimensions are Tsoku and Makatjane~\cite{tsoku2026dl} (learned crypto spread forecast, but lower frequency and single exchange), Liou et al.~\cite{liou2024hft} (LOB features for spread prediction, but equities and single exchange), and Fischer et al.~\cite{fischer2019statistical} (minute-scale ML on crypto, but cross-sectional rank prediction rather than pairwise spread forecasting). Our contribution is at the intersection: a learned z-score forecast on cross-exchange same-asset spreads, trained on non-backfillable minute-scale microstructure features, validated live with dual forecast and trading metrics.

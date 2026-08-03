@@ -1,0 +1,26 @@
+% ======================================================================
+%  CONCLUSION
+% ======================================================================
+\section{Conclusion}\label{sec:conclusion}
+
+We presented a gradient-boosting framework for predicting same-asset cross-exchange cryptocurrency spread dynamics, replacing the mechanical z-score threshold rules that underpin all existing high-frequency crypto pairs-trading systems with a learned forecast. Trained on 68 live microstructure features spanning orderbook imbalance, trade flow, funding rates, and lagged spread dynamics across 23~volatile assets and 6~centralized exchanges at one-minute granularity, the LightGBM model predicts the next-snapshot z-score and trades only when the predicted magnitude exceeds a confidence threshold.
+
+Our key findings are:
+
+\begin{enumerate}
+    \item A gradient-boosting model trained on live CEX microstructure achieves prediction R$^2$ of 0.35 and directional accuracy of 76.9\% on filtered live paper-trading entries, compared to R$^2$ of 0.17 for naive persistence on the same rows.
+
+    \item Under matched capacity constraints, the learned policy improves per-trade directional accuracy by 7.6~percentage points and mean z-unit profit by 71\% over a mechanical persistence baseline, while classical mean-reversion produces negative returns at this hold horizon.
+
+    \item The model's hourly portfolio Sharpe ratio of 2.41 over an 8-hour live session, with positive risk-adjusted returns in every observed hour, demonstrates consistent performance under real-time market conditions with no future information available.
+
+    \item The confidence filter ($|\hat{z}| \geq 0.5$) acts as a learned abstention mechanism, lifting R$^2$ by 0.19--0.25 by selecting the 10--15\% of predictions in high-signal regimes. On these filtered rows, directional accuracy is largely explained by persistence in high-$|z|$ states; the model's incremental value is in capturing the magnitude of future z-score movements.
+\end{enumerate}
+
+\subsection{Limitations}
+
+Several limitations qualify these findings. The live campaigns span 8~hours each with proxy P\&L computed as $\text{direction} \times z_{t+1}$ rather than dollar profit after fees and slippage. The observed collector cadence of approximately 110~seconds per snapshot (rather than the nominal 60~seconds) introduces latency between signal generation and the market state at execution. The z-score warmup period ($\text{MIN\_PERIODS} = 90$, approximately 2.5--3~hours) means predictions are unavailable during the early portion of each session. Cross-sectional rows within a snapshot are dependent (multiple coin/pair observations share the same market state), so row counts should not be interpreted as independent samples. The Jul~31 collector terminated early due to a software error, and the two campaigns differ in model vintage, horizon, and market regime, preventing direct A/B attribution of improvements.
+
+\subsection{Future Work}
+
+Three directions follow naturally from this work. First, incorporating realistic fee structures and execution latency into the settlement proxy would bridge the gap between z-unit performance and economic profitability. Fischer et al.~\cite{fischer2019statistical} show that alpha in minute-scale crypto strategies can disappear within 1--5~minutes of execution delay; a systematic delay ablation would quantify this risk for our framework. Second, extending the feature set with additional non-backfillable signals (liquidation cascades, volume-tiered trading fees, sub-second quote updates) could improve forecast quality in regimes where orderbook imbalance alone is insufficient. Third, the publicly released dataset (\url{https://huggingface.co/datasets/SFU-fintech-AI/statarb-crypto-research}) enables the community to benchmark alternative model architectures on the same cross-exchange microstructure panel, including sequence models that may capture temporal dependencies the tree ensemble cannot.

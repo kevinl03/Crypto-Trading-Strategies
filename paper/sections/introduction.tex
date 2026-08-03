@@ -1,0 +1,32 @@
+% ======================================================================
+%  INTRODUCTION
+% ======================================================================
+\section{Introduction}\label{sec:intro}
+
+Cryptocurrency markets are fragmented across dozens of centralized exchanges (CEXs), each operating independent order books with heterogeneous liquidity, fee structures, and matching-engine latencies. Unlike equity markets, where consolidated tape systems and best-execution regulation enforce price convergence, crypto exchanges are isolated venues. This fragmentation creates persistent cross-exchange price deviations for identical assets~\cite{makarov2020trading}.
+
+Statistical arbitrage (``pairs trading'') exploits mean-reverting spreads between co-moving instruments~\cite{krauss2017statistical}. In cryptocurrency markets, every existing pairs-trading study uses \emph{rule-based z-score thresholds} to generate entry and exit signals: trade when the spread's rolling z-score exceeds a fixed boundary, exit when it reverts~\cite{fil2020pairs, tadi2021evaluation, ko2023pairs, palazzi2025trading}. No prior work trains a model to \emph{predict where the z-score will be next} and uses that forecast as the trading signal.
+
+We demonstrate that a gradient-boosting model (LightGBM) trained on live centralized-exchange microstructure features can predict the next-snapshot z-score of same-asset cross-exchange spreads, replacing mechanical threshold rules with a learned forecast. The model ingests 68~features spanning orderbook imbalance, trade flow, funding rates, open interest, and lagged spread dynamics across 23~volatile cryptocurrency assets and 6~exchanges at approximately one-minute granularity. A confidence filter restricts trading to predictions where $|\hat{z}| \geq 0.5$, acting as a learned abstention mechanism that selects high-quality entries from the forecast distribution.
+
+\subsection{Dataset and Non-Backfillable Features}
+
+A distinguishing feature of this work is the dataset itself. Our live collector snapshots 9~concurrent signal families every 60--90~seconds across 23~assets and up to 6~exchanges: ticker quotes (best bid/ask), L2~orderbook (top~20 price levels per side), recent trades, funding rates, open interest, withdrawal status, exchange operational status, precomputed spread matrices, and OHLCV candles. The asset universe was selected for high cross-exchange spread volatility and sufficient liquidity across multiple venues. Collection spans over two months of live windows (June--July 2026) at one-minute granularity.
+
+Public exchange APIs serve historical OHLCV candles, but \emph{not} historical order books, quote-level snapshots, or trade prints. Every orderbook and trade-flow observation in our dataset exists only because it was collected live and cannot be reconstructed retroactively for any past window. This non-backfillable property means that the microstructure features central to our model are unavailable to researchers working with standard historical data sources.
+
+The resulting dataset is publicly released at \url{https://huggingface.co/datasets/SFU-fintech-AI/statarb-crypto-research}. To the best of our knowledge, no comparable public dataset provides synchronized cross-exchange L2~orderbook, trade flow, and funding rate data at minute-scale granularity for volatile cryptocurrency assets. We consider the dataset release a contribution independent of the model.
+
+\subsection{Contributions}
+
+We make the following contributions:
+
+\begin{enumerate}
+    \item We train a gradient-boosting model to \textbf{predict the next-snapshot z-score} of same-asset cross-exchange cryptocurrency spreads, replacing the mechanical z-score threshold rules used by all prior high-frequency crypto pairs-trading systems.
+
+    \item We validate the model in \textbf{two live paper-trading campaigns} (8~hours each, weekday and weekend) with no future information leakage, reporting both forecast metrics (R$^2$, directional accuracy) and trading metrics (per-trade profit, hourly portfolio Sharpe ratio) with a matched naive persistence baseline on every evaluation.
+
+    \item We show that the learned forecast achieves \textbf{directional accuracy of 76.9\%}, prediction \textbf{R$^2$ of 0.35}, and an \textbf{hourly portfolio Sharpe ratio of 2.41} on the live session, improving per-trade directional accuracy by 7.6~percentage points and mean profit by 71\% over a capacity-matched mechanical persistence baseline.
+
+    \item We release a \textbf{publicly available dataset} of synchronized cross-exchange microstructure data (L2~orderbook, trade flow, funding rates, open interest) at one-minute granularity for 23~volatile cryptocurrency assets across 6~exchanges, collected over two months of live windows. This data cannot be reconstructed from historical exchange APIs.
+\end{enumerate}
