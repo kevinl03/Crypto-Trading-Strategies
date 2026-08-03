@@ -296,15 +296,39 @@ Based on section complexity and line counts:
 22. Remove redundant phrases throughout
 
 ### Step 8: Compile and Measure
-23. Compile V3 PDF: `tectonic --outdir _build_v3 gradient-boosting-cross-market-spread-prediction.tex`
-24. Check page count
+
+**IMPORTANT**: You are editing the existing section files in `paper/sections/*.tex`. The main LaTeX file `gradient-boosting-cross-market-spread-prediction.tex` stays the same - it just `\input`s the section files you're editing.
+
+**Compilation commands**:
+```powershell
+# Navigate to paper directory
+cd paper
+
+# Ensure build directory exists
+New-Item -ItemType Directory -Force -Path _build_v3 | Out-Null
+
+# Compile with tectonic (downloads packages as needed)
+$env:Path += ";$env:LOCALAPPDATA\tectonic"
+tectonic --outdir _build_v3 gradient-boosting-cross-market-spread-prediction.tex
+
+# Copy/rename output to V3
+Copy-Item _build_v3\gradient-boosting-cross-market-spread-prediction.pdf gradient-boosting-cross-market-spread-prediction-v3.pdf -Force
+```
+
+23. Run the compilation commands above
+24. Check page count: Open the PDF or read the last page via `Read` tool
 25. If >8 pages: Remove Campaign A from Sections 4.4, 5.2 and all jul30 references
 26. If <8 pages: Selectively restore content from Step 1 deletions (priority: 2.4 > 2.5 > 7.5)
 
 ### Step 9: Commit V3
-27. Name output: `gradient-boosting-cross-market-spread-prediction-v3.pdf`
-28. Commit with message: "V3: Reduce to 8 pages (cut related work, discussion, ablation, compress code details)"
-29. Push to `origin/paper/draft-initial-sections`
+27. Verify output exists: `gradient-boosting-cross-market-spread-prediction-v3.pdf` (should be in paper/ directory)
+28. Stage all changes:
+```powershell
+git add sections/*.tex gradient-boosting-cross-market-spread-prediction-v3.pdf
+# Note: May need -f flag for PDF if in .gitignore
+```
+29. Commit with detailed message listing all cuts made
+30. Push to `origin/paper/draft-initial-sections`
 
 ---
 
@@ -323,22 +347,28 @@ After reductions, verify:
 
 ## Files to Modify
 
+**YOU WILL EDIT EXISTING FILES, NOT CREATE NEW ONES**
+
+The main LaTeX file (`gradient-boosting-cross-market-spread-prediction.tex`) uses `\input{sections/...}` to include all section files. You only edit the section `.tex` files.
+
 ### Primary Edits:
 - `paper/sections/related_work.tex` (heavy cuts)
 - `paper/sections/discussion.tex` (heavy cuts + merges)
 - `paper/sections/ablation.tex` (moderate cuts + merges)
 - `paper/sections/results.tex` (add merged content from discussion/ablation)
+- `paper/sections/experimental_setup.tex` (compress code/data details)
 
 ### Minor Edits:
-- `paper/sections/introduction.tex` (compress 1.1)
+- `paper/sections/introduction.tex` (compress 1.1 data collection details)
 - `paper/sections/conclusion.tex` (compress 8.1)
 
 ### No Changes:
+- `paper/gradient-boosting-cross-market-spread-prediction.tex` (main file - NO EDITS)
 - `paper/sections/abstract.tex`
 - `paper/sections/methodology.tex`
-- `paper/sections/experimental_setup.tex` (unless removing Campaign A)
 - `paper/sections/ethics.tex`
 - `paper/references.bib` (verify no orphaned citations after deletions)
+- `paper/figures/*.png` (except possibly removing Figure 2)
 
 ---
 
