@@ -32,6 +32,12 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Optional
 
+# Windows sleep prevention
+if sys.platform == "win32":
+    import ctypes
+    ES_CONTINUOUS = 0x80000000
+    ES_SYSTEM_REQUIRED = 0x00000001
+
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
@@ -350,6 +356,27 @@ def print_dashboard(health: dict, session_info: dict):
 # Main
 # ---------------------------------------------------------------------------
 
+def _prevent_sleep():
+    """Prevent Windows from sleeping during the 5-day run."""
+    if sys.platform == "win32":
+        try:
+            ctypes.windll.kernel32.SetThreadExecutionState(
+                ES_CONTINUOUS | ES_SYSTEM_REQUIRED
+            )
+            print("  [POWER] Windows sleep prevented for this session")
+        except Exception:
+            pass
+
+
+def _allow_sleep():
+    """Restore normal Windows sleep behavior."""
+    if sys.platform == "win32":
+        try:
+            ctypes.windll.kernel32.SetThreadExecutionState(ES_CONTINUOUS)
+        except Exception:
+            pass
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="5-day continuous paper trading session manager"
@@ -433,6 +460,9 @@ def main():
     print("  Starting processes...")
     print("="*70 + "\n")
     
+    # Prevent Windows sleep
+    _prevent_sleep()
+    
     # Initialize process manager
     pm = ProcessManager(
         session_dir=session_dir,
@@ -490,6 +520,7 @@ def main():
         print("\n\n[INTERRUPT] Received Ctrl+C")
     
     finally:
+        _allow_sleep()
         pm.shutdown()
         
         # Final summary
