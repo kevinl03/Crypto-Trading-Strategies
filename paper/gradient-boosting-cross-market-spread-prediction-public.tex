@@ -1,15 +1,13 @@
 % ======================================================================
-%  ICAIF '26 submission
-%  Learned z-score forecasting for cross-exchange cryptocurrency spreads
+%  PUBLIC-RELEASE build (non-anonymous, with URLs visible)
 %
-%  Build:  tectonic gradient-boosting-cross-market-spread-prediction.tex
+%  Build:  tectonic gradient-boosting-cross-market-spread-prediction-public.tex
 %
-%  REVIEW (double-blind) build is the default:
-%      \documentclass[sigconf,anonymous,review]{acmart}
-%  CAMERA-READY: switch to \documentclass[sigconf]{acmart}, set
-%  \anonsubmissionfalse below, and fill in the ACM rights-form commands.
+%  This is identical to the submission build except:
+%    - \documentclass drops `anonymous,review'
+%    - \anonsubmissionfalse reveals dataset and code URLs
 % ======================================================================
-\documentclass[sigconf,anonymous,review]{acmart}
+\documentclass[sigconf]{acmart}
 
 %%% ----- Packages -----
 \usepackage{booktabs}
@@ -19,11 +17,8 @@
 \usepackage{subcaption}
 
 %%% ----- Anonymity toggle -----
-% Must be kept in sync with the `anonymous' documentclass option: the class
-% suppresses the author block automatically, but it cannot anonymise
-% identifying URLs inside the body text.
 \newif\ifanonsubmission
-\anonsubmissiontrue
+\anonsubmissionfalse
 
 \newcommand{\datasetref}{%
   \ifanonsubmission
@@ -125,7 +120,7 @@ gradient boosting, market microstructure, limit order book, live evaluation}
 \input{sections/ethics}
 
 % ======================================================================
-%  ACKNOWLEDGMENTS  (auto-suppressed in anonymous mode)
+%  ACKNOWLEDGMENTS  (visible in public build)
 % ======================================================================
 \begin{acks}
 The authors thank the faculty of the Department of Statistics and Actuarial
