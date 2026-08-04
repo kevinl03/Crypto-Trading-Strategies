@@ -84,7 +84,7 @@ def main():
                 stderr=subprocess.STDOUT,
                 cwd=ROOT,
             )
-        print(f"  ✓ Collector started (PID {collector_proc.pid})")
+        print(f"  [OK] Collector started (PID {collector_proc.pid})")
         print(f"    Waiting 45s for initial data...")
         time.sleep(45)
         
@@ -92,16 +92,16 @@ def main():
         print("\n[2/4] Looking for collector data...")
         run_dir = find_latest_run()
         if not run_dir:
-            print("  ✗ ERROR: No collector run directory found")
+            print("  [ERROR] No collector run directory found")
             print("    Check collector.log for errors")
             return
         
-        print(f"  ✓ Found run: {run_dir.name}")
+        print(f"  [OK] Found run: {run_dir.name}")
         
         # Check if we have spreads
         spread_files = sorted((run_dir / "spread_matrix").glob("*.jsonl")) if (run_dir / "spread_matrix").exists() else []
         if not spread_files:
-            print("  ✗ ERROR: No spread_matrix data")
+            print("  [ERROR] No spread_matrix data")
             return
         
         spread_size = spread_files[-1].stat().st_size
@@ -129,7 +129,7 @@ def main():
                 stderr=subprocess.STDOUT,
                 cwd=ROOT,
             )
-        print(f"  ✓ Trader started (PID {trader_proc.pid})")
+        print(f"  [OK] Trader started (PID {trader_proc.pid})")
         
         # Step 4: Monitor for 3 minutes
         print("\n[4/4] Monitoring (3 minutes)...")
@@ -141,8 +141,8 @@ def main():
             check_count += 1
             
             # Check processes
-            coll_status = "✓ running" if collector_proc.poll() is None else f"✗ died (exit {collector_proc.poll()})"
-            trader_status = "✓ running" if trader_proc.poll() is None else f"✗ died (exit {trader_proc.poll()})"
+            coll_status = "[running]" if collector_proc.poll() is None else f"[died] (exit {collector_proc.poll()})"
+            trader_status = "[running]" if trader_proc.poll() is None else f"[died] (exit {trader_proc.poll()})"
             
             print(f"\n  Check #{check_count} ({int(time.time() - start)}s elapsed):")
             print(f"    Collector: {coll_status}")
@@ -164,10 +164,10 @@ def main():
             
             # Stop if processes died
             if collector_proc.poll() is not None:
-                print("\n  ⚠ Collector died early - check logs")
+                print("\n  [WARN] Collector died early - check logs")
                 break
             if trader_proc.poll() is not None:
-                print("\n  ⚠ Trader died early - check logs")
+                print("\n  [WARN] Trader died early - check logs")
                 break
         
         print("\n" + "="*70)
@@ -184,16 +184,16 @@ def main():
             print(f"  Closed trades: {n_closed}")
             
             if n_preds > 0:
-                print("\n  ✓ SUCCESS: System is working!")
+                print("\n  [SUCCESS] System is working!")
                 print(f"\n  Output directory: {test_dir}")
                 print("\n  Ready to run full 5-day session:")
                 print(f"    python scripts/run_5day_paper_session.py --model {args.model}")
             else:
-                print("\n  ⚠ WARNING: No predictions generated")
+                print("\n  [WARN] No predictions generated")
                 print("    This might be normal if warmup not complete.")
                 print("    Check trader.log for details.")
         else:
-            print("\n  ⚠ WARNING: No summary.json created")
+            print("\n  [WARN] No summary.json created")
             print("    Trader may not have started properly.")
             print("    Check trader.log for details.")
         

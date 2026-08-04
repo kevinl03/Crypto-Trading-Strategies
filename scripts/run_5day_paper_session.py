@@ -85,7 +85,7 @@ class ProcessManager:
                     cwd=ROOT,
                 )
             self.collector_restarts += 1
-            print(f"  ✓ Collector started (PID {self.collector_proc.pid})")
+            print(f"  [OK] Collector started (PID {self.collector_proc.pid})")
             print(f"    Log: {log_file}")
             
             # Wait for collector to create run directory
@@ -96,7 +96,7 @@ class ProcessManager:
             return True
             
         except Exception as e:
-            print(f"  ✗ Failed to start collector: {e}")
+            print(f"  [ERROR] Failed to start collector: {e}")
             return False
     
     def start_trader(self) -> bool:
@@ -134,15 +134,15 @@ class ProcessManager:
                     cwd=ROOT,
                 )
             self.trader_restarts += 1
-            print(f"  ✓ Trader started (PID {self.trader_proc.pid})")
+            print(f"  [OK] Trader started (PID {self.trader_proc.pid})")
             print(f"    Log: {log_file}")
             print(f"    Duration: 120 hours (5 days)")
-            print(f"    Entry threshold: τ={self.entry_tau}")
+            print(f"    Entry threshold: tau={self.entry_tau}")
             print(f"    Max open positions: {self.max_open}")
             return True
             
         except Exception as e:
-            print(f"  ✗ Failed to start trader: {e}")
+            print(f"  [ERROR] Failed to start trader: {e}")
             return False
     
     def check_health(self) -> dict:
@@ -248,9 +248,9 @@ class ProcessManager:
             try:
                 self.trader_proc.terminate()
                 self.trader_proc.wait(timeout=timeout)
-                print(f"    ✓ Trader stopped (exit code {self.trader_proc.returncode})")
+                print(f"    [OK] Trader stopped (exit code {self.trader_proc.returncode})")
             except subprocess.TimeoutExpired:
-                print("    ⚠ Trader didn't stop gracefully, forcing...")
+                print("    [WARN] Trader didn't stop gracefully, forcing...")
                 self.trader_proc.kill()
                 self.trader_proc.wait()
         
@@ -260,9 +260,9 @@ class ProcessManager:
             try:
                 self.collector_proc.terminate()
                 self.collector_proc.wait(timeout=timeout)
-                print(f"    ✓ Collector stopped (exit code {self.collector_proc.returncode})")
+                print(f"    [OK] Collector stopped (exit code {self.collector_proc.returncode})")
             except subprocess.TimeoutExpired:
-                print("    ⚠ Collector didn't stop gracefully, forcing...")
+                print("    [WARN] Collector didn't stop gracefully, forcing...")
                 self.collector_proc.kill()
                 self.collector_proc.wait()
     
@@ -318,18 +318,18 @@ def print_dashboard(health: dict, session_info: dict):
     
     # Collector
     coll = health.get("collector", {})
-    status = "✓ RUNNING" if coll.get("running") else "✗ STOPPED"
+    status = "[RUNNING]" if coll.get("running") else "[STOPPED]"
     print(f"  Data Collector: {status}")
     if coll.get("running"):
         print(f"    PID: {coll.get('pid')}")
         print(f"    Restarts: {coll.get('restarts', 0)}")
         if coll.get("data_stale"):
-            print(f"    ⚠ WARNING: Data is stale (>5min since last update)")
+            print(f"    WARNING: Data is stale (>5min since last update)")
     print()
     
     # Trader
     trader = health.get("trader", {})
-    status = "✓ RUNNING" if trader.get("running") else "✗ STOPPED"
+    status = "[RUNNING]" if trader.get("running") else "[STOPPED]"
     print(f"  LGBM Paper Trader: {status}")
     if trader.get("running") or trader.get("n_closed", 0) > 0:
         print(f"    PID: {trader.get('pid', 'N/A')}")

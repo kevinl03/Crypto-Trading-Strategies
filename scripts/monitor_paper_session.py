@@ -116,7 +116,7 @@ def print_status(data: dict):
         print(f"  Remaining:  {format_duration(remaining)}")
         
         if remaining <= 0:
-            print(f"  Status:     ✓ COMPLETED")
+            print(f"  Status:     [COMPLETED]")
         else:
             print(f"  Ends at:    {end_time.strftime('%Y-%m-%d %H:%M:%S UTC')}")
     
@@ -126,14 +126,14 @@ def print_status(data: dict):
     # Collector status
     coll = health.get("collector", {})
     print("  DATA COLLECTOR")
-    status = "✓ Running" if coll.get("running") else "✗ Stopped"
+    status = "[Running]" if coll.get("running") else "[Stopped]"
     print(f"    Status:     {status}")
     if coll.get("running"):
         print(f"    PID:        {coll.get('pid')}")
     if coll.get("restarts", 0) > 0:
         print(f"    Restarts:   {coll.get('restarts')}")
     if coll.get("data_stale"):
-        print(f"    ⚠ WARNING: Data stale (>5min since last update)")
+        print(f"    WARNING: Data stale (>5min since last update)")
     run_dir = coll.get("run_dir")
     if run_dir:
         print(f"    Run dir:    {Path(run_dir).name}")
@@ -143,7 +143,7 @@ def print_status(data: dict):
     # Trader status
     trader = health.get("trader", {})
     print("  LGBM PAPER TRADER")
-    status = "✓ Running" if trader.get("running") else "✗ Stopped"
+    status = "[Running]" if trader.get("running") else "[Stopped]"
     print(f"    Status:     {status}")
     if trader.get("running"):
         print(f"    PID:        {trader.get('pid')}")
@@ -167,12 +167,12 @@ def print_status(data: dict):
         
         if dir_acc is not None:
             pct = dir_acc * 100
-            status_icon = "✓" if dir_acc >= 0.5 else "✗"
+            status_icon = "[+]" if dir_acc >= 0.5 else "[-]"
             print(f"    Direction acc:    {status_icon} {pct:.1f}%")
         
         if mean_pnl is not None:
             sign = "+" if mean_pnl >= 0 else ""
-            status_icon = "↗" if mean_pnl >= 0 else "↘"
+            status_icon = "[UP]" if mean_pnl >= 0 else "[DN]"
             print(f"    Mean PnL proxy:   {status_icon} {sign}{mean_pnl:.3f}")
         
         # Trades per hour
