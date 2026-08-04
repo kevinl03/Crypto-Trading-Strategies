@@ -144,15 +144,40 @@ The collector **prevents Windows sleep** automatically. If running on battery:
 After the session completes, analyze results:
 
 ```bash
-# Calculate portfolio Sharpe ratio
+# 1. Realistic friction analysis (NEW - incorporates actual market conditions)
+python scripts/analyze_friction_realistic.py data/paper_trading/5day_20260803_180000
+
+# With custom trade size
+python scripts/analyze_friction_realistic.py data/paper_trading/5day_20260803_180000 --trade-size-usd 10000
+
+# 2. Calculate portfolio Sharpe ratio
 python scripts/portfolio_sharpe_paper_session.py data/paper_trading/5day_20260803_180000 --max-open 50
 
-# Plot trades
+# 3. Plot trades
 python scripts/plot_paper_trades.py data/paper_trading/5day_20260803_180000
 
-# Generate full report
+# 4. Generate full report
 python scripts/report_paper_session.py data/paper_trading/5day_20260803_180000
 ```
+
+### Friction Analysis Features
+
+The friction analyzer matches each trade to actual market conditions and computes:
+
+**Execution Friction:**
+- Bid-ask spread crossing costs (both entry and exit)
+- Size-dependent slippage from order book depth
+- Taker fees (4 bps per leg by default)
+
+**Capital Mobility Friction:**
+- Withdrawal/deposit blocked flags (when arbitrageurs can't move capital)
+- Exchange downtime penalties
+- Network transfer costs
+
+**Output:**
+- `friction_analysis.json` - Summary statistics
+- `friction_analysis.csv` - Per-trade details for further analysis
+- Comparison of original PnL vs realistic PnL after all friction
 
 ## Running in the Background (Advanced)
 
