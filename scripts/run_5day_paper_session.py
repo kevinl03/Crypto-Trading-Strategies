@@ -81,6 +81,9 @@ class ProcessManager:
             "--slow-every", "10",  # Slow signals every 10 snapshots
         ]
         
+        # Inherit parent environment (includes venv paths)
+        env = os.environ.copy()
+        
         log_file = self.session_dir / "collector.log"
         try:
             with open(log_file, "a") as f:
@@ -89,17 +92,32 @@ class ProcessManager:
                     stdout=f,
                     stderr=subprocess.STDOUT,
                     cwd=ROOT,
+                    env=env,
                 )
             self.collector_restarts += 1
             print(f"  [OK] Collector started (PID {self.collector_proc.pid})")
             print(f"    Log: {log_file}")
             
-            # Wait for collector to create run directory
-            time.sleep(5)
+            # Wait for collector to create run directory (poll up to 180 seconds)
+            print(f"  Waiting for collector to create run directory...")
+            start_wait = time.time()
+            while (time.time() - start_wait) < 180:
+                time.sleep(5)
+                new_run_dir = self._find_latest_run()
+                # Check if it's a newly created directory (after we started)
+                if new_run_dir and new_run_dir.stat().st_ctime > start_wait:
+                    self.collector_run_dir = new_run_dir
+                    print(f"  [OK] Found new run dir: {self.collector_run_dir}")
+                    return True
+                    
+            # Timeout - use whatever is latest
             self.collector_run_dir = self._find_latest_run()
             if self.collector_run_dir:
-                print(f"    Run dir: {self.collector_run_dir}")
-            return True
+                print(f"  [WARN] Timeout waiting for new run dir, using latest: {self.collector_run_dir}")
+                return True
+            else:
+                print(f"  [ERROR] No run directory found after 180s")
+                return False
             
         except Exception as e:
             print(f"  [ERROR] Failed to start collector: {e}")
@@ -130,6 +148,9 @@ class ProcessManager:
             "--max-open", str(self.max_open),
         ]
         
+        # Inherit parent environment (includes venv paths)
+        env = os.environ.copy()
+        
         log_file = self.session_dir / "trader.log"
         try:
             with open(log_file, "a") as f:
@@ -138,6 +159,7 @@ class ProcessManager:
                     stdout=f,
                     stderr=subprocess.STDOUT,
                     cwd=ROOT,
+                    env=env,
                 )
             self.trader_restarts += 1
             print(f"  [OK] Trader started (PID {self.trader_proc.pid})")
