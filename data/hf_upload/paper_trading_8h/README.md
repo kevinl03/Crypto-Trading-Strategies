@@ -1,3 +1,17 @@
+---
+license: mit
+task_categories:
+  - time-series-forecasting
+  - other
+tags:
+  - crypto
+  - statistical-arbitrage
+  - paper-trading
+  - lightgbm
+  - cross-exchange-spread
+pretty_name: StatArb LightGBM 8h paper-trading sessions
+---
+
 # Paper trading sessions (~8h) — LightGBM live campaign
 
 Two live paper-trading runs used for the research paper writeup. Uploaded under
