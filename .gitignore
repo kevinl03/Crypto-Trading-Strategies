@@ -25,6 +25,10 @@ data/logs/
 data/historical/
 data/ohlcv_live/
 
+# HF staging copies (assembled by upload_paper_trading_to_hf; README is tracked)
+data/hf_upload/paper_trading_8h/**
+!data/hf_upload/paper_trading_8h/README.md
+
 # Parquet files (large data files)
 *.parquet
 
