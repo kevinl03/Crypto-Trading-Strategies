@@ -1,0 +1,17 @@
+ZSCORE_WINDOW (W) sensitivity — Jul25 protocol (spread-only LGBM)
+train=['jun13', 'jun22', 'jul13', 'jul19_post', 'jul22_24']  val=jul19_pre  test=jul25_28  cut=3584
+HORIZON=1  N_LAGS=3  MIN_PERIODS=round(0.3*W)
+W grid: [20, 60, 120, 180, 240, 300, 320]
+
+Ranked by test R² (lgbm):
+  W=320  R²=0.1255  DirAcc=63.242%  R²@τ=0.4180  DirAcc@τ=80.843%  PnL=0.2682  best_iter=38  n=1,677,666
+  W=300  R²=0.1235  DirAcc=63.145%  R²@τ=0.4193  DirAcc@τ=80.857%  PnL=0.2663  best_iter=37  n=1,679,736
+  W=240  R²=0.1187  DirAcc=62.827%  R²@τ=0.4209  DirAcc@τ=80.602%  PnL=0.2594  best_iter=39  n=1,685,946
+  W=180  R²=0.1113  DirAcc=61.860%  R²@τ=0.4141  DirAcc@τ=79.623%  PnL=0.2472  best_iter=45  n=1,692,138
+  W=120  R²=0.0980  DirAcc=60.655%  R²@τ=0.3955  DirAcc@τ=78.454%  PnL=0.2277  best_iter=57  n=1,698,113
+  W= 60  R²=0.0777  DirAcc=58.716%  R²@τ=0.3771  DirAcc@τ=77.169%  PnL=0.1983  best_iter=241  n=1,703,093
+  W= 20  R²=0.0471  DirAcc=55.923%  R²@τ=0.3898  DirAcc@τ=78.726%  PnL=0.1496  best_iter=557  n=1,697,181
+
+BEST by R²: W=320 (R²=0.1255, DirAcc=63.242%)
+
+Note: each W redefines the z-label; compare relative lift vs naive on the same W.
