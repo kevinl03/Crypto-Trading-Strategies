@@ -16,6 +16,13 @@ def main() -> None:
     ap.add_argument("--max-epochs", type=int, default=None)
     ap.add_argument("--seq-len", type=int, default=None)
     ap.add_argument("--batch-size", type=int, default=None)
+    ap.add_argument("--hidden-size", type=int, default=None, help="LSTM hidden size (160 ≈ LGBM 1.24MB fp32)")
+    ap.add_argument(
+        "--lgbm-model",
+        type=Path,
+        default=Path(__file__).resolve().parent / "outputs" / "statarb_lgbm.txt",
+        help="LGBM artifact used for size-matching report",
+    )
     ap.add_argument("--no-hf", action="store_true")
     ap.add_argument("--smoke", action="store_true", help="Tiny train for plumbing check")
     ap.add_argument(
@@ -39,6 +46,8 @@ def main() -> None:
         cfg.seq_len = args.seq_len
     if args.batch_size is not None:
         cfg.batch_size = args.batch_size
+    if args.hidden_size is not None:
+        cfg.hidden_size = args.hidden_size
     if args.smoke:
         cfg.max_epochs = 2
         cfg.patience = 2
@@ -166,6 +175,37 @@ def main() -> None:
         metrics=metrics,
         winsor_bounds=winsor_bounds,
     )
+
+    # Size parity report vs LGBM booster
+    import torch
+
+    lstm_path = out / "statarb_lstm.pt"
+    n_params = sum(p.numel() for p in model.model.parameters())
+    size_report = {
+        "lgbm_path": str(args.lgbm_model),
+        "lgbm_disk_bytes": int(args.lgbm_model.stat().st_size) if args.lgbm_model.exists() else None,
+        "lstm_path": str(lstm_path),
+        "lstm_disk_bytes": int(lstm_path.stat().st_size),
+        "lstm_num_parameters": int(n_params),
+        "lstm_fp32_weight_bytes": int(n_params * 4),
+        "lstm_hidden_size": cfg.hidden_size,
+        "size_ratio_lstm_disk_over_lgbm_disk": (
+            float(lstm_path.stat().st_size / args.lgbm_model.stat().st_size)
+            if args.lgbm_model.exists()
+            else None
+        ),
+        "size_ratio_lstm_fp32_over_lgbm_disk": (
+            float((n_params * 4) / args.lgbm_model.stat().st_size)
+            if args.lgbm_model.exists()
+            else None
+        ),
+        "note": (
+            "LGBM artifact is a text booster file; LSTM .pt is binary state_dict (+cfg). "
+            "Primary size-match target is LSTM fp32 weight bytes ≈ LGBM disk bytes."
+        ),
+    }
+    (out / "model_size_report.json").write_text(json.dumps(size_report, indent=2), encoding="utf-8")
+    print("size report:", json.dumps(size_report, indent=2))
     print("done →", out)
 
 

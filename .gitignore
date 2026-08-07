@@ -62,3 +62,5 @@ build/
 # LSTM training weights/checkpoints (keep metrics text/json trackable)
 statarb/outputs_lstm/*.pt
 statarb/outputs_lstm/**/*.pt
+statarb/outputs_lstm_size_matched/*.pt
+statarb/outputs_lstm_size_matched/**/*.pt
