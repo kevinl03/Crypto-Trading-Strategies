@@ -131,16 +131,20 @@ Recommended wording:
 
 ---
 
-## Numbers to refresh after the current GPU run finishes
+## Measured GPU run (2026-08-07)
 
-Update this table from `statarb/outputs_lstm/METRICS.md` / the runner log:
+From `statarb/outputs_lstm/` + runner log (`stride=8`, caps 250k/150k, RTX 4060):
 
 | Field | Value |
 |---|---|
-| End-to-end wall-clock (GPU run) | _fill_ |
-| Epochs until early stop | _fill_ |
-| Peak RAM (if measured) | _fill_ |
-| Filtered DirAcc / R² / mean pnl_proxy / Sharpe | _fill_ |
+| End-to-end wall-clock | **~9 min** (~542 s) |
+| Epochs until early stop | **20** (best val_rmse 0.91118 @ epoch 14) |
+| Device | `cuda` (RTX 4060) |
+| Filtered LSTM DirAcc / R² / mean pnl_proxy | **82.4%** / **0.492** / **+0.839** |
+| Filtered Sharpe (per-trade) / Sharpe A | **0.86** / **3.88** |
+| Naive filtered (same τ on \(z_t\)) DirAcc / R² / mean pnl | 70.5% / −0.28 / +0.483 |
+
+Caveat: offline holdout + subsampled test (150k); not a live paper-session Sharpe B. Ops conclusion unchanged — prep/RAM still dominate vs LGBM.
 
 ---
 
