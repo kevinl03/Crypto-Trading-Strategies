@@ -8,10 +8,10 @@ This guide shows you how to run a continuous 5-day paper trading session with au
 
 ```bash
 # Using your existing trained model
-python scripts/run_5day_paper_session.py --model statarb/outputs/statarb_lgbm.txt
+python scripts/paper_trading_3day/run_5day_paper_session.py --model statarb/outputs/statarb_lgbm.txt
 
 # With custom parameters
-python scripts/run_5day_paper_session.py \
+python scripts/paper_trading_3day/run_5day_paper_session.py \
     --model statarb/outputs/statarb_lgbm.txt \
     --entry-tau 0.6 \
     --max-open 100
@@ -29,13 +29,13 @@ In a separate terminal:
 
 ```bash
 # One-time status check
-python scripts/monitor_paper_session.py --latest
+python scripts/paper_trading_3day/monitor_paper_session.py --latest
 
 # Continuous monitoring (refreshes every 30s)
-python scripts/monitor_paper_session.py --latest --follow
+python scripts/paper_trading_3day/monitor_paper_session.py --latest --follow
 
 # Monitor specific session
-python scripts/monitor_paper_session.py data/paper_trading/5day_20260803_180000 --follow
+python scripts/paper_trading_3day/monitor_paper_session.py data/paper_trading/5day_20260803_180000 --follow
 ```
 
 ### 3. Stop early (optional)
@@ -145,10 +145,10 @@ After the session completes, analyze results:
 
 ```bash
 # 1. Realistic friction analysis (NEW - incorporates actual market conditions)
-python scripts/analyze_friction_realistic.py data/paper_trading/5day_20260803_180000
+python scripts/paper_trading_3day/analyze_friction_realistic.py data/paper_trading/5day_20260803_180000
 
 # With custom trade size
-python scripts/analyze_friction_realistic.py data/paper_trading/5day_20260803_180000 --trade-size-usd 10000
+python scripts/paper_trading_3day/analyze_friction_realistic.py data/paper_trading/5day_20260803_180000 --trade-size-usd 10000
 
 # 2. Calculate portfolio Sharpe ratio
 python scripts/portfolio_sharpe_paper_session.py data/paper_trading/5day_20260803_180000 --max-open 50
@@ -184,20 +184,20 @@ The friction analyzer matches each trade to actual market conditions and compute
 ### Windows
 ```bash
 # PowerShell
-Start-Process python -ArgumentList "scripts/run_5day_paper_session.py --model statarb/outputs/statarb_lgbm.txt" -WindowStyle Hidden
+Start-Process python -ArgumentList "scripts/paper_trading_3day/run_5day_paper_session.py --model statarb/outputs/statarb_lgbm.txt" -WindowStyle Hidden
 
 # Or use pythonw.exe (no console window)
-pythonw scripts/run_5day_paper_session.py --model statarb/outputs/statarb_lgbm.txt
+pythonw scripts/paper_trading_3day/run_5day_paper_session.py --model statarb/outputs/statarb_lgbm.txt
 ```
 
 ### Linux/Mac
 ```bash
 # Run in background with nohup
-nohup python scripts/run_5day_paper_session.py --model statarb/outputs/statarb_lgbm.txt > session.out 2>&1 &
+nohup python scripts/paper_trading_3day/run_5day_paper_session.py --model statarb/outputs/statarb_lgbm.txt > session.out 2>&1 &
 
 # Or use screen/tmux for detachable sessions
 screen -S paper_trading
-python scripts/run_5day_paper_session.py --model statarb/outputs/statarb_lgbm.txt
+python scripts/paper_trading_3day/run_5day_paper_session.py --model statarb/outputs/statarb_lgbm.txt
 # Press Ctrl+A then D to detach
 ```
 

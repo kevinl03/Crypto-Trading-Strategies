@@ -9,7 +9,7 @@ This runs a shortened version to verify:
 - Shutdown is graceful
 
 Usage:
-    python scripts/test_5day_setup.py --model statarb/outputs/statarb_lgbm.txt
+    python scripts/paper_trading_3day/test_5day_setup.py --model statarb/outputs/statarb_lgbm.txt
 """
 
 import argparse
@@ -21,7 +21,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
 
@@ -187,7 +187,7 @@ def main():
                 print("\n  [SUCCESS] System is working!")
                 print(f"\n  Output directory: {test_dir}")
                 print("\n  Ready to run full 5-day session:")
-                print(f"    python scripts/run_5day_paper_session.py --model {args.model}")
+                print(f"    python scripts/paper_trading_3day/run_5day_paper_session.py --model {args.model}")
             else:
                 print("\n  [WARN] No predictions generated")
                 print("    This might be normal if warmup not complete.")

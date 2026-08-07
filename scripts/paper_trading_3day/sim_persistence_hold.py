@@ -7,7 +7,7 @@ Persistence exit rule (checked from the next snap onward):
   else exit at that snap (min hold = 1)
 
 Usage:
-  python scripts/sim_persistence_hold.py data/paper_trading/5day_Aug4_2026
+  python scripts/paper_trading_3day/sim_persistence_hold.py data/paper_trading/5day_Aug4_2026
 """
 from __future__ import annotations
 

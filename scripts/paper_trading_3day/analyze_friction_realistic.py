@@ -9,8 +9,8 @@ Enhances paper trading results by incorporating actual market conditions:
 - Network transfer costs
 
 Usage:
-    python scripts/analyze_friction_realistic.py data/paper_trading/5day_Aug3_2026
-    python scripts/analyze_friction_realistic.py data/paper_trading/5day_Aug3_2026 --trade-size-usd 5000
+    python scripts/paper_trading_3day/analyze_friction_realistic.py data/paper_trading/5day_Aug3_2026
+    python scripts/paper_trading_3day/analyze_friction_realistic.py data/paper_trading/5day_Aug3_2026 --trade-size-usd 5000
 """
 
 from __future__ import annotations
@@ -26,7 +26,7 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parent.parent.parent
 
 
 @dataclass

@@ -8,12 +8,12 @@ This guide explains how to run and manage the 5-day continuous paper trading sys
 
 **Windows:**
 ```bash
-.venv\Scripts\python.exe scripts\run_5day_paper_session.py --model statarb\outputs\statarb_lgbm.txt
+.venv\Scripts\python.exe scripts\paper_trading_3day\run_5day_paper_session.py --model statarb\outputs\statarb_lgbm.txt
 ```
 
 **Linux/Mac:**
 ```bash
-.venv/bin/python scripts/run_5day_paper_session.py --model statarb/outputs/statarb_lgbm.txt
+.venv/bin/python scripts/paper_trading_3day/run_5day_paper_session.py --model statarb/outputs/statarb_lgbm.txt
 ```
 
 This single command:
@@ -30,10 +30,10 @@ Open a **separate terminal** to watch live progress:
 
 ```bash
 # One-time status check
-.venv\Scripts\python.exe scripts\monitor_paper_session.py --latest
+.venv\Scripts\python.exe scripts\paper_trading_3day\monitor_paper_session.py --latest
 
 # Continuous live monitoring (refreshes every 30s)
-.venv\Scripts\python.exe scripts\monitor_paper_session.py --latest --follow
+.venv\Scripts\python.exe scripts\paper_trading_3day\monitor_paper_session.py --latest --follow
 ```
 
 The monitor shows:
@@ -99,10 +99,10 @@ data/statarb/YYYYMMDD_HHMMSS/  (separate data collection run)
 **Usage:**
 ```bash
 # Basic
-python scripts/run_5day_paper_session.py --model statarb/outputs/statarb_lgbm.txt
+python scripts/paper_trading_3day/run_5day_paper_session.py --model statarb/outputs/statarb_lgbm.txt
 
 # Custom parameters
-python scripts/run_5day_paper_session.py \
+python scripts/paper_trading_3day/run_5day_paper_session.py \
     --model statarb/outputs/statarb_lgbm.txt \
     --entry-tau 0.6 \
     --max-open 100 \
@@ -136,13 +136,13 @@ python scripts/run_5day_paper_session.py \
 **Usage:**
 ```bash
 # Check latest session
-python scripts/monitor_paper_session.py --latest
+python scripts/paper_trading_3day/monitor_paper_session.py --latest
 
 # Monitor specific session
-python scripts/monitor_paper_session.py data/paper_trading/5day_20260803_180000
+python scripts/paper_trading_3day/monitor_paper_session.py data/paper_trading/5day_20260803_180000
 
 # Continuous monitoring (like tail -f)
-python scripts/monitor_paper_session.py --latest --follow
+python scripts/paper_trading_3day/monitor_paper_session.py --latest --follow
 ```
 
 **Parameters:**
@@ -161,7 +161,7 @@ python scripts/monitor_paper_session.py --latest --follow
 
 **Usage:**
 ```bash
-python scripts/test_5day_setup.py --model statarb/outputs/statarb_lgbm.txt
+python scripts/paper_trading_3day/test_5day_setup.py --model statarb/outputs/statarb_lgbm.txt
 ```
 
 **When to use:**
@@ -179,13 +179,13 @@ python scripts/test_5day_setup.py --model statarb/outputs/statarb_lgbm.txt
 **Usage:**
 ```bash
 # Basic analysis (uses $5k trade size for slippage)
-python scripts/analyze_friction_realistic.py data/paper_trading/5day_20260803_180000
+python scripts/paper_trading_3day/analyze_friction_realistic.py data/paper_trading/5day_20260803_180000
 
 # Custom trade size
-python scripts/analyze_friction_realistic.py data/paper_trading/5day_20260803_180000 --trade-size-usd 10000
+python scripts/paper_trading_3day/analyze_friction_realistic.py data/paper_trading/5day_20260803_180000 --trade-size-usd 10000
 
 # Custom fees
-python scripts/analyze_friction_realistic.py data/paper_trading/5day_20260803_180000 --taker-fee-bps 5.0
+python scripts/paper_trading_3day/analyze_friction_realistic.py data/paper_trading/5day_20260803_180000 --taker-fee-bps 5.0
 ```
 
 **Parameters:**
@@ -301,7 +301,7 @@ Get-Process python | Select-Object Name,Id,WorkingSet
 
 1. **Test first:**
    ```bash
-   python scripts/test_5day_setup.py --model statarb/outputs/statarb_lgbm.txt
+   python scripts/paper_trading_3day/test_5day_setup.py --model statarb/outputs/statarb_lgbm.txt
    ```
 
 2. **Check disk space:**
@@ -337,7 +337,7 @@ Get-Process python | Select-Object Name,Id,WorkingSet
 
 1. **Analyze friction:**
    ```bash
-   python scripts/analyze_friction_realistic.py data/paper_trading/5day_*/
+   python scripts/paper_trading_3day/analyze_friction_realistic.py data/paper_trading/5day_*/
    ```
 
 2. **Calculate Sharpe:**
@@ -357,27 +357,27 @@ Get-Process python | Select-Object Name,Id,WorkingSet
 
 ```powershell
 # PowerShell (no window)
-Start-Process python -ArgumentList "scripts\run_5day_paper_session.py --model statarb\outputs\statarb_lgbm.txt" -WindowStyle Hidden
+Start-Process python -ArgumentList "scripts\paper_trading_3day\run_5day_paper_session.py --model statarb\outputs\statarb_lgbm.txt" -WindowStyle Hidden
 
 # Or pythonw.exe (no console)
-pythonw scripts\run_5day_paper_session.py --model statarb\outputs\statarb_lgbm.txt
+pythonw scripts\paper_trading_3day\run_5day_paper_session.py --model statarb\outputs\statarb_lgbm.txt
 ```
 
 ### Linux/Mac
 
 ```bash
 # nohup (survives logout)
-nohup python scripts/run_5day_paper_session.py --model statarb/outputs/statarb_lgbm.txt > session.out 2>&1 &
+nohup python scripts/paper_trading_3day/run_5day_paper_session.py --model statarb/outputs/statarb_lgbm.txt > session.out 2>&1 &
 
 # screen (detachable)
 screen -S paper_trading
-python scripts/run_5day_paper_session.py --model statarb/outputs/statarb_lgbm.txt
+python scripts/paper_trading_3day/run_5day_paper_session.py --model statarb/outputs/statarb_lgbm.txt
 # Ctrl+A then D to detach
 # screen -r paper_trading to reattach
 
 # tmux (detachable)
 tmux new -s paper_trading
-python scripts/run_5day_paper_session.py --model statarb/outputs/statarb_lgbm.txt
+python scripts/paper_trading_3day/run_5day_paper_session.py --model statarb/outputs/statarb_lgbm.txt
 # Ctrl+B then D to detach
 # tmux attach -t paper_trading to reattach
 ```

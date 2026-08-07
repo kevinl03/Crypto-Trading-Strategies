@@ -9,8 +9,8 @@ Orchestrates a multi-day paper trading run with:
 - Auto-restart on failures (with exponential backoff)
 
 Usage:
-    python scripts/run_5day_paper_session.py --model statarb/outputs/statarb_lgbm.txt
-    python scripts/run_5day_paper_session.py --model path/to/model.txt --entry-tau 0.6 --max-open 50
+    python scripts/paper_trading_3day/run_5day_paper_session.py --model statarb/outputs/statarb_lgbm.txt
+    python scripts/paper_trading_3day/run_5day_paper_session.py --model path/to/model.txt --entry-tau 0.6 --max-open 50
 
 Monitoring:
     The script creates a monitoring dashboard at data/paper_trading/<session_id>/dashboard.json
@@ -38,7 +38,7 @@ if sys.platform == "win32":
     ES_CONTINUOUS = 0x80000000
     ES_SYSTEM_REQUIRED = 0x00000001
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
 # ---------------------------------------------------------------------------
@@ -48,15 +48,23 @@ sys.path.insert(0, str(ROOT))
 class ProcessManager:
     """Manages collector and paper trader subprocesses with auto-restart."""
     
-    def __init__(self, session_dir: Path, model_path: Path, entry_tau: float, max_open: int):
+    def __init__(
+        self,
+        session_dir: Path,
+        model_path: Path,
+        entry_tau: float,
+        max_open: int,
+        resume_run_dir: Optional[Path] = None,
+    ):
         self.session_dir = session_dir
         self.model_path = model_path
         self.entry_tau = entry_tau
         self.max_open = max_open
+        self.resume_run_dir = resume_run_dir
         
         self.collector_proc: Optional[subprocess.Popen] = None
         self.trader_proc: Optional[subprocess.Popen] = None
-        self.collector_run_dir: Optional[Path] = None
+        self.collector_run_dir: Optional[Path] = resume_run_dir
         
         self.collector_restarts = 0
         self.trader_restarts = 0
@@ -66,20 +74,27 @@ class ProcessManager:
         self.shutdown_requested = False
         
     def start_collector(self) -> bool:
-        """Start the data collector with --forever flag."""
+        """Start the data collector with --forever flag (July-style: skip-ohlcv + resume)."""
         if self.collector_proc and self.collector_proc.poll() is None:
             return True  # Already running
             
         print(f"\n[{self._timestamp()}] Starting data collector...")
         
+        # Match the proven week-long setup (run_collector.bat / watch_paper_8h.ps1):
+        # --skip-ohlcv keeps ~60s cadence; --resume keeps ONE run dir so z-score warmup survives restarts.
         cmd = [
             sys.executable,
             "-m", "experiments.collect_statarb_data",
-            "--forever",  # Run until stopped
-            "--interval", "60",  # 60-second snapshots for live trading
-            "--assets", "volatile",  # Volatile coins (WIF, PEPE, CRV, etc.)
-            "--slow-every", "10",  # Slow signals every 10 snapshots
+            "--forever",
+            "--interval", "60",
+            "--assets", "volatile",
+            "--slow-every", "10",
+            "--skip-ohlcv",
         ]
+        if self.resume_run_dir and self.resume_run_dir.exists():
+            cmd.extend(["--resume", str(self.resume_run_dir)])
+            self.collector_run_dir = self.resume_run_dir
+            print(f"  Resuming into existing run dir: {self.resume_run_dir}")
         
         # Inherit parent environment (includes venv paths)
         env = os.environ.copy()
@@ -98,21 +113,34 @@ class ProcessManager:
             print(f"  [OK] Collector started (PID {self.collector_proc.pid})")
             print(f"    Log: {log_file}")
             
-            # Wait for collector to create run directory (poll up to 180 seconds)
+            if self.collector_run_dir and self.collector_run_dir.exists():
+                # Resume path: wait briefly for lock + first write
+                time.sleep(5)
+                if self.collector_proc.poll() is not None:
+                    print(f"  [ERROR] Collector exited immediately (code {self.collector_proc.returncode})")
+                    print(f"    Check {log_file} — often a stale lock or another collector still running")
+                    return False
+                print(f"  [OK] Using run dir: {self.collector_run_dir}")
+                return True
+            
+            # Fresh start: wait for collector to create run directory (poll up to 180 seconds)
             print(f"  Waiting for collector to create run directory...")
             start_wait = time.time()
             while (time.time() - start_wait) < 180:
                 time.sleep(5)
+                if self.collector_proc.poll() is not None:
+                    print(f"  [ERROR] Collector exited early (code {self.collector_proc.returncode})")
+                    return False
                 new_run_dir = self._find_latest_run()
-                # Check if it's a newly created directory (after we started)
                 if new_run_dir and new_run_dir.stat().st_ctime > start_wait:
                     self.collector_run_dir = new_run_dir
+                    self.resume_run_dir = new_run_dir  # future restarts resume same dir
                     print(f"  [OK] Found new run dir: {self.collector_run_dir}")
                     return True
                     
-            # Timeout - use whatever is latest
             self.collector_run_dir = self._find_latest_run()
             if self.collector_run_dir:
+                self.resume_run_dir = self.collector_run_dir
                 print(f"  [WARN] Timeout waiting for new run dir, using latest: {self.collector_run_dir}")
                 return True
             else:
@@ -433,12 +461,26 @@ def main():
         default=None,
         help="Custom output directory (default: auto-generated)"
     )
+    parser.add_argument(
+        "--resume-run-dir",
+        type=Path,
+        default=None,
+        help=(
+            "Resume collector into an existing data/statarb/<run_id> directory "
+            "(July week-long pattern). Avoids resetting z-score warmup on restart."
+        ),
+    )
     
     args = parser.parse_args()
     
     # Validate model
     if not args.model.exists():
         print(f"ERROR: Model file not found: {args.model}")
+        sys.exit(1)
+    
+    resume_run_dir = args.resume_run_dir.resolve() if args.resume_run_dir else None
+    if resume_run_dir and not resume_run_dir.exists():
+        print(f"ERROR: Resume run dir not found: {resume_run_dir}")
         sys.exit(1)
     
     # Create session directory
@@ -458,6 +500,8 @@ def main():
         "entry_tau": args.entry_tau,
         "max_open": args.max_open,
         "duration_hours": 120,
+        "resume_run_dir": str(resume_run_dir) if resume_run_dir else None,
+        "skip_ohlcv": True,
     }
     
     # Save session config
@@ -477,6 +521,8 @@ def main():
     print(f"  Max open:     {args.max_open}")
     print(f"  Duration:     120 hours (5 days)")
     print(f"  Output:       {session_dir}")
+    print(f"  Resume run:   {resume_run_dir or '(fresh collector run)'}")
+    print(f"  Collector:    --forever --skip-ohlcv (July-style)")
     print(f"  Health check: every {args.check_interval}s")
     print()
     print("  Starting processes...")
@@ -491,6 +537,7 @@ def main():
         model_path=args.model.resolve(),
         entry_tau=args.entry_tau,
         max_open=args.max_open,
+        resume_run_dir=resume_run_dir,
     )
     
     # Signal handlers for graceful shutdown

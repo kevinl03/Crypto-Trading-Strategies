@@ -34,7 +34,7 @@ REMOTE_FOLDER = "paper_trading_3day"
 STAGING = ROOT / "data" / "hf_upload" / "paper_trading_3day"
 SESSION_SRC = ROOT / "data" / "paper_trading" / "5day_Aug4_2026"
 SESSION_DST_NAME = "aug4_lgbm_3day"
-METRICS_SRC = ROOT / "docs" / "72h_live_campaign_paper_metrics.md"
+METRICS_SRC = ROOT / "docs" / "paper_trading_3day" / "72h_live_campaign_paper_metrics.md"
 
 # Explicit allow-list (skip friction dumps, logs, pre_restart archives).
 COPY_EXACT = (

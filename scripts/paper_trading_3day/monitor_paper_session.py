@@ -2,9 +2,9 @@
 Monitor a running 5-day paper trading session.
 
 Usage:
-    python scripts/monitor_paper_session.py data/paper_trading/5day_20260803_180000
-    python scripts/monitor_paper_session.py --latest
-    python scripts/monitor_paper_session.py --latest --follow
+    python scripts/paper_trading_3day/monitor_paper_session.py data/paper_trading/5day_20260803_180000
+    python scripts/paper_trading_3day/monitor_paper_session.py --latest
+    python scripts/paper_trading_3day/monitor_paper_session.py --latest --follow
 """
 
 import argparse
@@ -14,7 +14,7 @@ import time
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parent.parent.parent
 
 
 def find_latest_session() -> Path:

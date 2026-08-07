@@ -82,7 +82,7 @@ From `portfolio_sharpe_report.json` (computed on ~41k closes / 60 hourly bars mi
 
 ## 4. Persistence hold ablation (buy/sell vs buy/hold/sell)
 
-Offline sim on session signals (`scripts/sim_persistence_hold.py`):
+Offline sim on session signals (`scripts/paper_trading_3day/sim_persistence_hold.py`):
 
 **Rule:** enter when `|pred|≥0.5`; stay open while `sign(pred)==position` and `|pred|≥τ`; min hold 1 snap; `max_open=50`.
 
@@ -142,7 +142,7 @@ Feedback appears aimed at the GBM paper (`paper/gradient-boosting-cross-market-s
 | `data/paper_trading/5day_Aug4_2026/portfolio_sharpe_report.json` | Sharpe A–D |
 | `data/paper_trading/5day_Aug4_2026/sim_persistence_hold_report.json` | Hold ablation |
 | `data/statarb/20260804_062334/` | Underlying live microstructure |
-| `scripts/sim_persistence_hold.py` | Reproduce hold ablation |
+| `scripts/paper_trading_3day/sim_persistence_hold.py` | Reproduce hold ablation |
 | `scripts/portfolio_sharpe_paper_session.py` | Reproduce Sharpe |
 
 ---
