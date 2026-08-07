@@ -10,6 +10,7 @@ run_improve_experiments) with:
 Usage (from statarb/):
   python run_zscore_window_sweep.py
   python run_zscore_window_sweep.py --w 60,120,300
+  python run_zscore_window_sweep.py --min-periods 20 --out-dir outputs_w_sweep_mp20
 """
 from __future__ import annotations
 
@@ -25,15 +26,14 @@ import pandas as pd
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 LOCAL_DATA_ROOT = Path(r"C:/Users/Kev/repos/stochastic-spread-modeling/data/cex_unified")
-OUT = Path("./outputs_w_sweep")
-OUT.mkdir(parents=True, exist_ok=True)
+OUT = Path("./outputs_w_sweep")  # overridden by --out-dir
 
 TOP_EXCHANGES = ["binance", "bybit", "okx", "coinbase", "kraken", "mexc"]
 HORIZON = 1
 N_LAGS = 3
 JUL25_CUT = 3584  # snapshot_idx cut on jul22-28 parquet
 
-DEFAULT_W_GRID = [20, 60, 120, 180, 240, 300, 320]
+DEFAULT_W_GRID = [20, 60, 120, 180, 240, 300, 320, 400, 560, 720, 960, 1280]
 
 LGBM_REG = {
     "objective": "regression",
@@ -67,8 +67,16 @@ VAL_ID = "jul19_pre"
 TEST_ID = "jul25_28"
 
 
-def min_periods_for(w: int) -> int:
-    """Scale warmup with W (~0.3·W); matches paper at W=300 → 90."""
+def min_periods_for(w: int, fixed: int | None = None) -> int:
+    """Warmup before a z-score is emitted.
+
+    fixed: use this constant for all W (must be <= W).
+    default: scale ~0.3·W (paper: W=300 → 90).
+    """
+    if fixed is not None:
+        if fixed > w:
+            raise ValueError(f"min_periods={fixed} > W={w}")
+        return fixed
     return max(5, int(round(0.3 * w)))
 
 
@@ -205,16 +213,19 @@ def train_reg(X_tr, y_tr, X_va, y_va, cat_cols: list[str]):
     )
 
 
-def run_sweep(w_grid: list[int]) -> pd.DataFrame:
+def run_sweep(w_grid: list[int], *, min_periods_fixed: int | None = None) -> pd.DataFrame:
+    global OUT
+    OUT.mkdir(parents=True, exist_ok=True)
     assert LOCAL_DATA_ROOT.exists(), f"missing data root: {LOCAL_DATA_ROOT}"
-    print("=== Loading spreads (once) ===", flush=True)
+    mp_mode = f"fixed={min_periods_fixed}" if min_periods_fixed is not None else "scale=0.3*W"
+    print(f"=== Loading spreads (once)  MIN_PERIODS mode: {mp_mode}  out={OUT} ===", flush=True)
     t0 = time.time()
     sm = load_all_spreads()
     print(f"  load wall: {time.time() - t0:.1f}s", flush=True)
 
     rows: list[dict] = []
     for w in w_grid:
-        mp = min_periods_for(w)
+        mp = min_periods_for(w, fixed=min_periods_fixed)
         print(f"\n=== W={w}  MIN_PERIODS={mp}  H={HORIZON}  N_LAGS={N_LAGS} ===", flush=True)
         t1 = time.time()
         feat = build_spread_features(sm, zscore_window=w, min_periods=mp)
@@ -279,10 +290,10 @@ def run_sweep(w_grid: list[int]) -> pd.DataFrame:
     summary_lines = [
         "ZSCORE_WINDOW (W) sensitivity — Jul25 protocol (spread-only LGBM)",
         f"train={TRAIN_IDS}  val={VAL_ID}  test={TEST_ID}  cut={JUL25_CUT}",
-        f"HORIZON={HORIZON}  N_LAGS={N_LAGS}  MIN_PERIODS=round(0.3*W)",
+        f"HORIZON={HORIZON}  N_LAGS={N_LAGS}  MIN_PERIODS={mp_mode}",
         f"W grid: {w_grid}",
         "",
-        "Ranked by test R² (lgbm):",
+        "Ranked by test R2 (lgbm):",
     ]
     for _, row in lgbm.iterrows():
         summary_lines.append(
@@ -312,20 +323,36 @@ def parse_args() -> argparse.Namespace:
         "--w",
         type=str,
         default=",".join(str(x) for x in DEFAULT_W_GRID),
-        help="Comma-separated W values (default: 20,60,120,180,240,300,320)",
+        help="Comma-separated W values",
+    )
+    p.add_argument(
+        "--min-periods",
+        type=int,
+        default=None,
+        help="Fixed MIN_PERIODS for all W (default: scale as round(0.3*W))",
+    )
+    p.add_argument(
+        "--out-dir",
+        type=str,
+        default="outputs_w_sweep",
+        help="Output directory relative to cwd (default: outputs_w_sweep)",
     )
     return p.parse_args()
 
 
 def main() -> None:
+    global OUT
     args = parse_args()
+    OUT = Path(args.out_dir)
     w_grid = [int(x.strip()) for x in args.w.split(",") if x.strip()]
     if not w_grid:
         raise SystemExit("empty --w grid")
     for w in w_grid:
         if w < 5:
             raise SystemExit(f"W too small: {w}")
-    run_sweep(w_grid)
+        if args.min_periods is not None and args.min_periods > w:
+            raise SystemExit(f"min_periods={args.min_periods} > W={w}")
+    run_sweep(w_grid, min_periods_fixed=args.min_periods)
 
 
 if __name__ == "__main__":
