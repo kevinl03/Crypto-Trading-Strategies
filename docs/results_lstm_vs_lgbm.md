@@ -2,18 +2,20 @@
 
 **Date:** 2026-08-07  
 **Branch:** `feat/lstm-zscore-baseline`  
-**LSTM artifacts:** [`statarb/outputs_lstm/`](../statarb/outputs_lstm/) (`metrics.json`, `METRICS.md`, `feature_schema.json`, `statarb_lstm.pt`)  
-**LGBM offline protocol:** [`statarb/cex_gbm_new.ipynb`](../statarb/cex_gbm_new.ipynb) → `statarb/outputs/statarb_lgbm.txt`  
-**LGBM live peer (same protocol family):** Jul 31 campaign ([`docs/baseline_lgbm_vs_mechanical_z.md`](baseline_lgbm_vs_mechanical_z.md), [`docs/handoff_paper_campaign_framing.md`](handoff_paper_campaign_framing.md))  
+**LSTM (size-matched):** [`statarb/outputs_lstm_size_matched/`](../statarb/outputs_lstm_size_matched/)  
+**LGBM same-window offline:** [`statarb/outputs_lgbm_offline_jul25/`](../statarb/outputs_lgbm_offline_jul25/) (`score_lgbm_offline_pnl_sharpe.py`)  
+**LGBM booster:** [`statarb/outputs/statarb_lgbm.txt`](../statarb/outputs/statarb_lgbm.txt)  
+**LGBM live peer:** Jul 31 campaign ([`docs/baseline_lgbm_vs_mechanical_z.md`](baseline_lgbm_vs_mechanical_z.md))  
+**Pros/cons (paper):** [`docs/lgbm_vs_lstm_pros_cons.md`](lgbm_vs_lstm_pros_cons.md)  
 **Ops / cost note:** [`docs/lstm_vs_lgbm_resource_practicality.md`](lstm_vs_lgbm_resource_practicality.md)
 
 ---
 
 ## 1. Claim (careful)
 
-On the **same Jul-25 holdout protocol** (train &lt; 2026-07-25; test = Jul 25–28; \(y=z_{t+1}\); W=300 / min_periods=90; trade when `|pred|>0.5`), the LSTM research run reports **higher filtered DirAcc / R² / mean `pnl_proxy`** than the documented LightGBM offline test numbers — but this is **not** a matched-row, full-test, capacity-matched bakeoff.
+On the **same Jul 25–28 calendar holdout** (\(y=z_{t+1}\); W=300 / min_periods=90; `|pred|>0.5`), a **size-matched LSTM** (`hidden=160` ≈ LGBM 1.24 MB) reports slightly higher filtered DirAcc / R² / mean `pnl_proxy` than LightGBM scored on the full holdout — but panels are **not matched-row** (LSTM stride/subsample vs LGBM full valid-target rows).
 
-Use LSTM as a **same-target research baseline**. Prefer LightGBM for **live** practicality (see resource note). Do **not** claim “LSTM beats LGBM in production” from these tables alone.
+Use LSTM as a **literature-aligned research baseline**. Prefer LightGBM for **live** practicality. Do **not** claim “LSTM beats LGBM in production” from these tables alone.
 
 ---
 
@@ -44,17 +46,17 @@ Use LSTM as a **same-target research baseline**. Prefer LightGBM for **live** pr
 
 Primary columns match campaign reporting: **DirAcc, R², mean `pnl_proxy`**, plus Sharpe where defined.
 
-### 3.1 Offline holdout
+### 3.1 Same-window Jul 25–28 offline (primary)
 
-| Model | Slice | n | DirAcc | R² | mean `pnl_proxy` | Sharpe (per-trade) | Sharpe A (closed hourly) |
+| Model | Slice | n | DirAcc | R² | mean `pnl_proxy` | Sharpe (per-trade) | Sharpe A |
 |---|---|---:|---:|---:|---:|---:|---:|
-| **LSTM** | filtered | 36,105 | **82.4%** | **0.492** | **+0.839** | **0.86** | 3.88 |
-| LSTM | all (subsample) | 150,000 | 67.4% | 0.233 | +0.363 | 0.38 | 4.80 |
-| LSTM naive \(z_t\) | `|z_t|>0.5` | 92,412 | 70.5% | −0.281 | +0.483 | 0.48 | 4.55 |
-| **LGBM offline** | filtered | — | **78.4%** | **0.383** | — | — | — |
-| LGBM offline | all | — | 62.8% | 0.133 | — | — | — |
+| **LGBM** | filtered | 263,464 | 78.7% | 0.389 | +0.765 | 0.73 | 3.90 |
+| LGBM | all | 1,680,081 | 63.1% | 0.132 | +0.268 | 0.26 | 6.33 |
+| Naive `|z_t|>0.5` (full panel) | filtered | 1,043,242 | 68.3% | −0.395 | +0.428 | 0.41 | 5.72 |
+| **LSTM size-matched** | filtered | 37,601 | **81.6%** | **0.470** | **+0.816** | **0.83** | 3.93 |
+| LSTM size-matched | all (subsample) | 150,000 | 67.4% | 0.229 | +0.363 | 0.38 | 4.77 |
 
-Sources: LSTM → `statarb/outputs_lstm/metrics.json`. LGBM offline → handoff `eval_results.csv` summary in [`docs/handoff_paper_campaign_framing.md`](handoff_paper_campaign_framing.md) § offline model (R²/DirAcc only; no offline mean-pnl table in that summary).
+Sources: `statarb/outputs_lgbm_offline_jul25/metrics.json`, `statarb/outputs_lstm_size_matched/metrics.json`. Same metric code (`evaluate_model_and_naive` / equivalent). LSTM test panel is stride/subsampled; LGBM is the full valid-target holdout.
 
 ### 3.2 LGBM live peer (same protocol family; different evaluation surface)
 
@@ -74,26 +76,25 @@ Sources: [`docs/baseline_lgbm_vs_mechanical_z.md`](baseline_lgbm_vs_mechanical_z
 
 **What supports LSTM looking strong offline**
 
-- On its capped Jul25 test subsample, filtered LSTM beats its own `|z_t|>0.5` naive on DirAcc (+11.9 pp), R² (0.49 vs −0.28), and mean `pnl_proxy` (+0.84 vs +0.48).
-- Filtered R² / DirAcc also sit above the **documented LGBM offline filtered** numbers (0.49 / 82.4% vs 0.38 / 78.4%).
+- Same calendar window: size-matched LSTM filtered DirAcc / R² / mean pnl (81.6% / 0.47 / +0.82) sit slightly above full-panel LGBM (78.7% / 0.39 / +0.77).
+- Both beat mechanical-style `|z_t|>0.5` naive on filtered DirAcc/R²/pnl (LGBM clearly; LSTM on its own subsample).
 
 **Why this is not a clean “LSTM wins” verdict**
 
-1. **Different row sets.** LSTM scores 150k stride-subsampled sequences; LGBM offline scores the full test panel. Selection differs.
+1. **Different row sets.** LSTM scores 150k stride-subsampled sequences; LGBM scores the full valid-target panel (~1.68M).
 2. **Different features.** Sequence microstructure vs 68-lag booster — skill is not isolated from representation.
-3. **Filter selectivity.** LSTM fires on 36k / 150k ≈ 24% of scored rows; LGBM live fires on a different density. Higher filtered metrics can partly be **harder selection**, not pure skill.
-4. **Naive construction differs.** LSTM naive uses `|z_t|>0.5` (mechanical-style entry). LGBM live naive is scored on **the same rows the model entered** (`|pred|≥0.5`). On Jul31, that matched-row naive DirAcc ≈ model DirAcc (77.0% vs 76.7%) — the honest DirAcc bar LGBM already cleared mainly on R²/pnl.
-5. **No live LSTM book.** LGBM has capacity-matched Sharpe B and mechanical peers; LSTM Sharpe A here is offline closed-only pseudo-hourly.
-6. **Ops.** Even if offline numbers favor future LSTM tuning, live practicality still favors LGBM ([resource note](lstm_vs_lgbm_resource_practicality.md)).
+3. **Filter selectivity.** LSTM fires on ~25% of its subsample; LGBM fires on ~16% of the full panel — densities differ.
+4. **No live LSTM book.** LGBM has Jul31 Sharpe B + mechanical peers; offline Sharpe A ≠ live Sharpe B.
+5. **Ops.** Live practicality still favors LGBM ([resource note](lstm_vs_lgbm_resource_practicality.md)).
 
 **Practical takeaway**
 
 | Axis | Winner today |
 |---|---|
-| Offline filtered DirAcc / R² (imperfect compare) | LSTM run (with caveats above) |
+| Same-window offline filtered skill (imperfect panels) | LSTM slight |
 | Live validated trading + mechanical peers | **LGBM** |
 | Train / serve practicality | **LGBM** |
-| Literature ablation (Tsoku-style learned z forecast) | LSTM has a seat at the table |
+| Literature ablation (Tsoku-style learned z forecast) | LSTM |
 
 ---
 
@@ -121,18 +122,17 @@ cd statarb
 
 Expect filtered headline metrics within noise of `metrics.json` (GPU nondeterminism can cause small drift unless `cudnn.deterministic` is forced).
 
-### 5.2 LGBM — verify against existing sources of truth
+### 5.2 LGBM — same-window offline scorer
 
-1. **Offline R²/DirAcc:** numbers in §3.1 are taken from the handoff summary of `eval_results.csv` for the Jul25-split booster (`statarb/outputs/statarb_lgbm.txt`), not re-inferred here.
-2. **Live DirAcc / pnl / Sharpe B:** taken from Jul31 session JSON/docs (`summary.json`, `portfolio_sharpe_report.json`, `metrics_report.csv`) as compiled in the baseline / lit results docs.
-3. **Protocol match:** Jul31 live model is the same H=1 / W=300 / 68-feat stack as the Jul25 offline notebook — appropriate as a **protocol-family** peer, not as the same parquet test rows as LSTM.
+1. **Command:** `statarb/score_lgbm_offline_pnl_sharpe.py` → `statarb/outputs_lgbm_offline_jul25/`.
+2. **Model:** existing `statarb/outputs/statarb_lgbm.txt` (not retrained); features rebuilt for Jul25–28 with the notebook FE path.
+3. **Live DirAcc / pnl / Sharpe B:** still from Jul31 docs (§3.2) as a protocol-family peer, not the same parquet rows.
 
 ### 5.3 What would make the comparison tighter (future)
 
-1. Score **LGBM and LSTM on identical Jul25 test indices** (no LSTM stride/subsample, or apply the same subsample to both).
-2. Report **matched-row naive** for LSTM: evaluate \(z_t\) on the rows where `|pred_LSTM|>0.5` (same construction as LGBM live).
-3. Add offline mean `pnl_proxy` + Sharpe A for LGBM on that shared panel.
-4. Only then claim a head-to-head skill ranking; keep ops conclusion separate.
+1. Score **LGBM and LSTM on identical Jul25 test indices** (drop LSTM subsample, or subsample LGBM the same way).
+2. Report **matched-row naive** for LSTM: \(z_t\) on rows where `|pred_LSTM|>0.5`.
+3. Only then claim a strict head-to-head skill ranking; keep ops conclusion separate.
 
 ### 5.4 Red flags we already account for
 
@@ -150,9 +150,9 @@ Expect filtered headline metrics within noise of `metrics.json` (GPU nondetermin
 
 | Path | Role |
 |---|---|
-| `statarb/outputs_lstm/metrics.json` | LSTM machine-readable results |
-| `statarb/outputs_lstm/METRICS.md` | LSTM dual-metric writeup |
-| `statarb/outputs_lstm/feature_schema.json` | Channels, scalers, maps |
-| `docs/handoff_paper_campaign_framing.md` | LGBM offline + live tables |
+| `statarb/outputs_lgbm_offline_jul25/metrics.json` | Same-window LGBM offline |
+| `statarb/outputs_lstm_size_matched/metrics.json` | Size-matched LSTM |
+| `statarb/outputs_lstm_size_matched/model_size_report.json` | MB vs LGBM |
+| `docs/lgbm_vs_lstm_pros_cons.md` | Paper pros/cons |
 | `docs/baseline_lgbm_vs_mechanical_z.md` | LGBM vs mechanical live |
 | `docs/lstm_vs_lgbm_resource_practicality.md` | Time/RAM/live practicality |
