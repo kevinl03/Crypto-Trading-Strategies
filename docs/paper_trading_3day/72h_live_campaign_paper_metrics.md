@@ -57,7 +57,7 @@ Replace / extend the Jul 31 ~8h tables with a **Campaign C (~72h / ~3-day)** blo
 Matches the training target (gross z-unit settlement, not dollars).
 
 **Suggested paper one-liner (literature-safe):**
-> In a ~73h live paper session (50,690 settled bets; 1.01M scored predictions; 23 coins × 15 venue-pairs), the LightGBM H=1 policy achieved 79.0% directional accuracy and mean z-unit settlement +0.84. Closed-only hourly portfolio Sharpe was 4.38 (Rf=0; every one of 74 clock hours positive). These are **gross z-proxy** diagnostics of live book stability—not annualized capital Sharpes and not fee-net P&L—so they are not numerically comparable to multi-month literature Sharpes (e.g. Tadi & Kortchemski 7.94).
+> In a ~73h live paper session (50,690 settled bets; 1.01M scored predictions; 23 coins × 15 venue-pairs), the LightGBM H=1 policy achieved 79.0% directional accuracy and mean z-unit settlement +0.84. Closed-only hourly portfolio Sharpe was 4.38 (Rf=0; every one of 74 clock hours positive). These are **gross z-proxy** diagnostics of live book stability—not annualized strategy Sharpes and not fee-net P&L—so they are not numerically comparable to longer-sample literature Sharpes (e.g. Tadi & Kortchemski’s 7.94 with Rf=0 on ~1y BitMEX pairs P&L).
 
 ---
 
@@ -75,7 +75,7 @@ Matches the training target (gross z-unit settlement, not dollars).
 **Publishing guidance (extend Jul 31 lit notes in `docs/results_jul31_live_metrics_lit.md`):**
 - Prefer headline **A = 4.38** (full book, closed-only) plus mid **B ≈ 4.10** if discussing open MTM.
 - **Do not annualize** (`4.38 × √(24×365)` is not a claim).
-- **Do not** equate to Tadi & Kortchemski’s multi-month capital Sharpe (~7.94), Fil & Kristoufek fee-sensitive results, or Tadi & Witzany ~0.95-class longer-sample Sharpes.
+- **Do not** equate to Tadi & Kortchemski’s ~1y annualized pairs Sharpe (7.94, Rf=0), Fil & Kristoufek’s cost-sensitive backtests, or Tadi & Witzany’s ~2y fee-aware annualized Sharpes (~0.93–0.97).
 - Use **74/74** as short-window *stability* evidence (scales Jul 31’s 6/6), not as a multi-month win-rate claim.
 
 ---
@@ -108,32 +108,33 @@ Offline sim on session signals (`scripts/paper_trading_3day/sim_persistence_hold
 
 ## 5. Literature framing (how to read 4.38 / 74/74 / 79%)
 
-Same discipline as Jul 31 (`docs/results_jul31_live_metrics_lit.md` §6): compare **definitions**, not raw numbers.
+Same discipline as Jul 31 (`docs/results_jul31_live_metrics_lit.md` §6): compare **definitions**, not raw numbers.  
+Numeric headlines below were checked against the PDFs in `literature/` (abstracts in `literature/README.md`; Sharpe/delay figures from paper bodies where needed).
 
 | Dimension | Campaign C (this run) | Typical HF crypto pairs lit |
 |---|---|---|
-| Horizon of evidence | **~73 live hours** (74 clock hours with closes) | Weeks to years |
-| PnL unit | Gross **z-proxy** (`dir × z_exit`) | Currency / capital return % |
-| Costs | No fees / slippage / fills | Often net or fee-stressed |
-| Aggregation | Hourly book P&L (variant A/B) | Daily/monthly returns |
-| Annualized? | **No** (primary) | Usually yes |
-| Signal type | **ML predicts** \(z_{t+1}\) + `\|pred\|≥0.5` | Usually mechanical z threshold |
+| Horizon of evidence | **~73 live hours** (74 clock hours with closes) | Weeks to ~1–2 years in these peers |
+| PnL unit | Gross **z-proxy** (`dir × z_exit`) | Currency / strategy return % |
+| Costs | No fees / slippage / fills | Often fee-sensitive or fee-inclusive |
+| Aggregation | Hourly book P&L (variant A/B) | Daily/monthly / annualized returns |
+| Annualized? | **No** (primary) | Usually yes when Sharpe is quoted |
+| Signal type | **ML predicts** \(z_{t+1}\) + `\|pred\|≥0.5` | Mostly mechanical cointegration / distance / z rules (ML peers differ in task) |
 
 **What Campaign C adds vs Jul 31 (2.41 / 6/6):** longer live path — DirAcc holds (~77% → ~79%), hourly Sharpe stays strong under the *same proxy*, and every clock hour remains green over **12×** more hours. That answers “was the 8h window a fluke?” — it does **not** license “we beat Tadi 7.94.”
 
-| Paper | Their headline | How Campaign C should be used |
+| Paper | Verified headline (from PDF) | How Campaign C should be used |
 |---|---|---|
-| **Tadi & Kortchemski (2021)** | Sharpe **7.94**, multi-month, capital P&L, Rf=0 | Closest *construction* cousin (portfolio P&L, Rf=0). Cite methodologically; **do not** rank 4.38 vs 7.94. |
-| **Tadi & Witzany (2025)** | ~0.95-class longer-sample Sharpe | Reminds that fee-aware, longer windows look quieter. Our 4.38 is still gross proxy. |
-| **Fil & Kristoufek (2020)** | Gross strong / **extreme cost sensitivity** | Keep gross vs net separate; do not imply dollar profit from z-proxy. |
-| **Fischer et al. (2019)** | Alpha dies under ~minutes of delay | Hold is H=1 (~1–2 min). Report delay ablation before claiming robustness to their setting. |
-| **Ko et al. (2023)** | Huge **gross** % returns | Reinforces gross/net split. |
-| **Tsoku & Makatjane (2026)** | DNN/LSTM spread **forecast** | Closest task family; our edge is minute CEX microstructure + live dual metrics + confidence filter. |
+| **Tadi & Kortchemski (2021)** | Minute BitMEX data ~2018-09 → 2019-10; scenario-2 **Sharpe 7.94** with **Rf=0** on strategy P&L (they also discuss realized vs unrealized P&L for MDD). Abstract: dynamic cointegration / OU half-life basket pairs beats buy-and-hold. | Closest *construction* cousin (portfolio/strategy P&L Sharpe, Rf=0, longer sample). Cite methodologically; **do not** rank our hourly z-proxy 4.38 vs their 7.94. |
+| **Tadi & Witzany (2025)** | Copula cointegrated pairs; Table VI optimal cases ≈ **35–37% annualized return**, **Sharpe ≈ 0.93–0.97** (EG 0.97 / KSS 0.93 at \(\alpha_1=0.10\)); sample ~2021-01 → 2023-01; footnotes: fees included in reported calcs. Abstract: beats buy-and-hold on profitability and risk-adjusted returns. | Longer-sample, fee-aware annualized band. Our 4.38 is still short-window gross z-proxy. |
+| **Fil & Kristoufek (2020)** | Distance + cointegration on 26 Binance coins at 5m / 1h / daily. Abstract: strategies **underperform classical benchmarks** overall, but results are **sensitive to parameters, transaction costs, and execution windows**; daily distance −0.07% monthly vs **+11.61% monthly at 5-minute**. | Use for cost/execution sensitivity — not as a Sharpe peer number. Keep gross z-proxy vs fee-net economics separate. |
+| **Fischer, Krauss & Deinert (2019)** | RF predicts whether a coin beats the **cross-sectional median over the next 120 min**; top-3/flop-3, reverse after 120 min; OOS **7.1 bps/day after 15 bps half-turn costs**. Body Table 3: round-trip alpha falls with execution delay and **vanishes by minute \(t+5\)**. | Delay / execution peer, **not** a spread-z forecast peer. Our H=1 hold is ~1–2 min; report a delayed-entry ablation before claiming robustness to their setting. |
+| **Ko, Lin, Do et al. (2023)** | Comparative study (distance / corr / coint / SDR / GA / NSGA-II) on 26 Binance coins at 1/5/60 min over **79 days** (2018-01-11 → 03-31). Abstract: **NSGA-II best at 2.84% average return**; SDR 1.63%; correlation −0.48%. | Method bake-off peer for pair selection — **not** a “huge return” benchmark (older notes’ 208–236% figure is **not** in this paper). |
+| **Tsoku & Makatjane (2026)** | Dynamic Johansen cointegration + **Dynamic Weighted Ensemble of DNN and LSTM** to **forecast spread dynamics** on BNB/ETH/LTC/XRP/USDT. Abstract: only dynamically coherent pairs suit mean-reversion; ensemble best predictive accuracy. | Closest *task family* (learned spread forecast). Differentiator: minute CEX cross-exchange microstructure, explicit \(z_{t+1}\) target, `\|pred\|≥0.5` policy, live paper campaigns. |
 
-**DO NOT CLAIM:** annualized Sharpe; fee-net profitability; “beats 7.94”; that 74/74 generalizes beyond this ~3-day window.
+**DO NOT CLAIM:** annualized Sharpe; fee-net profitability; “beats 7.94”; that 74/74 generalizes beyond this ~3-day window; that Ko reports triple-digit returns.
 
 **Framing sentence for the paper:**
-> Relative to mechanical high-frequency crypto pairs-trading studies, Campaign C’s contribution is a **learned** next-snapshot z forecast evaluated **live** over ~3 days with dual forecast/trading metrics (DirAcc, mean z-proxy, hourly portfolio Sharpe under a z-settlement proxy)—not numerical dominance on annualized net capital Sharpe.
+> Relative to mechanical high-frequency crypto pairs-trading studies, Campaign C’s contribution is a **learned** next-snapshot z forecast evaluated **live** over ~3 days with dual forecast/trading metrics (DirAcc, mean z-proxy, hourly portfolio Sharpe under a z-settlement proxy)—not numerical dominance on annualized net strategy Sharpe.
 
 ---
 
