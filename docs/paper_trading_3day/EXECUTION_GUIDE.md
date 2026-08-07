@@ -1,28 +1,28 @@
-# 5-Day Paper Trading Session - Execution Guide
+# 3-Day Paper Trading Session - Execution Guide
 
-This guide explains how to run and manage the 5-day continuous paper trading system.
+This guide explains how to run and manage the 3-day continuous paper trading system.
 
 ## Quick Start
 
-### 1. Start the 5-Day Session
+### 1. Start the 3-Day Session
 
 **Windows:**
 ```bash
-.venv\Scripts\python.exe scripts\paper_trading_3day\run_5day_paper_session.py --model statarb\outputs\statarb_lgbm.txt
+.venv\Scripts\python.exe scripts\paper_trading_3day\run_3day_paper_session.py --model statarb\outputs\statarb_lgbm.txt
 ```
 
 **Linux/Mac:**
 ```bash
-.venv/bin/python scripts/paper_trading_3day/run_5day_paper_session.py --model statarb/outputs/statarb_lgbm.txt
+.venv/bin/python scripts/paper_trading_3day/run_3day_paper_session.py --model statarb/outputs/statarb_lgbm.txt
 ```
 
 This single command:
 - Starts the data collector (runs continuously until stopped)
-- Starts the LGBM paper trader (runs for 120 hours)
+- Starts the LGBM paper trader (runs for 72 hours)
 - Monitors both processes every 5 minutes
 - Auto-restarts crashed processes
 - **Prevents Windows sleep** (keeps your PC awake)
-- Saves all data to `data/paper_trading/5day_YYYYMMDD_HHMMSS/`
+- Saves all data to `data/paper_trading/3day_YYYYMMDD_HHMMSS/`
 
 ### 2. Monitor the Session (Optional)
 
@@ -57,7 +57,7 @@ Press **Ctrl+C twice** for immediate force stop.
 ## What Gets Created
 
 ```
-data/paper_trading/5day_YYYYMMDD_HHMMSS/
+data/paper_trading/3day_YYYYMMDD_HHMMSS/
 ├── session_config.json       # Session parameters
 ├── dashboard.json             # Latest health status (updated every 5 min)
 ├── summary.json               # Trading statistics (updated every 1 min)
@@ -79,13 +79,13 @@ data/statarb/YYYYMMDD_HHMMSS/  (separate data collection run)
 └── _state.json               # Resumable checkpoint
 ```
 
-**Note**: Files are partitioned by UTC day, so a 5-day run creates multiple dated files per signal.
+**Note**: Files are partitioned by UTC day, so a 3-day run creates multiple dated files per signal.
 
 ---
 
 ## Scripts Explained
 
-### 1. `run_5day_paper_session.py` - Main Orchestrator
+### 1. `run_3day_paper_session.py` - Main Orchestrator
 
 **What it does:**
 - Launches data collector as subprocess
@@ -94,15 +94,15 @@ data/statarb/YYYYMMDD_HHMMSS/  (separate data collection run)
 - Monitors both every 5 minutes
 - Auto-restarts crashed processes (exponential backoff)
 - Prevents Windows sleep
-- Runs for exactly 120 hours (5 days)
+- Runs for exactly 72 hours (3 days)
 
 **Usage:**
 ```bash
 # Basic
-python scripts/paper_trading_3day/run_5day_paper_session.py --model statarb/outputs/statarb_lgbm.txt
+python scripts/paper_trading_3day/run_3day_paper_session.py --model statarb/outputs/statarb_lgbm.txt
 
 # Custom parameters
-python scripts/paper_trading_3day/run_5day_paper_session.py \
+python scripts/paper_trading_3day/run_3day_paper_session.py \
     --model statarb/outputs/statarb_lgbm.txt \
     --entry-tau 0.6 \
     --max-open 100 \
@@ -117,14 +117,14 @@ python scripts/paper_trading_3day/run_5day_paper_session.py \
 - `--output-dir PATH` - Custom output directory
 
 **How it works:**
-1. Creates unique session directory: `data/paper_trading/5day_YYYYMMDD_HHMMSS/`
+1. Creates unique session directory: `data/paper_trading/3day_YYYYMMDD_HHMMSS/`
 2. Starts collector: `python -m experiments.collect_statarb_data --forever --interval 60 --assets volatile`
 3. Waits for collector to create data directory
 4. Starts trader: `python -m experiments.paper_trade_lgbm --model <model> --run-dir <collector_run> --hours 120`
 5. Loops every 10 seconds checking if processes are alive
 6. Every 5 minutes: runs health check, saves dashboard
 7. Auto-restarts if either process crashes (up to 10 times with backoff)
-8. After 120 hours OR Ctrl+C: graceful shutdown
+8. After 72 hours OR Ctrl+C: graceful shutdown
 
 ### 2. `monitor_paper_session.py` - Status Monitor
 
@@ -139,7 +139,7 @@ python scripts/paper_trading_3day/run_5day_paper_session.py \
 python scripts/paper_trading_3day/monitor_paper_session.py --latest
 
 # Monitor specific session
-python scripts/paper_trading_3day/monitor_paper_session.py data/paper_trading/5day_20260803_180000
+python scripts/paper_trading_3day/monitor_paper_session.py data/paper_trading/3day_YYYYMMDD_HHMMSS
 
 # Continuous monitoring (like tail -f)
 python scripts/paper_trading_3day/monitor_paper_session.py --latest --follow
@@ -151,7 +151,7 @@ python scripts/paper_trading_3day/monitor_paper_session.py --latest --follow
 - `--follow, -f` - Continuously refresh status
 - `--interval INT` - Refresh interval in seconds (default: 30)
 
-### 3. `test_5day_setup.py` - Quick Test
+### 3. `test_3day_setup.py` - Quick Test
 
 **What it does:**
 - Runs a 5-minute test of the full pipeline
@@ -161,11 +161,11 @@ python scripts/paper_trading_3day/monitor_paper_session.py --latest --follow
 
 **Usage:**
 ```bash
-python scripts/paper_trading_3day/test_5day_setup.py --model statarb/outputs/statarb_lgbm.txt
+python scripts/paper_trading_3day/test_3day_setup.py --model statarb/outputs/statarb_lgbm.txt
 ```
 
 **When to use:**
-- Before starting a full 5-day run
+- Before starting a full 3-day run
 - To verify your environment is set up correctly
 - After making changes to the code
 
@@ -179,13 +179,13 @@ python scripts/paper_trading_3day/test_5day_setup.py --model statarb/outputs/sta
 **Usage:**
 ```bash
 # Basic analysis (uses $5k trade size for slippage)
-python scripts/paper_trading_3day/analyze_friction_realistic.py data/paper_trading/5day_20260803_180000
+python scripts/paper_trading_3day/analyze_friction_realistic.py data/paper_trading/3day_YYYYMMDD_HHMMSS
 
 # Custom trade size
-python scripts/paper_trading_3day/analyze_friction_realistic.py data/paper_trading/5day_20260803_180000 --trade-size-usd 10000
+python scripts/paper_trading_3day/analyze_friction_realistic.py data/paper_trading/3day_YYYYMMDD_HHMMSS --trade-size-usd 10000
 
 # Custom fees
-python scripts/paper_trading_3day/analyze_friction_realistic.py data/paper_trading/5day_20260803_180000 --taker-fee-bps 5.0
+python scripts/paper_trading_3day/analyze_friction_realistic.py data/paper_trading/3day_YYYYMMDD_HHMMSS --taker-fee-bps 5.0
 ```
 
 **Parameters:**
@@ -203,7 +203,7 @@ python scripts/paper_trading_3day/analyze_friction_realistic.py data/paper_tradi
 
 ## Sleep Prevention
 
-The system automatically prevents Windows sleep during the 5-day run:
+The system automatically prevents Windows sleep during the 3-day run:
 
 **How it works:**
 - Calls `SetThreadExecutionState` with `ES_SYSTEM_REQUIRED` flag
@@ -218,7 +218,7 @@ Windows PowerShell (as Administrator):
 powercfg /change standby-timeout-ac 0
 powercfg /change hibernate-timeout-ac 0
 
-# After 5 days, restore (e.g., 30 min)
+# After 3 days, restore (e.g., 30 min)
 powercfg /change standby-timeout-ac 30
 powercfg /change hibernate-timeout-ac 180
 ```
@@ -232,7 +232,7 @@ powercfg /change hibernate-timeout-ac 180
 
 **Check:**
 ```bash
-tail -n 50 data/paper_trading/5day_*/collector.log
+tail -n 50 data/paper_trading/3day_*/collector.log
 ```
 
 **Common causes:**
@@ -243,7 +243,7 @@ tail -n 50 data/paper_trading/5day_*/collector.log
 **Fix:**
 Stop the session and restart with slower interval:
 ```bash
-# Edit run_5day_paper_session.py line 53:
+# Edit run_3day_paper_session.py line 53:
 # Change: "--interval", "60",
 # To:     "--interval", "90",
 ```
@@ -253,7 +253,7 @@ Stop the session and restart with slower interval:
 
 **Check:**
 ```bash
-tail -n 50 data/paper_trading/5day_*/trader.log
+tail -n 50 data/paper_trading/3day_*/trader.log
 ```
 
 **Common causes:**
@@ -301,11 +301,11 @@ Get-Process python | Select-Object Name,Id,WorkingSet
 
 1. **Test first:**
    ```bash
-   python scripts/paper_trading_3day/test_5day_setup.py --model statarb/outputs/statarb_lgbm.txt
+   python scripts/paper_trading_3day/test_3day_setup.py --model statarb/outputs/statarb_lgbm.txt
    ```
 
 2. **Check disk space:**
-   - Expect ~5-10 GB for 5 days of data
+   - Expect ~3-6 GB for 3 days of data
    - `df -h` (Linux) or `dir` (Windows)
 
 3. **Close resource-heavy apps:**
@@ -337,17 +337,17 @@ Get-Process python | Select-Object Name,Id,WorkingSet
 
 1. **Analyze friction:**
    ```bash
-   python scripts/paper_trading_3day/analyze_friction_realistic.py data/paper_trading/5day_*/
+   python scripts/paper_trading_3day/analyze_friction_realistic.py data/paper_trading/3day_*/
    ```
 
 2. **Calculate Sharpe:**
    ```bash
-   python scripts/portfolio_sharpe_paper_session.py data/paper_trading/5day_*/ --max-open 50
+   python scripts/portfolio_sharpe_paper_session.py data/paper_trading/3day_*/ --max-open 50
    ```
 
 3. **Archive data:**
    - Copy session to external drive/cloud
-   - Compress if needed: `tar -czf session.tar.gz data/paper_trading/5day_*/`
+   - Compress if needed: `tar -czf session.tar.gz data/paper_trading/3day_*/`
 
 ---
 
@@ -357,27 +357,27 @@ Get-Process python | Select-Object Name,Id,WorkingSet
 
 ```powershell
 # PowerShell (no window)
-Start-Process python -ArgumentList "scripts\paper_trading_3day\run_5day_paper_session.py --model statarb\outputs\statarb_lgbm.txt" -WindowStyle Hidden
+Start-Process python -ArgumentList "scripts\paper_trading_3day\run_3day_paper_session.py --model statarb\outputs\statarb_lgbm.txt" -WindowStyle Hidden
 
 # Or pythonw.exe (no console)
-pythonw scripts\paper_trading_3day\run_5day_paper_session.py --model statarb\outputs\statarb_lgbm.txt
+pythonw scripts\paper_trading_3day\run_3day_paper_session.py --model statarb\outputs\statarb_lgbm.txt
 ```
 
 ### Linux/Mac
 
 ```bash
 # nohup (survives logout)
-nohup python scripts/paper_trading_3day/run_5day_paper_session.py --model statarb/outputs/statarb_lgbm.txt > session.out 2>&1 &
+nohup python scripts/paper_trading_3day/run_3day_paper_session.py --model statarb/outputs/statarb_lgbm.txt > session.out 2>&1 &
 
 # screen (detachable)
 screen -S paper_trading
-python scripts/paper_trading_3day/run_5day_paper_session.py --model statarb/outputs/statarb_lgbm.txt
+python scripts/paper_trading_3day/run_3day_paper_session.py --model statarb/outputs/statarb_lgbm.txt
 # Ctrl+A then D to detach
 # screen -r paper_trading to reattach
 
 # tmux (detachable)
 tmux new -s paper_trading
-python scripts/paper_trading_3day/run_5day_paper_session.py --model statarb/outputs/statarb_lgbm.txt
+python scripts/paper_trading_3day/run_3day_paper_session.py --model statarb/outputs/statarb_lgbm.txt
 # Ctrl+B then D to detach
 # tmux attach -t paper_trading to reattach
 ```

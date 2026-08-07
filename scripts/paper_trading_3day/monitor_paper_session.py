@@ -1,10 +1,12 @@
 """
-Monitor a running 5-day paper trading session.
+Monitor a running 3-day paper trading session.
 
 Usage:
-    python scripts/paper_trading_3day/monitor_paper_session.py data/paper_trading/5day_20260803_180000
+    python scripts/paper_trading_3day/monitor_paper_session.py data/paper_trading/3day_20260803_180000
     python scripts/paper_trading_3day/monitor_paper_session.py --latest
     python scripts/paper_trading_3day/monitor_paper_session.py --latest --follow
+
+Also finds legacy session dirs named 5day_* (Campaign C used that prefix).
 """
 
 import argparse
@@ -18,15 +20,18 @@ ROOT = Path(__file__).resolve().parent.parent.parent
 
 
 def find_latest_session() -> Path:
-    """Find the most recent 5-day session directory."""
+    """Find the most recent 3-day (or legacy 5day_*) session directory."""
     paper_root = ROOT / "data" / "paper_trading"
     if not paper_root.exists():
         print("ERROR: No paper trading sessions found")
         sys.exit(1)
     
-    dirs = [p for p in paper_root.iterdir() if p.is_dir() and p.name.startswith("5day_")]
+    dirs = [
+        p for p in paper_root.iterdir()
+        if p.is_dir() and (p.name.startswith("3day_") or p.name.startswith("5day_"))
+    ]
     if not dirs:
-        print("ERROR: No 5-day sessions found")
+        print("ERROR: No 3-day sessions found")
         sys.exit(1)
     
     return max(dirs, key=lambda p: p.stat().st_mtime)
@@ -238,7 +243,7 @@ def monitor_loop(session_dir: Path, interval: int = 30):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Monitor 5-day paper trading session")
+    parser = argparse.ArgumentParser(description="Monitor 3-day paper trading session")
     parser.add_argument(
         "session_dir",
         type=Path,

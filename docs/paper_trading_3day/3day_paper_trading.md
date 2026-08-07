@@ -1,17 +1,17 @@
-# 5-Day Continuous Paper Trading Session
+# 3-Day Continuous Paper Trading Session
 
-This guide shows you how to run a continuous 5-day paper trading session with automated monitoring and health checks.
+This guide shows you how to run a continuous 3-day paper trading session with automated monitoring and health checks.
 
 ## Quick Start
 
-### 1. Start the 5-day session
+### 1. Start the 3-day session
 
 ```bash
 # Using your existing trained model
-python scripts/paper_trading_3day/run_5day_paper_session.py --model statarb/outputs/statarb_lgbm.txt
+python scripts/paper_trading_3day/run_3day_paper_session.py --model statarb/outputs/statarb_lgbm.txt
 
 # With custom parameters
-python scripts/paper_trading_3day/run_5day_paper_session.py \
+python scripts/paper_trading_3day/run_3day_paper_session.py \
     --model statarb/outputs/statarb_lgbm.txt \
     --entry-tau 0.6 \
     --max-open 100
@@ -19,9 +19,9 @@ python scripts/paper_trading_3day/run_5day_paper_session.py \
 
 This will:
 - Start a data collector that runs continuously (collects every 60 seconds)
-- Start the LGBM paper trader configured for 120 hours (5 days)
+- Start the LGBM paper trader configured for 72 hours (3 days)
 - Auto-restart failed processes with exponential backoff
-- Save all results to `data/paper_trading/5day_YYYYMMDD_HHMMSS/`
+- Save all results to `data/paper_trading/3day_YYYYMMDD_HHMMSS/`
 
 ### 2. Monitor the session
 
@@ -35,7 +35,7 @@ python scripts/paper_trading_3day/monitor_paper_session.py --latest
 python scripts/paper_trading_3day/monitor_paper_session.py --latest --follow
 
 # Monitor specific session
-python scripts/paper_trading_3day/monitor_paper_session.py data/paper_trading/5day_20260803_180000 --follow
+python scripts/paper_trading_3day/monitor_paper_session.py data/paper_trading/3day_YYYYMMDD_HHMMSS --follow
 ```
 
 ### 3. Stop early (optional)
@@ -48,7 +48,7 @@ Press **Ctrl+C** in the main terminal to gracefully shut down:
 ## What Gets Created
 
 ```
-data/paper_trading/5day_YYYYMMDD_HHMMSS/
+data/paper_trading/3day_YYYYMMDD_HHMMSS/
 ├── session_config.json       # Session parameters
 ├── dashboard.json             # Latest health status
 ├── summary.json               # Trading statistics
@@ -73,7 +73,7 @@ data/paper_trading/5day_YYYYMMDD_HHMMSS/
 
 ### Progress Tracking
 The monitor shows:
-- **Progress bar**: Visual progress through the 5-day period
+- **Progress bar**: Visual progress through the 3-day period
 - **Uptime**: How long the session has been running
 - **Remaining**: Time until completion
 - **Live stats**: Predictions, trades, accuracy, PnL proxy
@@ -81,7 +81,7 @@ The monitor shows:
 
 ## Parameters
 
-### Main Script (`run_5day_paper_session.py`)
+### Main Script (`run_3day_paper_session.py`)
 
 ```
 --model PATH            Path to trained LightGBM model (required)
@@ -106,7 +106,7 @@ Based on your existing runs:
 
 | Metric | Expected Value |
 |--------|---------------|
-| Duration | 120 hours (5 days) |
+| Duration | 72 hours (3 days) |
 | Snapshots | ~7,200 (60s intervals) |
 | Predictions | ~150,000-200,000 |
 | Trades | ~5,000-10,000 |
@@ -128,7 +128,7 @@ Ensure:
 - Data directory is accessible
 
 ### High memory usage
-For 5-day runs, consider:
+For 3-day runs, consider:
 - The collector automatically rotates files daily
 - Trader keeps only recent data in memory (300 snapshots)
 - Log files grow ~100-500 KB/hour
@@ -145,19 +145,19 @@ After the session completes, analyze results:
 
 ```bash
 # 1. Realistic friction analysis (NEW - incorporates actual market conditions)
-python scripts/paper_trading_3day/analyze_friction_realistic.py data/paper_trading/5day_20260803_180000
+python scripts/paper_trading_3day/analyze_friction_realistic.py data/paper_trading/3day_YYYYMMDD_HHMMSS
 
 # With custom trade size
-python scripts/paper_trading_3day/analyze_friction_realistic.py data/paper_trading/5day_20260803_180000 --trade-size-usd 10000
+python scripts/paper_trading_3day/analyze_friction_realistic.py data/paper_trading/3day_YYYYMMDD_HHMMSS --trade-size-usd 10000
 
 # 2. Calculate portfolio Sharpe ratio
-python scripts/portfolio_sharpe_paper_session.py data/paper_trading/5day_20260803_180000 --max-open 50
+python scripts/portfolio_sharpe_paper_session.py data/paper_trading/3day_YYYYMMDD_HHMMSS --max-open 50
 
 # 3. Plot trades
-python scripts/plot_paper_trades.py data/paper_trading/5day_20260803_180000
+python scripts/plot_paper_trades.py data/paper_trading/3day_YYYYMMDD_HHMMSS
 
 # 4. Generate full report
-python scripts/report_paper_session.py data/paper_trading/5day_20260803_180000
+python scripts/report_paper_session.py data/paper_trading/3day_YYYYMMDD_HHMMSS
 ```
 
 ### Friction Analysis Features
@@ -184,20 +184,20 @@ The friction analyzer matches each trade to actual market conditions and compute
 ### Windows
 ```bash
 # PowerShell
-Start-Process python -ArgumentList "scripts/paper_trading_3day/run_5day_paper_session.py --model statarb/outputs/statarb_lgbm.txt" -WindowStyle Hidden
+Start-Process python -ArgumentList "scripts/paper_trading_3day/run_3day_paper_session.py --model statarb/outputs/statarb_lgbm.txt" -WindowStyle Hidden
 
 # Or use pythonw.exe (no console window)
-pythonw scripts/paper_trading_3day/run_5day_paper_session.py --model statarb/outputs/statarb_lgbm.txt
+pythonw scripts/paper_trading_3day/run_3day_paper_session.py --model statarb/outputs/statarb_lgbm.txt
 ```
 
 ### Linux/Mac
 ```bash
 # Run in background with nohup
-nohup python scripts/paper_trading_3day/run_5day_paper_session.py --model statarb/outputs/statarb_lgbm.txt > session.out 2>&1 &
+nohup python scripts/paper_trading_3day/run_3day_paper_session.py --model statarb/outputs/statarb_lgbm.txt > session.out 2>&1 &
 
 # Or use screen/tmux for detachable sessions
 screen -S paper_trading
-python scripts/paper_trading_3day/run_5day_paper_session.py --model statarb/outputs/statarb_lgbm.txt
+python scripts/paper_trading_3day/run_3day_paper_session.py --model statarb/outputs/statarb_lgbm.txt
 # Press Ctrl+A then D to detach
 ```
 
@@ -205,7 +205,7 @@ python scripts/paper_trading_3day/run_5day_paper_session.py --model statarb/outp
 
 1. **Use a stable network**: Wired connection recommended
 2. **Monitor periodically**: Check status a few times per day
-3. **Check logs if restarts occur**: `tail -n 100 data/paper_trading/5day_*/trader.log`
+3. **Check logs if restarts occur**: `tail -n 100 data/paper_trading/3day_*/trader.log`
 4. **Keep laptop plugged in**: Even though sleep is prevented, battery drain can cause shutdown
 5. **Close resource-heavy apps**: Browser with many tabs, IDE, etc.
 

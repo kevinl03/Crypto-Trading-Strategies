@@ -1,16 +1,16 @@
 """
-5-Day Continuous Paper Trading Session Manager
+3-Day Continuous Paper Trading Session Manager
 
 Orchestrates a multi-day paper trading run with:
 - Continuous data collection (until stopped)
-- LGBM paper trader (120 hours = 5 days)
+- LGBM paper trader (72 hours = 3 days)
 - Automated health monitoring every 5 minutes
 - Graceful shutdown on completion or Ctrl+C
 - Auto-restart on failures (with exponential backoff)
 
 Usage:
-    python scripts/paper_trading_3day/run_5day_paper_session.py --model statarb/outputs/statarb_lgbm.txt
-    python scripts/paper_trading_3day/run_5day_paper_session.py --model path/to/model.txt --entry-tau 0.6 --max-open 50
+    python scripts/paper_trading_3day/run_3day_paper_session.py --model statarb/outputs/statarb_lgbm.txt
+    python scripts/paper_trading_3day/run_3day_paper_session.py --model path/to/model.txt --entry-tau 0.6 --max-open 50
 
 Monitoring:
     The script creates a monitoring dashboard at data/paper_trading/<session_id>/dashboard.json
@@ -152,7 +152,7 @@ class ProcessManager:
             return False
     
     def start_trader(self) -> bool:
-        """Start the LGBM paper trader for 120 hours (5 days)."""
+        """Start the LGBM paper trader for 72 hours (3 days)."""
         if self.trader_proc and self.trader_proc.poll() is None:
             return True  # Already running
             
@@ -169,7 +169,7 @@ class ProcessManager:
             "-m", "experiments.paper_trade_lgbm",
             "--model", str(self.model_path),
             "--run-dir", str(self.collector_run_dir),
-            "--hours", "120",  # 5 days
+            "--hours", "72",  # 3 days
             "--entry-tau", str(self.entry_tau),
             "--poll-sec", "15",  # Check for new data every 15s
             "--output-dir", str(self.session_dir),
@@ -192,7 +192,7 @@ class ProcessManager:
             self.trader_restarts += 1
             print(f"  [OK] Trader started (PID {self.trader_proc.pid})")
             print(f"    Log: {log_file}")
-            print(f"    Duration: 120 hours (5 days)")
+            print(f"    Duration: 72 hours (3 days)")
             print(f"    Entry threshold: tau={self.entry_tau}")
             print(f"    Max open positions: {self.max_open}")
             return True
@@ -222,9 +222,9 @@ class ProcessManager:
                 print(f"\n[{self._timestamp()}] Collector failed {self.max_restarts} times, giving up")
                 
         if not health["trader"]["running"] and not self.shutdown_requested:
-            # Check if it finished naturally (120 hours elapsed)
+            # Check if it finished naturally (72 hours elapsed)
             elapsed_h = (time.time() - self.start_time) / 3600
-            if elapsed_h < 119.5:  # Allow some margin
+            if elapsed_h < 71.5:  # Allow some margin
                 if self.trader_restarts < self.max_restarts:
                     print(f"\n[{self._timestamp()}] Trader died early, restarting...")
                     backoff = min(2 ** (self.trader_restarts - 1), 60)
@@ -234,7 +234,7 @@ class ProcessManager:
                 else:
                     print(f"\n[{self._timestamp()}] Trader failed {self.max_restarts} times, giving up")
             else:
-                print(f"\n[{self._timestamp()}] Trader completed 5-day run!")
+                print(f"\n[{self._timestamp()}] Trader completed 3-day run!")
                 self.shutdown_requested = True
         
         return health
@@ -407,7 +407,7 @@ def print_dashboard(health: dict, session_info: dict):
 # ---------------------------------------------------------------------------
 
 def _prevent_sleep():
-    """Prevent Windows from sleeping during the 5-day run."""
+    """Prevent Windows from sleeping during the 3-day run."""
     if sys.platform == "win32":
         try:
             ctypes.windll.kernel32.SetThreadExecutionState(
@@ -429,7 +429,7 @@ def _allow_sleep():
 
 def main():
     parser = argparse.ArgumentParser(
-        description="5-day continuous paper trading session manager"
+        description="3-day continuous paper trading session manager"
     )
     parser.add_argument(
         "--model",
@@ -484,7 +484,7 @@ def main():
         sys.exit(1)
     
     # Create session directory
-    session_id = datetime.now(timezone.utc).strftime("5day_%Y%m%d_%H%M%S")
+    session_id = datetime.now(timezone.utc).strftime("3day_%Y%m%d_%H%M%S")
     if args.output_dir:
         session_dir = args.output_dir
     else:
@@ -499,7 +499,7 @@ def main():
         "model_path": str(args.model.resolve()),
         "entry_tau": args.entry_tau,
         "max_open": args.max_open,
-        "duration_hours": 120,
+        "duration_hours": 72,
         "resume_run_dir": str(resume_run_dir) if resume_run_dir else None,
         "skip_ohlcv": True,
     }
@@ -514,12 +514,12 @@ def main():
     )
     
     print("="*70)
-    print("  5-DAY CONTINUOUS PAPER TRADING SESSION")
+    print("  3-DAY CONTINUOUS PAPER TRADING SESSION")
     print("="*70)
     print(f"  Model:        {args.model}")
     print(f"  Entry tau:    {args.entry_tau}")
     print(f"  Max open:     {args.max_open}")
-    print(f"  Duration:     120 hours (5 days)")
+    print(f"  Duration:     72 hours (3 days)")
     print(f"  Output:       {session_dir}")
     print(f"  Resume run:   {resume_run_dir or '(fresh collector run)'}")
     print(f"  Collector:    --forever --skip-ohlcv (July-style)")
@@ -576,10 +576,10 @@ def main():
                 print_dashboard(health, session_info)
                 last_dashboard_print = now
             
-            # Check if 5 days elapsed
+            # Check if 3 days elapsed
             elapsed_h = (time.time() - pm.start_time) / 3600
-            if elapsed_h >= 120:
-                print(f"\n[{pm._timestamp()}] 5-day session complete!")
+            if elapsed_h >= 72:
+                print(f"\n[{pm._timestamp()}] 3-day session complete!")
                 pm.shutdown_requested = True
                 break
             

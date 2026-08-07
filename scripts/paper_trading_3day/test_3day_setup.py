@@ -1,5 +1,5 @@
 """
-Quick test of 5-day paper trading setup (runs for 5 minutes).
+Quick test of 3-day paper trading setup (runs for 5 minutes).
 
 This runs a shortened version to verify:
 - Data collector starts correctly
@@ -9,7 +9,7 @@ This runs a shortened version to verify:
 - Shutdown is graceful
 
 Usage:
-    python scripts/paper_trading_3day/test_5day_setup.py --model statarb/outputs/statarb_lgbm.txt
+    python scripts/paper_trading_3day/test_3day_setup.py --model statarb/outputs/statarb_lgbm.txt
 """
 
 import argparse
@@ -42,7 +42,7 @@ def find_latest_run() -> Path:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Test 5-day paper trading setup (5 min test)")
+    parser = argparse.ArgumentParser(description="Test 3-day paper trading setup (5 min test)")
     parser.add_argument("--model", type=Path, required=True, help="Path to LightGBM model")
     args = parser.parse_args()
     
@@ -186,8 +186,8 @@ def main():
             if n_preds > 0:
                 print("\n  [SUCCESS] System is working!")
                 print(f"\n  Output directory: {test_dir}")
-                print("\n  Ready to run full 5-day session:")
-                print(f"    python scripts/paper_trading_3day/run_5day_paper_session.py --model {args.model}")
+                print("\n  Ready to run full 3-day session:")
+                print(f"    python scripts/paper_trading_3day/run_3day_paper_session.py --model {args.model}")
             else:
                 print("\n  [WARN] No predictions generated")
                 print("    This might be normal if warmup not complete.")
