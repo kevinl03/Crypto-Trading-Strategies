@@ -42,10 +42,13 @@
 }
 
 @article{tadi2021evaluation,
-  title     = {Evaluation of Dynamic Cointegration-Based Pairs Trading Strategy in the Cryptocurrency Market},
-  author    = {Tadi, Maysam and Kortchmeski, Igor},
-  journal   = {arXiv preprint arXiv:2109.10662},
-  year      = {2021}
+  title         = {Evaluation of Dynamic Cointegration-Based Pairs Trading Strategy in the Cryptocurrency Market},
+  author        = {Tadi, Masood and Kortchemski, Irina},
+  journal       = {arXiv preprint arXiv:2109.10662},
+  year          = {2021},
+  eprint        = {2109.10662},
+  archivePrefix = {arXiv},
+  primaryClass  = {q-fin.TR}
 }
 
 @article{suchato2024application,
@@ -101,14 +104,19 @@
   year      = {2024}
 }
 
-@article{leung2019statistical,
+% Previously filed under the key `leung2019statistical` with the authors given as
+% "Leung, Tim and others". That was a misattribution: the JRFM 12(1):31 paper of this
+% title is by Fischer, Krauss and Deinert. Corrected and rekeyed below.
+@article{fischer2019statistical,
   title     = {Statistical Arbitrage in Cryptocurrency Markets},
-  author    = {Leung, Tim and others},
+  author    = {Fischer, Thomas G{\"u}nter and Krauss, Christopher and Deinert, Alexander},
   journal   = {Journal of Risk and Financial Management},
   volume    = {12},
   number    = {1},
+  pages     = {31},
   year      = {2019},
-  publisher = {MDPI}
+  publisher = {MDPI},
+  doi       = {10.3390/jrfm12010031}
 }
 
 @article{pan2024reinforcement,
@@ -121,11 +129,16 @@
   publisher = {MDPI}
 }
 
-@article{tadi2023copula,
+@article{tadi2025copula,
   title     = {Copula-Based Trading of Cointegrated Cryptocurrency Pairs},
-  author    = {Tadi, Maysam and Kortchmeski, Igor},
-  journal   = {arXiv preprint arXiv:2305.06961},
-  year      = {2023}
+  author    = {Tadi, Masood and Witzany, Ji{\v{r}}{\'i}},
+  journal   = {Financial Innovation},
+  volume    = {11},
+  number    = {1},
+  pages     = {40},
+  year      = {2025},
+  publisher = {Springer},
+  doi       = {10.1186/s40854-024-00702-7}
 }
 
 @article{jung2025statistical,
@@ -179,4 +192,122 @@
   pages     = {436--444},
   year      = {2023},
   publisher = {ACM}
+}
+
+% ======================================================================
+%  Entries cited by the gradient-boosting / LightGBM submission.
+%  Metadata verified against the PDFs in literature/ where available.
+% ======================================================================
+
+@inproceedings{ke2017lightgbm,
+  title     = {{LightGBM}: A Highly Efficient Gradient Boosting Decision Tree},
+  author    = {Ke, Guolin and Meng, Qi and Finley, Thomas and Wang, Taifeng and Chen, Wei and Ma, Weidong and Ye, Qiwei and Liu, Tie-Yan},
+  booktitle = {Advances in Neural Information Processing Systems 30 (NIPS 2017)},
+  pages     = {3146--3154},
+  year      = {2017},
+  publisher = {Curran Associates, Inc.}
+}
+
+@article{ko2023pairs,
+  title     = {Pairs Trading Strategies in Cryptocurrency Markets: A Comparative Study between Statistical Methods and Evolutionary Algorithms},
+  author    = {Ko, Po-Chang and Lin, Ping-Chen and Do, Hoang-Thu and Kuo, Yuan-Heng and Huang, You-Fu and Chen, Wen-Hsien},
+  journal   = {Engineering Proceedings},
+  volume    = {38},
+  number    = {1},
+  pages     = {74},
+  year      = {2023},
+  publisher = {MDPI},
+  doi       = {10.3390/engproc2023038074}
+}
+
+@article{palazzi2025trading,
+  title     = {Trading Games: Beating Passive Strategies in the Bullish Crypto Market},
+  author    = {Palazzi, Rafael Baptista},
+  journal   = {Journal of Futures Markets},
+  volume    = {45},
+  number    = {10},
+  pages     = {1911--1933},
+  year      = {2025},
+  publisher = {Wiley},
+  doi       = {10.1002/fut.70018}
+}
+
+@article{tsoku2026dl,
+  title     = {Deep Learning-Based Pairs Trading: Real-Time Forecasting of Co-Integrated Cryptocurrency Pairs},
+  author    = {Tsoku, Johannes Tshepiso and Makatjane, Katleho},
+  journal   = {Frontiers in Applied Mathematics and Statistics},
+  volume    = {12},
+  pages     = {1749337},
+  year      = {2026},
+  publisher = {Frontiers},
+  doi       = {10.3389/fams.2026.1749337}
+}
+
+@article{liou2024hft,
+  title     = {Price Spread Prediction in High-Frequency Pairs Trading Using Deep Learning Architectures},
+  author    = {Liou, Jyh-Hwa and Liu, Yun-Ti and Cheng, Li-Chen},
+  journal   = {International Review of Financial Analysis},
+  volume    = {97},
+  pages     = {103725},
+  year      = {2024},
+  publisher = {Elsevier},
+  doi       = {10.1016/j.irfa.2024.103725}
+}
+
+@article{han2024lstm,
+  title     = {An {LSTM}-Based Optimization Algorithm for Enhancing Quantitative Arbitrage Trading},
+  author    = {Han, Guodong and Li, Hecheng},
+  journal   = {PeerJ Computer Science},
+  volume    = {10},
+  pages     = {e2164},
+  year      = {2024},
+  publisher = {PeerJ},
+  doi       = {10.7717/peerj-cs.2164}
+}
+
+% Same underlying work as `ning2024advanced` above, which is cited by the older
+% Ornstein--Uhlenbeck reference draft. Kept under a separate key so both drafts compile.
+@article{ning2024rl,
+  title         = {Advanced Statistical Arbitrage with Reinforcement Learning},
+  author        = {Ning, Boming and Lee, Kiseop},
+  journal       = {arXiv preprint arXiv:2403.12180},
+  year          = {2024},
+  eprint        = {2403.12180},
+  archivePrefix = {arXiv},
+  primaryClass  = {q-fin.TR}
+}
+
+@article{sarmento2024ml,
+  title     = {Enhancing a Pairs Trading Strategy with the Application of Machine Learning},
+  author    = {Sarmento, Sim{\~a}o Moraes and Horta, Nuno and Godinho, Pedro},
+  journal   = {Forecasting},
+  volume    = {6},
+  number    = {2},
+  pages     = {24},
+  year      = {2024},
+  publisher = {MDPI},
+  doi       = {10.3390/forecast6020024}
+}
+
+@article{shen2022arbitrage,
+  title     = {Machine Learning-Based Analysis of a Stock Index Spot--Futures Arbitrage Approach},
+  author    = {Shen, Dong-Her and Hsu, Yu-Chun and Hsu, Kai-Wei},
+  journal   = {Mathematics},
+  volume    = {10},
+  number    = {19},
+  pages     = {3635},
+  year      = {2022},
+  publisher = {MDPI},
+  doi       = {10.3390/math10193635}
+}
+
+@article{perrone2026pairs,
+  title     = {Pairs Trading with Time-Series Deep Learning Models on High Frequency Cross-Stock Data},
+  author    = {Perrone, P. A. M. and Espinosa-Leal, L.},
+  journal   = {Journal of Finance and Data Science},
+  volume    = {10},
+  pages     = {100177},
+  year      = {2026},
+  publisher = {Elsevier},
+  doi       = {10.1016/j.jfds.2026.100177}
 }

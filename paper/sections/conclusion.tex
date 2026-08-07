@@ -1,0 +1,10 @@
+% ======================================================================
+%  CONCLUSION
+% ======================================================================
+\section{Conclusion}\label{sec:conclusion}
+
+We presented a gradient-boosting framework that replaces mechanical z-score thresholds with a learned forecast for cross-exchange cryptocurrency spread dynamics. On filtered live paper-trading entries, the model achieves R$^2$ of 0.35 and directional accuracy of 76.9\%, improving per-trade accuracy by 7.6~pp and mean z-unit profit by 71\% over a capacity-matched mechanical persistence baseline. The confidence filter ($|\hat{z}| \geq 0.5$) lifts R$^2$ by 0.19--0.25 by selecting the 10--15\% of predictions in high-signal regimes; on these rows, the model's incremental value is in capturing magnitude rather than direction. Critically, this is a forecasting result: scored in basis points of realized spread change, none of the policies---including ours---has a positive mean at any non-zero transaction cost (Section~\ref{sec:proxy_gap}). Section~\ref{sec:limitations} details the threats to validity.
+
+\subsection{Future Work}
+
+Incorporating realistic fee structures, execution latency, and a direct spread-change training target would bridge the gap between z-unit performance and economic profitability. The released dataset enables the community to benchmark alternative architectures---including sequence models that may capture temporal dependencies the tree ensemble cannot---on the same cross-exchange microstructure panel.

@@ -218,21 +218,25 @@ def fig3_filter_r2_lift():
                 textcoords="offset points",
             )
     for i, (b, a) in enumerate(zip(before, after)):
+        mid_x = x[i] + width / 4
         ax.annotate(
-            f"Δ={a - b:+.3f}",
-            (x[i], max(b, a)),
+            f"Δ = {a - b:+.3f}",
+            (mid_x, a),
             ha="center",
             va="bottom",
-            fontsize=8,
+            fontsize=9,
+            fontweight="bold",
             color="#333",
-            xytext=(0, 14),
+            xytext=(0, 18),
             textcoords="offset points",
+            arrowprops=dict(arrowstyle="-", color="#999", lw=0.8),
         )
     ax.set_xticks(x)
     ax.set_xticklabels(camps)
     ax.set_ylabel("Model R²")
     ax.set_title("Filter lift: model R² before vs after |pred|≥0.5")
     ax.axhline(0, color="0.4", lw=0.8)
+    ax.set_ylim(0, max(after) * 1.35)
     ax.legend(frameon=False)
     out = OUT / "fig3_filter_r2_lift.png"
     fig.savefig(out, bbox_inches="tight")
@@ -240,23 +244,94 @@ def fig3_filter_r2_lift():
     return out
 
 
-def fig4_feature_importance(top_n: int = 20):
+def fig4_feature_importance(top_n: int = 10):
     fi_path = ROOT / "statarb" / "outputs" / "feature_importance.csv"
     if not fi_path.exists():
-        print(f"SKIP fig4: missing {fi_path}")
+        fi_path = ROOT / "statarb" / "outputs_ob_fix" / "feature_importance.csv"
+    if not fi_path.exists():
+        print(f"SKIP fig4: missing feature_importance.csv")
         return None
     fi = pd.read_csv(fi_path)
-    # normalize column names
     cols = {c.lower(): c for c in fi.columns}
     feat_col = cols.get("feature", list(fi.columns)[0])
     imp_col = cols.get("importance", list(fi.columns)[1])
     fi = fi.sort_values(imp_col, ascending=False).head(top_n).iloc[::-1]
 
-    fig, ax = plt.subplots(figsize=(8, 6), constrained_layout=True)
+    fig, ax = plt.subplots(figsize=(8, 4.5), constrained_layout=True)
     ax.barh(fi[feat_col], fi[imp_col], color="#3182bd")
     ax.set_xlabel("Importance (gain)")
     ax.set_title(f"Top {top_n} feature importances")
     out = OUT / "fig4_feature_importance_top20.png"
+    fig.savefig(out, bbox_inches="tight")
+    plt.close(fig)
+    return out
+
+
+def fig7_baseline_diracc_pnl():
+    """Side-by-side DirAcc and Mean PnL for LightGBM vs mechanical baselines (capacity-matched)."""
+    session = SESSIONS["Jul31"]
+    summary = json.loads((session / "summary.json").read_text(encoding="utf-8"))
+    baseline = json.loads(
+        (session / "mechanical_z_baseline" / "mechanical_z_baseline_report.json")
+        .read_text(encoding="utf-8")
+    )
+
+    strategies = ["LightGBM", "Mech.\npersistence", "Mech.\nmean-reversion"]
+    dir_accs = [
+        summary["dir_acc"],
+        baseline["persistence"]["capacity_matched"]["dir_acc"],
+        baseline["mean_reversion"]["capacity_matched"]["dir_acc"],
+    ]
+    mean_pnls = [
+        summary["mean_pnl_proxy"],
+        baseline["persistence"]["capacity_matched"]["mean_pnl_proxy"],
+        baseline["mean_reversion"]["capacity_matched"]["mean_pnl_proxy"],
+    ]
+    colors = ["#2171b5", "#6baed6", "#bdd7e7"]
+
+    fig, axes = plt.subplots(1, 2, figsize=(8, 4), constrained_layout=True)
+    x = np.arange(len(strategies))
+
+    ax = axes[0]
+    bars = ax.bar(x, [d * 100 for d in dir_accs], color=colors, edgecolor="white", linewidth=0.5)
+    for bar, v in zip(bars, dir_accs):
+        ax.annotate(
+            f"{v:.1%}",
+            (bar.get_x() + bar.get_width() / 2, bar.get_height()),
+            ha="center", va="bottom", fontsize=9, fontweight="bold",
+            xytext=(0, 3), textcoords="offset points",
+        )
+    ax.set_xticks(x)
+    ax.set_xticklabels(strategies, fontsize=9)
+    ax.set_ylabel("Directional Accuracy (%)")
+    ax.set_title("DirAcc (capacity-matched)")
+    ax.set_ylim(0, 100)
+
+    ax = axes[1]
+    bars = ax.bar(x, mean_pnls, color=colors, edgecolor="white", linewidth=0.5)
+    for bar, v in zip(bars, mean_pnls):
+        ax.annotate(
+            f"{v:+.3f}",
+            (bar.get_x() + bar.get_width() / 2, bar.get_height()),
+            ha="center",
+            va="bottom" if v >= 0 else "top",
+            fontsize=9, fontweight="bold",
+            xytext=(0, 3 if v >= 0 else -3),
+            textcoords="offset points",
+        )
+    ax.set_xticks(x)
+    ax.set_xticklabels(strategies, fontsize=9)
+    ax.set_ylabel("Mean per-trade PnL proxy (z-units)")
+    ax.set_title("Mean PnL proxy (capacity-matched)")
+    ax.axhline(0, color="0.4", lw=0.8)
+
+    pnl_improve = (mean_pnls[0] - mean_pnls[1]) / mean_pnls[1] * 100
+    fig.suptitle(
+        f"Jul 31 baseline comparison (max_open=50): "
+        f"+{dir_accs[0] - dir_accs[1]:.1%} DirAcc, +{pnl_improve:.0f}% mean PnL vs persistence",
+        fontsize=10,
+    )
+    out = OUT / "fig7_baseline_diracc_pnl.png"
     fig.savefig(out, bbox_inches="tight")
     plt.close(fig)
     return out
@@ -346,6 +421,7 @@ def main():
         fig4_feature_importance,
         fig5_cum_pnl_jul31,
         fig6_model_minus_naive_diracc,
+        fig7_baseline_diracc_pnl,
     ):
         print(f"Running {fn.__name__}...")
         out = fn()
