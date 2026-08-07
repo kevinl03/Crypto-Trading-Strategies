@@ -1,0 +1,8 @@
+# Install once: pip install pre-commit && pre-commit install
+# Strips outputs from every *.ipynb before commit.
+repos:
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.8.1
+    hooks:
+      - id: nbstripout
+        files: \.ipynb$

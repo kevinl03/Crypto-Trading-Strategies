@@ -48,6 +48,16 @@ venv\Scripts\activate      # Windows
 pip install -r requirements.txt
 ```
 
+### Notebooks (no outputs in git)
+
+All `*.ipynb` files are committed **code-only** (outputs stripped). After cloning:
+
+```bash
+pip install nbstripout pre-commit
+nbstripout --install          # git filter for *.ipynb
+pre-commit install            # also strips on commit via .pre-commit-config.yaml
+```
+
 ### C++ Signal Engine (Optional)
 
 The hot-path signal functions have C++ implementations that provide **160–200× speedup** over NumPy for batch operations. The C++ module is optional — all Python code falls back to NumPy implementations if it is not compiled.
