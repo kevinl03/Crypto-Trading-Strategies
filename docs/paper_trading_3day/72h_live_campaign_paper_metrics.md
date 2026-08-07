@@ -2,7 +2,7 @@
 
 **Session:** `data/paper_trading/5day_Aug4_2026`  
 **Collector run:** `data/statarb/20260804_062334`  
-**Branch:** `feature/5day-paper-trading` (rebased onto `origin/main` as of 2026-08-07)  
+**Branch:** `feature/3day-paper-trading`  
 **Model:** `statarb/outputs/statarb_lgbm.txt` (68 feats, H=1, z-window 300, `|pred|≥0.5`, `max_open=50`)
 
 This note compiles **what the paper can claim** from the longer live run (vs the prior ~8h Jul 30/31 campaigns), plus how to answer reviewer feedback. Settlement is the z-unit proxy (`direction × z_exit`), not dollar P&L.
@@ -11,25 +11,25 @@ This note compiles **what the paper can claim** from the longer live run (vs the
 
 ## 1. Do we have all the data?
 
-**Yes — full paper-trading artifacts are available** (restored from `pre_restart_20260807_164107` after an accidental archive-on-restart).
+**Yes — full paper-trading artifacts are available.**
 
 | Artifact | Status | Notes |
 |---|---|---|
 | `trades.jsonl` + `trades_001.jsonl` | ✅ ~20 MB | **50,690** closed trades |
 | `signals.jsonl` … `signals_020.jsonl` | ✅ ~211 MB | **1,013,380** scored predictions |
-| `summary.json` / `dashboard.json` | ✅ | Final snapshot at death |
-| `portfolio_sharpe_report.json` | ✅ | Mid-run (~60h mark); see §3 |
+| `summary.json` | ✅ | End-of-session trader stats |
+| `portfolio_sharpe_report.json` | ✅ | Mid-run (~60h / 41k closes); see §3 |
 | `sim_persistence_hold_report.json` | ✅ | Hold ablation on ~815k signals mid-run |
-| Collector `spread_matrix` / `ticker` / `orderbook` / … | ✅ | Continuous through death (~snap 3030); multi-day JSONL |
+| Collector `spread_matrix` / `ticker` / `orderbook` / … | ✅ | Continuous through session end (~snap 3030); multi-day JSONL |
 
-**Timeline (UTC):**
+**Timeline (UTC) — verified from `trades*.jsonl`:**
 - First trade: `2026-08-04T08:42:13Z` (after ~90-snap z warmup)
-- Last trade / death: `2026-08-07T09:36:28Z`
+- Last exit: `2026-08-07T09:36:28Z`
 - **Trade span ≈ 72.9 hours (~3.0 days)** of active paper trading  
-- Wall-clock orchestrator uptime before death ≈ 65h (session started `2026-08-04T16:33:46Z`; shorter than trade span because collector warmup preceded the resumed paper session)
+- `config.json` `started_at`: `2026-08-04T15:40:14Z` (trader config write; collector/warmup preceded trading)
 
 **Caveats on completeness:**
-- 50 orphan opens at kill never appear in `trades.jsonl` (same as Jul 31).
+- 50 orphan opens at session end never appear in `trades.jsonl` (same as Jul 31).
 - Persistence sim was run on a mid-session signal cut (~40.9k live closes / ~815k signals), not the final 50.7k — directionally unchanged; re-run if you need exact final-cut ablation.
 
 ---
@@ -45,9 +45,9 @@ Replace / extend the Jul 31 ~8h tables with a **Campaign C (~72h / ~3-day)** blo
 | Directional accuracy | 76.9% | **78.99%** |
 | Mean `pnl_proxy` (= `direction × z_exit`) | +0.75 | **+0.837** |
 | Median \|pred\| on entries | — | **0.693** |
-| Coins / exchange-pairs traded | — | **23 / 15** |
-| Closed-only hourly Sharpe (z-proxy) | 2.35 (A) / **2.41** (B w/ MTM) | **~4.10–4.38** (see §3) |
-| Hours with positive hourly z-proxy PnL | 6/6 | **74/74** |
+| Coins / exchange-pairs traded | — | **23 / 15** (verified) |
+| Closed-only hourly Sharpe (z-proxy) | 2.35 (A) / **2.41** (B w/ MTM) | **4.38** (A full) / **4.10** (mid A/B) |
+| Hours with positive hourly z-proxy PnL | 6/6 | **74/74** (verified; no hour gaps) |
 
 **Settlement definition (unchanged, publishable as proxy):**
 \[
@@ -56,27 +56,27 @@ Replace / extend the Jul 31 ~8h tables with a **Campaign C (~72h / ~3-day)** blo
 \]
 Matches the training target (gross z-unit settlement, not dollars).
 
-**Suggested paper one-liner:**
-> In a ~72h (~3-day) live paper session (50,690 settled bets; 1.01M scored predictions), the LightGBM policy maintained directional accuracy of 79.0% and mean z-unit settlement of +0.84, with every observed clock hour producing positive portfolio z-proxy P&L (closed-only hourly Sharpe ≈ 4.1).
+**Suggested paper one-liner (literature-safe):**
+> In a ~73h live paper session (50,690 settled bets; 1.01M scored predictions; 23 coins × 15 venue-pairs), the LightGBM H=1 policy achieved 79.0% directional accuracy and mean z-unit settlement +0.84. Closed-only hourly portfolio Sharpe was 4.38 (Rf=0; every one of 74 clock hours positive). These are **gross z-proxy** diagnostics of live book stability—not annualized capital Sharpes and not fee-net P&L—so they are not numerically comparable to multi-month literature Sharpes (e.g. Tadi & Kortchemski 7.94).
 
 ---
 
 ## 3. Portfolio Sharpe (what to report)
 
-From `portfolio_sharpe_report.json` (computed on ~41k closes / 60 hourly bars mid-run) and a full-book closed-only recompute on all 50,690 trades:
+**Verified recompute** (sum `pnl_proxy` by UTC exit hour over all 50,690 closes): **74/74 hours > 0**, closed-only hourly Sharpe **A = 4.3845**. Mid-run artifact `portfolio_sharpe_report.json` (41,017 closes / 60 hours) matches A/B/C ≈ **4.10**, D ≈ **1.19**.
 
 | Variant | Definition | Value |
 |---|---|---|
-| **A** Closed-only hourly | Sum of closed `pnl_proxy` per UTC hour | **~4.10** (mid) / **~4.38** (full 74h) |
-| **B** Hourly equity + open MTM | Δ equity with `direction × z_t` on opens | **~4.10** (mid-run report) |
-| **C** B / `max_open=50` | Capital-normalized in slot units | **~4.10** |
-| **D** Per-snapshot equity | Finer bar (~89s) | **~1.19** |
+| **A** Closed-only hourly | Sum of closed `pnl_proxy` per UTC hour | **4.10** (mid) / **4.38** (full 74h) |
+| **B** Hourly equity + open MTM | Δ equity with `direction × z_t` on opens | **4.10** (mid-run report) |
+| **C** B / `max_open=50` | Capital-normalized in slot units | **4.10** (mid) |
+| **D** Per-snapshot equity | Finer bar (~89s) | **1.19** (mid) |
 
-**Publishing guidance (same as Jul 31 lit notes):**
-- Headline: **hourly portfolio Sharpe ≈ 4.1** under z-proxy, Rf=0, ~3-day live window.
-- **Do not annualize** as a primary claim (`4.1 × √(24×365)` is nonsense for a 3-day sample).
-- **Do not** equate to Tadi & Kortchemski’s multi-month capital Sharpe (~7.94).
-- Prefer reporting **A and B**; note D is more conservative at snapshot frequency.
+**Publishing guidance (extend Jul 31 lit notes in `docs/results_jul31_live_metrics_lit.md`):**
+- Prefer headline **A = 4.38** (full book, closed-only) plus mid **B ≈ 4.10** if discussing open MTM.
+- **Do not annualize** (`4.38 × √(24×365)` is not a claim).
+- **Do not** equate to Tadi & Kortchemski’s multi-month capital Sharpe (~7.94), Fil & Kristoufek fee-sensitive results, or Tadi & Witzany ~0.95-class longer-sample Sharpes.
+- Use **74/74** as short-window *stability* evidence (scales Jul 31’s 6/6), not as a multi-month win-rate claim.
 
 ---
 
@@ -106,7 +106,38 @@ Offline sim on session signals (`scripts/paper_trading_3day/sim_persistence_hold
 
 ---
 
-## 5. Mapping to reviewer feedback
+## 5. Literature framing (how to read 4.38 / 74/74 / 79%)
+
+Same discipline as Jul 31 (`docs/results_jul31_live_metrics_lit.md` §6): compare **definitions**, not raw numbers.
+
+| Dimension | Campaign C (this run) | Typical HF crypto pairs lit |
+|---|---|---|
+| Horizon of evidence | **~73 live hours** (74 clock hours with closes) | Weeks to years |
+| PnL unit | Gross **z-proxy** (`dir × z_exit`) | Currency / capital return % |
+| Costs | No fees / slippage / fills | Often net or fee-stressed |
+| Aggregation | Hourly book P&L (variant A/B) | Daily/monthly returns |
+| Annualized? | **No** (primary) | Usually yes |
+| Signal type | **ML predicts** \(z_{t+1}\) + `\|pred\|≥0.5` | Usually mechanical z threshold |
+
+**What Campaign C adds vs Jul 31 (2.41 / 6/6):** longer live path — DirAcc holds (~77% → ~79%), hourly Sharpe stays strong under the *same proxy*, and every clock hour remains green over **12×** more hours. That answers “was the 8h window a fluke?” — it does **not** license “we beat Tadi 7.94.”
+
+| Paper | Their headline | How Campaign C should be used |
+|---|---|---|
+| **Tadi & Kortchemski (2021)** | Sharpe **7.94**, multi-month, capital P&L, Rf=0 | Closest *construction* cousin (portfolio P&L, Rf=0). Cite methodologically; **do not** rank 4.38 vs 7.94. |
+| **Tadi & Witzany (2025)** | ~0.95-class longer-sample Sharpe | Reminds that fee-aware, longer windows look quieter. Our 4.38 is still gross proxy. |
+| **Fil & Kristoufek (2020)** | Gross strong / **extreme cost sensitivity** | Keep gross vs net separate; do not imply dollar profit from z-proxy. |
+| **Fischer et al. (2019)** | Alpha dies under ~minutes of delay | Hold is H=1 (~1–2 min). Report delay ablation before claiming robustness to their setting. |
+| **Ko et al. (2023)** | Huge **gross** % returns | Reinforces gross/net split. |
+| **Tsoku & Makatjane (2026)** | DNN/LSTM spread **forecast** | Closest task family; our edge is minute CEX microstructure + live dual metrics + confidence filter. |
+
+**DO NOT CLAIM:** annualized Sharpe; fee-net profitability; “beats 7.94”; that 74/74 generalizes beyond this ~3-day window.
+
+**Framing sentence for the paper:**
+> Relative to mechanical high-frequency crypto pairs-trading studies, Campaign C’s contribution is a **learned** next-snapshot z forecast evaluated **live** over ~3 days with dual forecast/trading metrics (DirAcc, mean z-proxy, hourly portfolio Sharpe under a z-settlement proxy)—not numerical dominance on annualized net capital Sharpe.
+
+---
+
+## 6. Mapping to reviewer feedback
 
 Feedback appears aimed at the GBM paper (`paper/gradient-boosting-cross-market-spread-prediction.tex` + `paper/sections/*`), not only the older OU draft.
 
@@ -121,35 +152,35 @@ Feedback appears aimed at the GBM paper (`paper/gradient-boosting-cross-market-s
 
 ---
 
-## 6. Recommended paper edits (Campaign C)
+## 7. Recommended paper edits (Campaign C)
 
 1. **Experimental setup:** add Campaign C (~2026-08-04 → 08-07, ~72.9h trade span, same model as Jul 31).
-2. **Results table:** DirAcc / mean pnl_proxy / n_closed / hourly Sharpe for Campaign C; note scale-up from 8h → ~3 days.
+2. **Results table:** DirAcc / mean pnl_proxy / n_closed / hourly Sharpe A=4.38 / 74/74 green hours; note scale-up from 8h → ~3 days.
 3. **Baselines:** regenerate mechanical persistence + mean-reversion under `max_open=50` on Campaign C signal panel (script path already used for Jul 31).
 4. **Ablation:** short subsection on persistence hold (this note §4).
-5. **Limitations:** Sharpe not annualized; orphan inventory at kill; z-proxy settlement (not dollars).
+5. **Limitations / lit framing:** z-proxy not dollars; no annualization; no “beats Tadi 7.94”; orphan inventory at session end.
 6. **Double-blind:** verify anonymous build has no HF/GitHub URLs.
 
 ---
 
-## 7. Files to cite in the revision
+## 8. Files to cite in the revision
 
 | Path | Use |
 |---|---|
 | `data/paper_trading/5day_Aug4_2026/summary.json` | Headline counts |
-| `data/paper_trading/5day_Aug4_2026/trades*.jsonl` | Per-trade DirAcc / pnl_proxy |
+| `data/paper_trading/5day_Aug4_2026/trades*.jsonl` | Per-trade DirAcc / pnl_proxy; full-book A + 74/74 |
 | `data/paper_trading/5day_Aug4_2026/signals*.jsonl` | Baseline replay / R² |
-| `data/paper_trading/5day_Aug4_2026/portfolio_sharpe_report.json` | Sharpe A–D |
+| `data/paper_trading/5day_Aug4_2026/portfolio_sharpe_report.json` | Mid-run Sharpe A–D |
 | `data/paper_trading/5day_Aug4_2026/sim_persistence_hold_report.json` | Hold ablation |
 | `data/statarb/20260804_062334/` | Underlying live microstructure |
 | `scripts/paper_trading_3day/sim_persistence_hold.py` | Reproduce hold ablation |
 | `scripts/portfolio_sharpe_paper_session.py` | Reproduce Sharpe |
+| `docs/results_jul31_live_metrics_lit.md` | Lit comparison template |
 
 ---
 
-## 8. Bottom line
+## 9. Bottom line
 
-- **Data:** complete enough for a Campaign C results section.  
-- **Forecast / proxy trading:** strong and **more stable** than the 8h window (DirAcc ~79%, hourly z-Sharpe ~4.1, 74/74 green hours).  
-- **Holding:** ablation shows **worse** DirAcc / z-proxy — keep H=1; report as negative ablation.  
-- **Rebase:** `feature/5day-paper-trading` successfully rebased onto `origin/main`.
+- **74/74 and A=4.38 are real** (recomputed from all 50,690 closes; no hour gaps).  
+- **Frame vs lit:** same as Jul 31 — gross z-proxy live-book stability, not capital/fee/annualized Sharpe race vs Tadi 7.94. Campaign C mainly shows the 8h result was not a fluke.  
+- **Holding:** ablation still worse on DirAcc / z-proxy — keep H=1.
