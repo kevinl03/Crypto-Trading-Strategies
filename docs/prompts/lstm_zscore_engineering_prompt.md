@@ -4,7 +4,8 @@ Execute this prompt **piecewise**. Complete one phase, stop for review, then con
 
 **Primary artifact:** [`statarb/cex_lstm_zscore.ipynb`](../../statarb/cex_lstm_zscore.ipynb)  
 **Reference (loader / split only — do NOT copy LightGBM feature columns):** [`statarb/cex_gbm_new.ipynb`](../../statarb/cex_gbm_new.ipynb)  
-**Export dir:** `statarb/outputs_lstm/`
+**Export dir:** `statarb/outputs_lstm/`  
+**Ops / practicality vs LGBM:** [`docs/lstm_vs_lgbm_resource_practicality.md`](../lstm_vs_lgbm_resource_practicality.md)
 
 ---
 
