@@ -10,61 +10,92 @@
 
 | Paper section | Claim / content | Copy from |
 |---|---|---|
-| **Methods** | Trade when `\|pred\| > τ`; τ=0.5 is the protocol default (live + offline) | §Definitions + one-liner below |
-| **Results** | Raising τ improves filtered DirAcc / R² / mean pnl_proxy (abstention works) | Headline table (§Results) |
-| **Results (figure)** | Quality–coverage curve; τ=0.5 near the balanced peak | Full sweep CSV / table |
-| **Discussion** | τ=0.5 is justified: strong skill vs naive, usable fire (~16%), close to score peak | §Takeaway |
-| *Appendix only* | Full τ grid + bps diagnostic | `tau_sweep.csv` |
+| **Methods** | Trade when `\|pred\| > τ`; τ=0.5 is the protocol default | §Definitions |
+| **Results** | Raising τ improves *per-trade* DirAcc / R² / mean pnl_proxy | Headline table |
+| **Results** | Total z-proxy mass = mean × n (does **not** penalize fire rate) | §Total pnl |
+| **Discussion** | Keep τ=0.5 for live parity + strong skill vs naive | §Takeaway |
+| *Appendix* | Full τ grid | `tau_sweep.csv` |
 
-**Primary metrics for the paper:** DirAcc, R², mean `pnl_proxy` (z-settle). These support the learned-filter story.
+**Primary paper metrics:** DirAcc, R², mean `pnl_proxy`, and **total pnl_proxy** (`mean × n`).  
+We do **not** use a fire-rate composite score.
 
 ---
 
-## Definitions (short)
+## Definitions
 
 | Term | Meaning |
 |---|---|
-| Fire rate | `n_traded / n_all` with `\|pred\| > τ` |
+| n | traded rows with `\|pred\| > τ` |
 | DirAcc | `sign(pred) == sign(z_{t+1})` on traded rows (zeros excluded) |
 | R² | `r2_score(z_{t+1}, pred)` on traded rows |
-| mean pnl_proxy | `mean(sign(pred) * z_{t+1})` — z-units |
+| mean pnl_proxy | `mean(sign(pred) * z_{t+1})` — z-units per trade |
+| **total pnl_proxy** | `mean_pnl_proxy × n` — gross z-proxy mass at that τ |
 | Sharpe / trade | mean/std of pnl_proxy (Rf=0) |
 | Sharpe A | mean/std of hourly summed pnl_proxy (offline closed; not live Sharpe B) |
-| Score | `mean_pnl_proxy * sqrt(fire_rate)` — balances skill vs coverage |
+
+Fire rate (`n / n_all`) is descriptive only — **not** used to rank τ.
+
+```mermaid
+flowchart TD
+  A["All scored rows<br/>n_all = 1.68M"] --> B{"|pred| > τ ?"}
+  B -->|yes| C["Traded set n(τ)"]
+  B -->|no| D[Abstain]
+  C --> E["mean pnl_proxy"]
+  C --> F["total pnl_proxy = mean × n"]
+  C --> G["DirAcc / R²"]
+```
 
 ---
 
 ## Results (verified)
 
-n_all = **1,679,736**. Numbers from `tau_sweep.json`.
+n_all = **1,679,736**. From `tau_sweep.json` / CSV.  
+`total_pnl_proxy = mean_pnl_proxy × n`.
 
-### Headline (use this)
+### Headline
 
-| τ | Role | fire | DirAcc | R² | mean pnl_z | vs naive DirAcc / R² / pnl_z |
-|---:|---|---:|---:|---:|---:|---|
-| **0.50** | **Protocol default** | 15.7% | **78.7%** | **0.389** | **+0.765** | naive `\|z\|>0.5`: 68.3% / −0.395 / +0.428 |
-| 0.25 | Score peak | 39.2% | 71.6% | 0.260 | +0.515 | — |
-| 1.00 | High confidence | 2.5% | **86.4%** | **0.563** | **+1.271** | naive `\|z\|>1`: 70.1% / −0.562 / +0.583 |
+| τ | Role | n | DirAcc | R² | mean pnl_z | **total pnl_z** | vs naive |
+|---:|---|---:|---:|---:|---:|---:|---|
+| 0.10 | Max total pnl | 1,180,549 | 66.5% | 0.176 | +0.361 | **+425,639** | — |
+| **0.50** | **Protocol default** | 263,424 | **78.7%** | **0.389** | **+0.765** | +201,606 | naive `\|z\|>0.5`: 68.3% / −0.395 / +0.428 |
+| 1.00 | High confidence | 42,519 | **86.4%** | **0.563** | **+1.271** | +54,037 | naive `\|z\|>1`: 70.1% / −0.562 / +0.583 |
 
-**Takeaway:** Abstention helps — higher τ → better filtered skill. At τ=0.5 the model clearly beats `|z|` persistence on R² and mean pnl_proxy (+0.77 vs +0.43) and lifts DirAcc (+10.4 pp). τ=1.0 widens that gap further (DirAcc +16.3 pp vs `|z|>1`) if a thinner book is acceptable. The composite score peaks at τ=0.25–0.35; **τ=0.5 stays within ~6% of that peak** while delivering stronger conditional metrics — so the live/offline protocol choice is well supported.
+```mermaid
+xychart-beta
+    title "LGBM τ sweep: mean vs total pnl_proxy"
+    x-axis [0.1, 0.25, 0.35, 0.5, 0.75, 1.0, 1.5, 2.0]
+    y-axis "Index (see note)" 0 --> 3
+    line "mean pnl (×1)" [0.36, 0.52, 0.61, 0.77, 1.02, 1.27, 1.85, 2.40]
+    line "total pnl (×1e-5)" [4.26, 3.39, 2.79, 2.02, 1.08, 0.54, 0.13, 0.03]
+```
 
-### Compact sweep (Results figure / appendix)
+*Chart scales total pnl by 1e−5 so both series fit; use the table for exact totals.*
 
-| τ | fire | DirAcc | R² | mean pnl_z | Sharpe/tr | Sharpe A | score |
+**Takeaway:**
+- **Per-trade quality** rises with τ (DirAcc / R² / mean pnl) — abstention works.
+- **Total pnl_proxy** falls with τ (fewer trades dominate) — peaks at τ=0.10 on this grid.
+- **τ=0.5** is kept as the protocol default: clear lift vs `|z|>0.5` naive on DirAcc (+10.4 pp), R² (0.39 vs −0.40), and mean pnl (+0.77 vs +0.43), matching live campaigns. It is **not** chosen by maximizing total pnl.
+
+### Compact sweep
+
+| τ | n | DirAcc | R² | mean pnl_z | total pnl_z | Sharpe/tr | Sharpe A |
 |---:|---:|---:|---:|---:|---:|---:|---:|
-| 0.25 | 39.2% | 71.6% | 0.260 | +0.515 | 0.50 | 5.21 | **0.323** |
-| 0.35 | 27.0% | 74.6% | 0.314 | +0.614 | 0.59 | 4.66 | 0.320 |
-| **0.50** | **15.7%** | **78.7%** | **0.389** | **+0.765** | **0.73** | **3.90** | 0.303 |
-| 0.75 | 6.3% | 83.6% | 0.490 | +1.018 | 0.93 | 2.82 | 0.256 |
-| 1.00 | 2.5% | 86.4% | 0.563 | +1.271 | 1.09 | 1.94 | 0.202 |
+| 0.10 | 1,180,549 | 66.5% | 0.176 | +0.361 | **425,639** | 0.36 | 6.15 |
+| 0.25 | 658,383 | 71.6% | 0.260 | +0.515 | 339,178 | 0.50 | 5.21 |
+| 0.35 | 454,279 | 74.6% | 0.314 | +0.614 | 279,098 | 0.59 | 4.66 |
+| **0.50** | **263,424** | **78.7%** | **0.389** | **+0.765** | 201,606 | **0.73** | 3.90 |
+| 0.75 | 106,094 | 83.6% | 0.490 | +1.018 | 108,000 | 0.93 | 2.82 |
+| 1.00 | 42,519 | 86.4% | 0.563 | +1.271 | 54,037 | 1.09 | 1.94 |
+| 1.50 | 7,113 | 87.6% | 0.610 | +1.846 | 13,128 | 1.33 | 0.96 |
+| 2.00 | 1,401 | 88.2% | 0.639 | +2.399 | 3,361 | 1.54 | 0.63 |
 
-Full grid (15 taus): `statarb/outputs_lgbm_tau_sweep_jul25/tau_sweep.csv`.
+Full grid: `statarb/outputs_lgbm_tau_sweep_jul25/tau_sweep.csv`.
 
 ---
 
 ## Paste-ready (Discussion)
 
-> We use `|pred| > τ` as an abstention filter on the LightGBM \(z_{t+1}\) forecaster. On the Jul 25–28 holdout, raising τ improves filtered DirAcc, R², and mean z-settled pnl_proxy, consistent with ML-as-filter designs. At the protocol default τ=0.5, LightGBM achieves DirAcc 78.7%, R² 0.39, and mean pnl_proxy +0.77, versus 68.3%, −0.40, and +0.43 for mechanical `|z_t|>0.5` persistence. A quality–coverage score peaks near τ=0.25–0.35; τ=0.5 remains close on that score with higher conditional skill and is retained for comparability with live paper sessions.
+> We use `|pred| > τ` as an abstention filter on the LightGBM \(z_{t+1}\) forecaster. On the Jul 25–28 holdout, raising τ improves filtered DirAcc, R², and mean z-settled pnl_proxy. At the protocol default τ=0.5, LightGBM achieves DirAcc 78.7%, R² 0.39, and mean pnl_proxy +0.77, versus 68.3%, −0.40, and +0.43 for mechanical `|z_t|>0.5` persistence. We also report total pnl_proxy (`mean × n`): tighter filters raise per-trade quality but reduce total z-proxy mass. τ=0.5 is retained for comparability with live paper sessions and for its clear skill lift versus the mechanical peer—not because it maximizes total pnl.
 
 ---
 

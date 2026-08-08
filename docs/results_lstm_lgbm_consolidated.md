@@ -59,7 +59,10 @@ Filtered R²: LGBM **0.35** vs matched-row naive **0.17**.
 |---|---:|---:|---:|---:|---:|---:|
 | **LGBM** (full holdout) | 263,464 | 78.7% | 0.389 | +0.765 | 0.73 | 3.90 |
 | **LSTM** size-matched (subsample) | 37,601 | **81.6%** | **0.470** | **+0.816** | **0.83** | 3.93 |
-| Naive `|z_t| > 0.5` (full panel) | 1,043,242 | 68.3% | −0.395 | +0.428 | 0.41 | 5.72 |
+| Naive `|z_t| > 0.5` (same 150k LSTM panel) | 92,412 | 70.5% | −0.281 | +0.483 | 0.48 | 4.55 |
+| Naive `|z_t| > 0.5` (full LGBM panel) | 1,043,242 | 68.3% | −0.395 | +0.428 | 0.41 | 5.72 |
+
+LSTM filtered `n` (37.6k) is smaller than naive on the same panel (92.4k) because filters differ: `|pred|>0.5` vs `|z_t|>0.5` — see [`statarb/outputs_lstm_size_matched/METRICS.md`](../statarb/outputs_lstm_size_matched/METRICS.md).
 
 ### 2.2 All rows (context)
 
@@ -75,15 +78,15 @@ Filtered R²: LGBM **0.35** vs matched-row naive **0.17**.
 ## 3. LGBM filter sensitivity (justify τ = 0.5)
 
 **Source:** [`docs/lgbm_pred_tau_filter_ablation.md`](lgbm_pred_tau_filter_ablation.md)  
-**Score:** `mean_pnl_proxy * sqrt(fire_rate)`
+**Volume metric:** `total pnl_proxy = mean_pnl_proxy × n` (no fire-rate penalty)
 
-| τ | Role | fire | DirAcc | R² | mean pnl_z |
-|---:|---|---:|---:|---:|---:|
-| 0.25 | Score peak | 39% | 71.6% | 0.260 | +0.515 |
-| **0.50** | **Protocol** | **16%** | **78.7%** | **0.389** | **+0.765** |
-| 1.00 | High confidence | 2.5% | 86.4% | 0.563 | +1.271 |
+| τ | Role | n | DirAcc | R² | mean pnl_z | total pnl_z |
+|---:|---|---:|---:|---:|---:|---:|
+| 0.10 | Max total pnl | 1.18M | 66.5% | 0.176 | +0.361 | **+426k** |
+| **0.50** | **Protocol** | 263k | **78.7%** | **0.389** | **+0.765** | +202k |
+| 1.00 | High confidence | 43k | 86.4% | 0.563 | +1.271 | +54k |
 
-Abstention works (higher τ → better conditional skill). τ=0.5 beats naive `|z|>0.5` and stays within ~6% of the quality×coverage peak — retain for live/offline parity.
+Abstention works (higher τ → better per-trade skill). Total z-proxy mass peaks at low τ. Keep **τ=0.5** for live parity and clear lift vs `|z|>0.5` naive — not because it maximizes total pnl.
 
 ---
 
@@ -101,7 +104,7 @@ Abstention works (higher τ → better conditional skill). τ=0.5 beats naive `|
 
 ### Paste-ready Discussion
 
-> We evaluate learned next-step z-forecasts for cross-exchange spreads under a common protocol (`y = z_{t+1}`, trade when `|pred| > 0.5`). In live paper trading, LightGBM improves on capacity-matched mechanical `|z|`-threshold persistence on DirAcc, mean z-settled pnl_proxy, and filtered R². Offline on Jul 25–28, a size-matched LSTM is competitive with LightGBM on the same z-metrics and serves as a literature-aligned deep baseline, while LightGBM remains the practical deployment model. An abstention sweep shows that raising τ improves conditional skill; τ=0.5 balances quality and coverage and is retained for protocol continuity with live sessions.
+> We evaluate learned next-step z-forecasts for cross-exchange spreads under a common protocol (`y = z_{t+1}`, trade when `|pred| > 0.5`). In live paper trading, LightGBM improves on capacity-matched mechanical `|z|`-threshold persistence on DirAcc, mean z-settled pnl_proxy, and filtered R². Offline on Jul 25–28, a size-matched LSTM is competitive with LightGBM on conditional z-metrics (with a thinner `|pred|>0.5` book than `|z|>0.5` naive on the same panel) and serves as a literature-aligned deep baseline, while LightGBM remains the practical deployment model. An abstention sweep shows that raising τ improves per-trade skill while reducing total pnl_proxy (`mean × n`); τ=0.5 is retained for live protocol continuity and its lift versus mechanical peers.
 
 ---
 

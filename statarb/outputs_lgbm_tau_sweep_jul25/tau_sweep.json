@@ -6,9 +6,9 @@
   "definition": {
     "filter": "|pred| > tau",
     "pnl_proxy": "sign(pred) * z_{t+1}",
-    "gross_return_bps": "sign(pred) * (spread_bps[t+1]-spread_bps[t])",
-    "quality_coverage_score": "mean_pnl_proxy * sqrt(fire_rate)",
-    "recommended_rule": "argmax quality_coverage_score among taus with fire_rate>=5% (else unconstrained score winner)"
+    "total_pnl_proxy": "mean_pnl_proxy * n",
+    "protocol_tau": 0.5,
+    "note": "Fire rate descriptive only. Protocol tau=0.5 for live parity; max total_pnl usually low tau."
   },
   "sweep": [
     {
@@ -20,12 +20,12 @@
       "mean_pnl_proxy": 0.3605428659960883,
       "sharpe_per_trade": 0.3561671854986941,
       "sharpe_closed_hourly_A": 6.151527798438808,
-      "quality_coverage_score": 0.30225841487133,
       "mean_gross_bps": -0.44809369260899623,
       "win_rate_bps": 0.3664828821167101,
       "sharpe_bps": -0.077361771157492,
       "mean_return_frac": -4.4809369260899626e-05,
-      "net_mean_5bps": -5.448093692608996
+      "net_mean_5bps": -5.448093692608996,
+      "total_pnl_proxy": 425638.5199088161
     },
     {
       "tau": 0.25,
@@ -36,12 +36,12 @@
       "mean_pnl_proxy": 0.5151683591326034,
       "sharpe_per_trade": 0.5041374046097278,
       "sharpe_closed_hourly_A": 5.2090821824862195,
-      "quality_coverage_score": 0.3225284063334034,
       "mean_gross_bps": -0.6261320546880179,
       "win_rate_bps": 0.36671359983474666,
       "sharpe_bps": -0.09747077033189493,
       "mean_return_frac": -6.26132054688018e-05,
-      "net_mean_5bps": -5.626132054688018
+      "net_mean_5bps": -5.626132054688018,
+      "total_pnl_proxy": 339178.0897908008
     },
     {
       "tau": 0.35,
@@ -52,12 +52,12 @@
       "mean_pnl_proxy": 0.6143748577759978,
       "sharpe_per_trade": 0.5946246432489806,
       "sharpe_closed_hourly_A": 4.66131508115399,
-      "quality_coverage_score": 0.31950249222531135,
       "mean_gross_bps": -0.7144817620004124,
       "win_rate_bps": 0.3662595013196736,
       "sharpe_bps": -0.10557617858718688,
       "mean_return_frac": -7.144817620004124e-05,
-      "net_mean_5bps": -5.714481762000412
+      "net_mean_5bps": -5.714481762000412,
+      "total_pnl_proxy": 279097.5960156225
     },
     {
       "tau": 0.5,
@@ -68,12 +68,12 @@
       "mean_pnl_proxy": 0.7653290246213783,
       "sharpe_per_trade": 0.7276346797437261,
       "sharpe_closed_hourly_A": 3.9001211041413524,
-      "quality_coverage_score": 0.30307864642106686,
       "mean_gross_bps": -0.8379455944791627,
       "win_rate_bps": 0.36503507653061223,
       "sharpe_bps": -0.1143529920106626,
       "mean_return_frac": -8.379455944791627e-05,
-      "net_mean_5bps": -5.837945594479162
+      "net_mean_5bps": -5.837945594479162,
+      "total_pnl_proxy": 201606.03298186196
     },
     {
       "tau": 0.6,
@@ -84,12 +84,12 @@
       "mean_pnl_proxy": 0.8651554667191717,
       "sharpe_per_trade": 0.8103492980245656,
       "sharpe_closed_hourly_A": 3.4615129450537268,
-      "quality_coverage_score": 0.2865060379763217,
       "mean_gross_bps": -0.9140515074108069,
       "win_rate_bps": 0.364702816847888,
       "sharpe_bps": -0.11817426025295233,
       "mean_return_frac": -9.140515074108069e-05,
-      "net_mean_5bps": -5.914051507410807
+      "net_mean_5bps": -5.914051507410807,
+      "total_pnl_proxy": 159372.88399073877
     },
     {
       "tau": 0.7,
@@ -100,12 +100,12 @@
       "mean_pnl_proxy": 0.9668390829521747,
       "sharpe_per_trade": 0.8908367081697874,
       "sharpe_closed_hourly_A": 3.0398242533354427,
-      "quality_coverage_score": 0.2668125804573285,
       "mean_gross_bps": -1.0046777726919263,
       "win_rate_bps": 0.36523037475961917,
       "sharpe_bps": -0.12239924572802069,
       "mean_return_frac": -0.00010046777726919262,
-      "net_mean_5bps": -6.0046777726919265
+      "net_mean_5bps": -6.0046777726919265,
+      "total_pnl_proxy": 123679.9891694081
     },
     {
       "tau": 0.75,
@@ -116,12 +116,12 @@
       "mean_pnl_proxy": 1.0179666934161347,
       "sharpe_per_trade": 0.926980472440073,
       "sharpe_closed_hourly_A": 2.816615989726083,
-      "quality_coverage_score": 0.2558341203593688,
       "mean_gross_bps": -1.0338730759801973,
       "win_rate_bps": 0.366363790600788,
       "sharpe_bps": -0.12249062390279837,
       "mean_return_frac": -0.00010338730759801973,
-      "net_mean_5bps": -6.033873075980197
+      "net_mean_5bps": -6.033873075980197,
+      "total_pnl_proxy": 108000.15837129141
     },
     {
       "tau": 0.8,
@@ -132,12 +132,12 @@
       "mean_pnl_proxy": 1.0678584404761964,
       "sharpe_per_trade": 0.9619023786420606,
       "sharpe_closed_hourly_A": 2.607312835921853,
-      "quality_coverage_score": 0.2449888511292057,
       "mean_gross_bps": -1.0884811851350198,
       "win_rate_bps": 0.36623270859960866,
       "sharpe_bps": -0.125196745121795,
       "mean_return_frac": -0.00010884811851350198,
-      "net_mean_5bps": -6.08848118513502
+      "net_mean_5bps": -6.08848118513502,
+      "total_pnl_proxy": 94410.432580941
     },
     {
       "tau": 0.9,
@@ -148,12 +148,12 @@
       "mean_pnl_proxy": 1.1645443552370267,
       "sharpe_per_trade": 1.023051215555233,
       "sharpe_closed_hourly_A": 2.2366163781829282,
-      "quality_coverage_score": 0.22274997526721343,
       "mean_gross_bps": -1.2378989882198368,
       "win_rate_bps": 0.3633656599843791,
       "sharpe_bps": -0.13341112070928665,
       "mean_return_frac": -0.00012378989882198368,
-      "net_mean_5bps": -6.237898988219837
+      "net_mean_5bps": -6.237898988219837,
+      "total_pnl_proxy": 71568.23789544671
     },
     {
       "tau": 1.0,
@@ -164,12 +164,12 @@
       "mean_pnl_proxy": 1.2708962808989177,
       "sharpe_per_trade": 1.0883238646021542,
       "sharpe_closed_hourly_A": 1.9436615781867146,
-      "quality_coverage_score": 0.20219998296982505,
       "mean_gross_bps": -1.3595338641406338,
       "win_rate_bps": 0.36242620945930054,
       "sharpe_bps": -0.13794911428028672,
       "mean_return_frac": -0.0001359533864140634,
-      "net_mean_5bps": -6.359533864140634
+      "net_mean_5bps": -6.359533864140634,
+      "total_pnl_proxy": 54037.23896754108
     },
     {
       "tau": 1.1,
@@ -180,12 +180,12 @@
       "mean_pnl_proxy": 1.3789888031292155,
       "sharpe_per_trade": 1.144362811957704,
       "sharpe_closed_hourly_A": 1.675903919136595,
-      "quality_coverage_score": 0.18218902338000675,
       "mean_gross_bps": -1.512996939297303,
       "win_rate_bps": 0.36156207366984994,
       "sharpe_bps": -0.14648787715598133,
       "mean_return_frac": -0.0001512996939297303,
-      "net_mean_5bps": -6.512996939297303
+      "net_mean_5bps": -6.512996939297303,
+      "total_pnl_proxy": 40431.9517077486
     },
     {
       "tau": 1.25,
@@ -196,12 +196,12 @@
       "mean_pnl_proxy": 1.5548371134832788,
       "sharpe_per_trade": 1.2331540859780077,
       "sharpe_closed_hourly_A": 1.3518671727091192,
-      "quality_coverage_score": 0.1556208312880838,
       "mean_gross_bps": -1.8321798380406533,
       "win_rate_bps": 0.36096749272003326,
       "sharpe_bps": -0.16016068019939703,
       "mean_return_frac": -0.00018321798380406534,
-      "net_mean_5bps": -6.832179838040654
+      "net_mean_5bps": -6.832179838040654,
+      "total_pnl_proxy": 26163.24410858313
     },
     {
       "tau": 1.5,
@@ -212,12 +212,12 @@
       "mean_pnl_proxy": 1.8457047305042613,
       "sharpe_per_trade": 1.326412262993353,
       "sharpe_closed_hourly_A": 0.9612237225867201,
-      "quality_coverage_score": 0.1201069433606849,
       "mean_gross_bps": -2.67081541362634,
       "win_rate_bps": 0.354702657106706,
       "sharpe_bps": -0.19179310800616142,
       "mean_return_frac": -0.000267081541362634,
-      "net_mean_5bps": -7.67081541362634
+      "net_mean_5bps": -7.67081541362634,
+      "total_pnl_proxy": 13128.497748076808
     },
     {
       "tau": 1.75,
@@ -228,12 +228,12 @@
       "mean_pnl_proxy": 2.116780355466181,
       "sharpe_per_trade": 1.429062107910952,
       "sharpe_closed_hourly_A": 0.7707702168104242,
-      "quality_coverage_score": 0.09137501266733715,
       "mean_gross_bps": -3.43354310882739,
       "win_rate_bps": 0.3661341853035144,
       "sharpe_bps": -0.20572974651045553,
       "mean_return_frac": -0.000343354310882739,
-      "net_mean_5bps": -8.43354310882739
+      "net_mean_5bps": -8.43354310882739,
+      "total_pnl_proxy": 6625.522512609146
     },
     {
       "tau": 2.0,
@@ -244,12 +244,12 @@
       "mean_pnl_proxy": 2.399331437191836,
       "sharpe_per_trade": 1.5410506701502624,
       "sharpe_closed_hourly_A": 0.6348571728594962,
-      "quality_coverage_score": 0.06929290948819558,
       "mean_gross_bps": -4.870742278342414,
       "win_rate_bps": 0.3683083511777302,
       "sharpe_bps": -0.24362375064462619,
       "mean_return_frac": -0.0004870742278342414,
-      "net_mean_5bps": -9.870742278342414
+      "net_mean_5bps": -9.870742278342414,
+      "total_pnl_proxy": 3361.4633435057626
     }
   ],
   "naive_zt_refs": {
@@ -257,152 +257,39 @@
       "n": 1043054,
       "diracc": 0.6831870641404951,
       "r2": -0.3947727488037118,
-      "mean_pnl_proxy": 0.42793078511554905
+      "mean_pnl_proxy": 0.42793078511554905,
+      "total_pnl_proxy": 446354.9171379139
     },
     "1.0": {
       "n": 506051,
       "diracc": 0.7004906620083746,
       "r2": -0.5618486282320072,
-      "mean_pnl_proxy": 0.5833123924705857
+      "mean_pnl_proxy": 0.5833123924705857,
+      "total_pnl_proxy": 295185.8195221324
     }
   },
   "optima": {
-    "by_quality_coverage_score": 0.25,
+    "by_total_pnl_proxy": 0.1,
     "by_diracc": 2.0,
     "by_r2": 2.0,
     "by_mean_pnl_proxy": 2.0,
     "by_sharpe_per_trade": 2.0,
-    "by_sharpe_A": 0.1,
-    "by_mean_gross_bps": 0.1
+    "by_sharpe_A": 0.1
   },
-  "optima_rows": {
-    "by_quality_coverage_score": {
-      "tau": 0.25,
-      "n": 658383,
-      "fire_rate": 0.3919562359799397,
-      "diracc": 0.7159662384964375,
-      "r2": 0.26012518339208857,
-      "mean_pnl_proxy": 0.5151683591326034,
-      "sharpe_per_trade": 0.5041374046097278,
-      "sharpe_closed_hourly_A": 5.2090821824862195,
-      "quality_coverage_score": 0.3225284063334034,
-      "mean_gross_bps": -0.6261320546880179,
-      "win_rate_bps": 0.36671359983474666,
-      "sharpe_bps": -0.09747077033189493,
-      "mean_return_frac": -6.26132054688018e-05,
-      "net_mean_5bps": -5.626132054688018
-    },
-    "by_diracc": {
-      "tau": 2.0,
-      "n": 1401,
-      "fire_rate": 0.0008340596379431053,
-      "diracc": 0.8822269807280514,
-      "r2": 0.6389731471709157,
-      "mean_pnl_proxy": 2.399331437191836,
-      "sharpe_per_trade": 1.5410506701502624,
-      "sharpe_closed_hourly_A": 0.6348571728594962,
-      "quality_coverage_score": 0.06929290948819558,
-      "mean_gross_bps": -4.870742278342414,
-      "win_rate_bps": 0.3683083511777302,
-      "sharpe_bps": -0.24362375064462619,
-      "mean_return_frac": -0.0004870742278342414,
-      "net_mean_5bps": -9.870742278342414
-    },
-    "by_r2": {
-      "tau": 2.0,
-      "n": 1401,
-      "fire_rate": 0.0008340596379431053,
-      "diracc": 0.8822269807280514,
-      "r2": 0.6389731471709157,
-      "mean_pnl_proxy": 2.399331437191836,
-      "sharpe_per_trade": 1.5410506701502624,
-      "sharpe_closed_hourly_A": 0.6348571728594962,
-      "quality_coverage_score": 0.06929290948819558,
-      "mean_gross_bps": -4.870742278342414,
-      "win_rate_bps": 0.3683083511777302,
-      "sharpe_bps": -0.24362375064462619,
-      "mean_return_frac": -0.0004870742278342414,
-      "net_mean_5bps": -9.870742278342414
-    },
-    "by_mean_pnl_proxy": {
-      "tau": 2.0,
-      "n": 1401,
-      "fire_rate": 0.0008340596379431053,
-      "diracc": 0.8822269807280514,
-      "r2": 0.6389731471709157,
-      "mean_pnl_proxy": 2.399331437191836,
-      "sharpe_per_trade": 1.5410506701502624,
-      "sharpe_closed_hourly_A": 0.6348571728594962,
-      "quality_coverage_score": 0.06929290948819558,
-      "mean_gross_bps": -4.870742278342414,
-      "win_rate_bps": 0.3683083511777302,
-      "sharpe_bps": -0.24362375064462619,
-      "mean_return_frac": -0.0004870742278342414,
-      "net_mean_5bps": -9.870742278342414
-    },
-    "by_sharpe_per_trade": {
-      "tau": 2.0,
-      "n": 1401,
-      "fire_rate": 0.0008340596379431053,
-      "diracc": 0.8822269807280514,
-      "r2": 0.6389731471709157,
-      "mean_pnl_proxy": 2.399331437191836,
-      "sharpe_per_trade": 1.5410506701502624,
-      "sharpe_closed_hourly_A": 0.6348571728594962,
-      "quality_coverage_score": 0.06929290948819558,
-      "mean_gross_bps": -4.870742278342414,
-      "win_rate_bps": 0.3683083511777302,
-      "sharpe_bps": -0.24362375064462619,
-      "mean_return_frac": -0.0004870742278342414,
-      "net_mean_5bps": -9.870742278342414
-    },
-    "by_sharpe_A": {
-      "tau": 0.1,
-      "n": 1180549,
-      "fire_rate": 0.7028181809522449,
-      "diracc": 0.6647898562448488,
-      "r2": 0.17610041758117267,
-      "mean_pnl_proxy": 0.3605428659960883,
-      "sharpe_per_trade": 0.3561671854986941,
-      "sharpe_closed_hourly_A": 6.151527798438808,
-      "quality_coverage_score": 0.30225841487133,
-      "mean_gross_bps": -0.44809369260899623,
-      "win_rate_bps": 0.3664828821167101,
-      "sharpe_bps": -0.077361771157492,
-      "mean_return_frac": -4.4809369260899626e-05,
-      "net_mean_5bps": -5.448093692608996
-    },
-    "by_mean_gross_bps": {
-      "tau": 0.1,
-      "n": 1180549,
-      "fire_rate": 0.7028181809522449,
-      "diracc": 0.6647898562448488,
-      "r2": 0.17610041758117267,
-      "mean_pnl_proxy": 0.3605428659960883,
-      "sharpe_per_trade": 0.3561671854986941,
-      "sharpe_closed_hourly_A": 6.151527798438808,
-      "quality_coverage_score": 0.30225841487133,
-      "mean_gross_bps": -0.44809369260899623,
-      "win_rate_bps": 0.3664828821167101,
-      "sharpe_bps": -0.077361771157492,
-      "mean_return_frac": -4.4809369260899626e-05,
-      "net_mean_5bps": -5.448093692608996
-    }
-  },
-  "recommended": {
-    "tau": 0.25,
-    "n": 658383,
-    "fire_rate": 0.3919562359799397,
-    "diracc": 0.7159662384964375,
-    "r2": 0.26012518339208857,
-    "mean_pnl_proxy": 0.5151683591326034,
-    "sharpe_per_trade": 0.5041374046097278,
-    "sharpe_closed_hourly_A": 5.2090821824862195,
-    "quality_coverage_score": 0.3225284063334034,
-    "mean_gross_bps": -0.6261320546880179,
-    "win_rate_bps": 0.36671359983474666,
-    "sharpe_bps": -0.09747077033189493,
-    "mean_return_frac": -6.26132054688018e-05,
-    "net_mean_5bps": -5.626132054688018
+  "protocol_tau_row": {
+    "tau": 0.5,
+    "n": 263424,
+    "fire_rate": 0.15682464387260855,
+    "diracc": 0.7867885993683188,
+    "r2": 0.38900471051072605,
+    "mean_pnl_proxy": 0.7653290246213783,
+    "sharpe_per_trade": 0.7276346797437261,
+    "sharpe_closed_hourly_A": 3.9001211041413524,
+    "mean_gross_bps": -0.8379455944791627,
+    "win_rate_bps": 0.36503507653061223,
+    "sharpe_bps": -0.1143529920106626,
+    "mean_return_frac": -8.379455944791627e-05,
+    "net_mean_5bps": -5.837945594479162,
+    "total_pnl_proxy": 201606.03298186196
   }
 }

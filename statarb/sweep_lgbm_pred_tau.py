@@ -1,15 +1,10 @@
 #!/usr/bin/env python3
-"""Sweep LGBM |pred| > tau on Jul25-28 holdout and rank filter thresholds.
+"""Sweep LGBM |pred| > tau on Jul25-28 holdout.
 
-Optimality is multi-objective (quality vs coverage). We report:
-  - forecast/trading quality: DirAcc, R2, mean pnl_proxy, Sharpe/trade
-  - coverage: n, fire_rate, Sharpe A (hourly closed proxy)
-  - economic: mean gross bps return, win_rate_bps
-
-Primary ranking score (paper-facing default):
-  score = mean_pnl_proxy * sqrt(fire_rate)
-which rewards higher z-proxy skill without collapsing to tiny n.
-Also report argmax of DirAcc / R2 / Sharpe/trade / Sharpe A / mean_gross_bps.
+Reports per-trade quality (DirAcc, R2, mean pnl_proxy) and total z-proxy mass:
+  total_pnl_proxy = mean_pnl_proxy * n
+Fire rate is descriptive only (not used to rank tau).
+Protocol default remains tau=0.5 for live/offline parity.
 """
 
 from __future__ import annotations
@@ -31,7 +26,6 @@ import lstm_zscore_lib as L
 from experiments.paper_trade_lgbm import prepare_X
 from score_lgbm_offline_pnl_sharpe import build_batch_matrix
 
-# Dense near common operating points; include 0.5 (campaign default) and 1.0
 TAUS = [
     0.10,
     0.25,
@@ -49,7 +43,8 @@ TAUS = [
     1.75,
     2.00,
 ]
-MIN_N = 500  # ignore ultra-sparse thresholds for "optimal" picks
+MIN_N = 500
+PROTOCOL_TAU = 0.5
 
 
 def _bps_stats(direction: np.ndarray, delta: np.ndarray, mask: np.ndarray) -> dict:
@@ -86,9 +81,7 @@ def evaluate_tau(
     n = int(m["filtered"]["n"])
     fire = n / max(1, len(preds))
     pnl = m["filtered"]["mean_pnl_proxy"]
-    score = None
-    if pnl is not None and fire > 0:
-        score = float(pnl * np.sqrt(fire))
+    total = float(pnl * n) if pnl is not None else None
     return {
         "tau": float(tau),
         "n": n,
@@ -96,18 +89,18 @@ def evaluate_tau(
         "diracc": m["filtered"]["diracc"],
         "r2": m["filtered"]["r2"],
         "mean_pnl_proxy": pnl,
+        "total_pnl_proxy": total,
         "sharpe_per_trade": m["filtered"]["sharpe_per_trade"],
         "sharpe_closed_hourly_A": m["filtered"]["sharpe_closed_hourly_A"],
-        "quality_coverage_score": score,
         **bps,
     }
 
 
-def pick_best(rows: list[dict], key: str, *, higher: bool = True) -> dict | None:
+def pick_best(rows: list[dict], key: str) -> dict | None:
     cand = [r for r in rows if r.get("n", 0) >= MIN_N and r.get(key) is not None]
     if not cand:
         return None
-    return max(cand, key=lambda r: r[key]) if higher else min(cand, key=lambda r: r[key])
+    return max(cand, key=lambda r: r[key])
 
 
 def main() -> None:
@@ -147,42 +140,28 @@ def main() -> None:
 
     rows = [evaluate_tau(y, preds, delta, meta, tau) for tau in TAUS]
 
-    # Naive |z|>tau reference at campaign + high confidence
     naive_refs = {}
     for tau in (0.5, 1.0):
         nm = L.metrics_block(y, df["zscore"].to_numpy(float), tau=tau, meta=meta)
+        n = nm["filtered"]["n"]
+        mean_p = nm["filtered"]["mean_pnl_proxy"]
         naive_refs[str(tau)] = {
-            "n": nm["filtered"]["n"],
+            "n": n,
             "diracc": nm["filtered"]["diracc"],
             "r2": nm["filtered"]["r2"],
-            "mean_pnl_proxy": nm["filtered"]["mean_pnl_proxy"],
+            "mean_pnl_proxy": mean_p,
+            "total_pnl_proxy": float(mean_p * n) if mean_p is not None else None,
         }
 
     optima = {
-        "by_quality_coverage_score": pick_best(rows, "quality_coverage_score"),
+        "by_total_pnl_proxy": pick_best(rows, "total_pnl_proxy"),
         "by_diracc": pick_best(rows, "diracc"),
         "by_r2": pick_best(rows, "r2"),
         "by_mean_pnl_proxy": pick_best(rows, "mean_pnl_proxy"),
         "by_sharpe_per_trade": pick_best(rows, "sharpe_per_trade"),
         "by_sharpe_A": pick_best(rows, "sharpe_closed_hourly_A"),
-        "by_mean_gross_bps": pick_best(rows, "mean_gross_bps"),
     }
-
-    # Recommended operating point: best quality_coverage among taus with fire_rate >= 5%
-    # (keeps a usable trade rate); fallback to unconstrained score winner.
-    usable = [
-        r
-        for r in rows
-        if r["n"] >= MIN_N
-        and r["fire_rate"] is not None
-        and r["fire_rate"] >= 0.05
-        and r["quality_coverage_score"] is not None
-    ]
-    recommended = (
-        max(usable, key=lambda r: r["quality_coverage_score"])
-        if usable
-        else optima["by_quality_coverage_score"]
-    )
+    protocol = next(r for r in rows if abs(r["tau"] - PROTOCOL_TAU) < 1e-9)
 
     report = {
         "window": "jul25_28",
@@ -192,18 +171,19 @@ def main() -> None:
         "definition": {
             "filter": "|pred| > tau",
             "pnl_proxy": "sign(pred) * z_{t+1}",
+            "total_pnl_proxy": "mean_pnl_proxy * n",
             "gross_return_bps": "sign(pred) * (spread_bps[t+1]-spread_bps[t])",
-            "quality_coverage_score": "mean_pnl_proxy * sqrt(fire_rate)",
-            "recommended_rule": (
-                "argmax quality_coverage_score among taus with fire_rate>=5% "
-                "(else unconstrained score winner)"
+            "protocol_tau": PROTOCOL_TAU,
+            "note": (
+                "Fire rate is descriptive only. Protocol tau=0.5 retained for "
+                "live parity + skill vs naive; max total_pnl_proxy is usually low tau."
             ),
         },
         "sweep": rows,
         "naive_zt_refs": naive_refs,
         "optima": {k: (v["tau"] if v else None) for k, v in optima.items()},
         "optima_rows": optima,
-        "recommended": recommended,
+        "protocol_tau_row": protocol,
     }
     (out_dir / "tau_sweep.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
     pd.DataFrame(rows).to_csv(out_dir / "tau_sweep.csv", index=False)
@@ -213,8 +193,8 @@ def main() -> None:
             return "n/a"
         return (
             f"τ={r['tau']:g} (n={r['n']:,}, DirAcc={r['diracc']:.3f}, "
-            f"R²={r['r2']:.3f}, pnl_z={r['mean_pnl_proxy']:+.3f}, "
-            f"fire={r['fire_rate']:.1%})"
+            f"R²={r['r2']:.3f}, mean={r['mean_pnl_proxy']:+.3f}, "
+            f"total={r['total_pnl_proxy']:+.0f})"
         )
 
     lines = [
@@ -222,54 +202,50 @@ def main() -> None:
         "",
         f"Scored **{len(preds):,}** rows with valid target + next spread.",
         "",
-        "## Recommended operating point",
+        f"## Protocol default (τ = {PROTOCOL_TAU:g})",
         "",
-        f"**τ = {recommended['tau']:g}** under "
-        "`score = mean_pnl_proxy × √(fire_rate)` with `fire_rate ≥ 5%`.",
+        "Retained for live/offline parity and skill vs `|z|>0.5` naive — "
+        "**not** because it maximizes total pnl_proxy.",
         "",
-        f"- n = {recommended['n']:,} ({recommended['fire_rate']:.1%} fire)",
-        f"- DirAcc = {recommended['diracc']:.4f}",
-        f"- R² = {recommended['r2']:.4f}",
-        f"- mean pnl_proxy = {recommended['mean_pnl_proxy']:+.4f}",
-        f"- Sharpe/trade = {recommended['sharpe_per_trade']:.4f}",
-        f"- Sharpe A = {recommended['sharpe_closed_hourly_A']:.4f}",
-        f"- mean gross bps = {recommended['mean_gross_bps']:+.4f}",
+        f"- n = {protocol['n']:,}",
+        f"- DirAcc = {protocol['diracc']:.4f}",
+        f"- R² = {protocol['r2']:.4f}",
+        f"- mean pnl_proxy = {protocol['mean_pnl_proxy']:+.4f}",
+        f"- total pnl_proxy = {protocol['total_pnl_proxy']:+.1f}",
         "",
         "## Optima by single metric (n ≥ 500)",
         "",
-        f"| Criterion | Best τ |",
-        f"|---|---|",
-        f"| quality×coverage score | {fmt(optima['by_quality_coverage_score'])} |",
+        "| Criterion | Best τ |",
+        "|---|---|",
+        f"| total pnl_proxy (mean × n) | {fmt(optima['by_total_pnl_proxy'])} |",
         f"| DirAcc | {fmt(optima['by_diracc'])} |",
         f"| R² | {fmt(optima['by_r2'])} |",
         f"| mean pnl_proxy | {fmt(optima['by_mean_pnl_proxy'])} |",
         f"| Sharpe/trade | {fmt(optima['by_sharpe_per_trade'])} |",
         f"| Sharpe A | {fmt(optima['by_sharpe_A'])} |",
-        f"| mean gross bps | {fmt(optima['by_mean_gross_bps'])} |",
         "",
         "## Full sweep",
         "",
-        "| τ | n | fire | DirAcc | R² | mean pnl_z | Sharpe/tr | Sharpe A | score | mean gross bps | win_bps |",
-        "|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
+        "| τ | n | DirAcc | R² | mean pnl_z | total pnl_z | Sharpe/tr | Sharpe A |",
+        "|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for r in rows:
         lines.append(
-            f"| {r['tau']:.2f} | {r['n']:,} | {r['fire_rate']:.3f} | "
-            f"{r['diracc']:.4f} | {r['r2']:.4f} | {r['mean_pnl_proxy']:+.4f} | "
-            f"{r['sharpe_per_trade']:.3f} | {r['sharpe_closed_hourly_A']:.3f} | "
-            f"{r['quality_coverage_score']:.4f} | {r['mean_gross_bps']:+.4f} | "
-            f"{r['win_rate_bps']:.3f} |"
+            f"| {r['tau']:.2f} | {r['n']:,} | {r['diracc']:.4f} | {r['r2']:.4f} | "
+            f"{r['mean_pnl_proxy']:+.4f} | {r['total_pnl_proxy']:+.1f} | "
+            f"{r['sharpe_per_trade']:.3f} | {r['sharpe_closed_hourly_A']:.3f} |"
         )
     lines += [
         "",
         "## Notes",
         "",
-        "- Campaign default τ=0.5 remains the live protocol peer unless you re-run live with a new τ.",
-        "- Higher τ improves conditional quality but cuts coverage; Sharpe A often falls as the book thins.",
-        "- Bps returns stay negative across this sweep — τ does not flip the z-proxy vs Δspread gap.",
+        "- `total_pnl_proxy = mean_pnl_proxy × n` (no fire-rate penalty).",
+        "- Higher τ improves per-trade quality; total mass usually peaks at low τ.",
+        "- Fire rate is not used for ranking.",
         "- Naive refs: "
         + ", ".join(
-            f"|z|>{k} DirAcc={v['diracc']:.3f} R²={v['r2']:.3f} pnl_z={v['mean_pnl_proxy']:+.3f}"
+            f"|z|>{k} DirAcc={v['diracc']:.3f} R²={v['r2']:.3f} "
+            f"mean={v['mean_pnl_proxy']:+.3f} total={v['total_pnl_proxy']:+.0f}"
             for k, v in naive_refs.items()
         ),
         "",
