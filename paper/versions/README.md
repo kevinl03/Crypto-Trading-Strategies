@@ -9,6 +9,7 @@ Compiled PDF checkpoints for review iterations. The live build output remains `.
 | `v4-gradient-boosting-cross-market-spread-prediction.pdf` | Post–Related Work rewrite |
 | `v4b-gradient-boosting-cross-market-spread-prediction.pdf` | Post–Introduction rewrite |
 | `v4c-gradient-boosting-cross-market-spread-prediction.pdf` | Abstract + short/long live OOS framing |
+| `v4d-gradient-boosting-cross-market-spread-prediction.pdf` | Human-readable abstract |
 | `public-gradient-boosting-cross-market-spread-prediction.pdf` | Public-release build |
 
 ## Build with Tectonic
