@@ -16,7 +16,7 @@ Methodologically, this is a change of formulation, not only of market setting. T
 \begin{enumerate}
     \item \textbf{Learned next-snapshot z-score forecasting for same-asset cross-exchange spreads.} We replace mechanical $|z_t|$ thresholds with a LightGBM forecast of $z_{t+H}$, conditioned on live microstructure and coin/venue categoricals, with a $|\hat{z}|\geq 0.5$ confidence gate for selective entry.
 
-    \item \textbf{Live paper-trading validation under real timing.} We deploy the policy in live campaigns (including a $\sim$72-hour session) with no future leakage, so decisions act on real-time, non-replayable market state rather than a fully delayed historical tape.
+    \item \textbf{Live paper-trading under real decision latency.} We run the policy in live campaigns (including a $\sim$72-hour session) on direct centralized-exchange market data at approximately one-minute frequency: the trained LightGBM model predicts the next z-score at each snapshot and executes paper trades under the system's real collection and decision delay, not a hindsight-aligned historical backtest.
 
     \item \textbf{Clear gains over matched mechanical baselines on short and long live campaigns.} Scoring in z-units (not dollars), a $\sim$73-hour out-of-sample paper session yields about 79\% directional wins and mean $\texttt{pnl\_proxy}$ of $+0.84$ on 50{,}690 closes, with summed hourly z-unit paper P\&L positive in every UTC hour; shorter $\sim$8-hour live sessions show the same pattern (76.9\% wins; filtered R$^2$ of 0.35) and improve win rate by 7.6~percentage points and mean $\texttt{pnl\_proxy}$ by 71\% over capacity-matched z-score persistence under identical settlement rules.
 
