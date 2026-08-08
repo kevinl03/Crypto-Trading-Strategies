@@ -4,8 +4,8 @@ Compiled PDF checkpoints for review iterations. The live build output remains `.
 
 | File | Iteration |
 |------|-----------|
-| `...-v2.pdf` | Earlier draft |
-| `...-v3.pdf` | Page-reduction draft |
-| `...-v4.pdf` | Post–Related Work rewrite |
-| `...-v4b.pdf` | Post–Introduction rewrite |
-| `...-public.pdf` | Public-release build |
+| `v2-gradient-boosting-cross-market-spread-prediction.pdf` | Earlier draft |
+| `v3-gradient-boosting-cross-market-spread-prediction.pdf` | Page-reduction draft |
+| `v4-gradient-boosting-cross-market-spread-prediction.pdf` | Post–Related Work rewrite |
+| `v4b-gradient-boosting-cross-market-spread-prediction.pdf` | Post–Introduction rewrite |
+| `public-gradient-boosting-cross-market-spread-prediction.pdf` | Public-release build |

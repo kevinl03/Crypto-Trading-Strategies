@@ -1,6 +1,6 @@
 # V4B Intro Iteration Notes
 
-Snapshot: `versions/gradient-boosting-cross-market-spread-prediction-v4b.pdf`
+Snapshot: `versions/v4b-gradient-boosting-cross-market-spread-prediction.pdf`
 
 ## Scope
 
@@ -8,7 +8,7 @@ Introduction rewrite to a 5-paragraph ICAIF-style blueprint (domain hook ? mecha
 
 ## Relation to v4
 
-- **v4**: related-work-only rewrite snapshot (`versions/gradient-boosting-cross-market-spread-prediction-v4.pdf`).
+- **v4**: related-work-only rewrite snapshot (`versions/v4-gradient-boosting-cross-market-spread-prediction.pdf`).
 - **v4b**: post-introduction rewrite (keeps v4 as the related-work-only checkpoint).
 
 ## Intro structure (final)
