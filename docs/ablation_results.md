@@ -9,7 +9,7 @@ features help?* and *does any of this clear fees?*
 | Study | Question | Verdict | Artifacts |
 |---|---|---|---|
 | **LOGO / nested feature groups** | Do ticker/OB/trades/funding/OI/cross add filtered R² beyond AR lags? | **Scenario C** — AR baseline best (~0.392 filt. R²); microstructure flat/slightly worse; funding & OI prune to 0 cols | `statarb/run_logo_ablation.py`, `statarb/outputs_logo/` |
-| **Fee-aware profit gate** | On live Jul30/Jul31 paper trades, does any `\|pred\|` slice clear RT fees? | **No** — mean gross ≈ −0.7 bps; higher `\|pred\|` worse; pair RT fees ≈ 105 bps | `scripts/fee_aware_trade_gate.py`, `docs/fee_aware_gate_summary.md`, `data/paper_trading/*/fee_aware_gate_report.json` |
+| **Fee-aware profit gate** | On live Jul30/Jul31 paper trades, does any `\|pred\|` slice clear RT fees? | **No** — mean gross ≈ −0.7 bps; higher `\|pred\|` worse; pair RT fees ≈ 105 bps | `scripts/fee_aware_trade_gate.py`, `docs/fee_aware_gate_summary.md`, `data/paper_trading/July31st_8_hr/pred_bps_calib.json` |
 | **bps-net retrain** | Does training on ΔS / (ΔS−fee) instead of forward z create fee-clearing trades? | **No** — gross bps nearly unpredictable (R²≈0.003); no variant has positive mean net@16 | `statarb/run_bps_net_retrain.py`, `statarb/outputs_bps_net/` |
 
 ## Feature importance (bps retrain dumps)
