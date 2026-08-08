@@ -1,10 +1,11 @@
 # LSTM vs LightGBM — Training / Live Resource Practicality
 
 **Purpose:** Compare wall-clock and memory cost of the LSTM z-score forecaster against the production LightGBM stack, framed for **offline retrain practicality** and **live paper/market execution**.  
-**Branch artifacts:** `statarb/cex_lstm_zscore.ipynb`, `statarb/lstm_zscore_lib.py`, `statarb/run_lstm_zscore.py`  
-**LGBM baseline:** `statarb/cex_gbm_new.ipynb` + `experiments/paper_trade_lgbm.py`
+**Branch artifacts:** `statarb/lstm_zscore_lib.py`, `statarb/run_lstm_zscore.py`  
+**LGBM baseline:** `statarb/cex_gbm_new.ipynb` + `experiments/paper_trade_lgbm.py`  
+**Skill results:** [`docs/results_lstm_lgbm_consolidated.md`](results_lstm_lgbm_consolidated.md)
 
-This note is about **ops cost**, not offline predictive skill. Skill comparison uses the same Jul-25 split, \(z_{t+1}\) target, and `|pred|>0.5` filter (see `statarb/outputs_lstm/METRICS.md` once training finishes).
+This note is about **ops cost**, not offline predictive skill. Skill comparison uses the same Jul-25 split, `z_{t+1}` target, and `|pred|>0.5` filter (`statarb/outputs_lstm_size_matched/`).
 
 ---
 
@@ -133,16 +134,15 @@ Recommended wording:
 
 ## Measured GPU run (2026-08-07)
 
-From `statarb/outputs_lstm/` + runner log (`stride=8`, caps 250k/150k, RTX 4060):
+From size-matched run (`statarb/outputs_lstm_size_matched/`, `hidden=160`, stride/caps, RTX 4060):
 
 | Field | Value |
 |---|---|
-| End-to-end wall-clock | **~9 min** (~542 s) |
-| Epochs until early stop | **20** (best val_rmse 0.91118 @ epoch 14) |
+| End-to-end wall-clock | **~9–12 min** (capped sequences) |
 | Device | `cuda` (RTX 4060) |
-| Filtered LSTM DirAcc / R² / mean pnl_proxy | **82.4%** / **0.492** / **+0.839** |
-| Filtered Sharpe (per-trade) / Sharpe A | **0.86** / **3.88** |
-| Naive filtered (same τ on \(z_t\)) DirAcc / R² / mean pnl | 70.5% / −0.28 / +0.483 |
+| Filtered LSTM DirAcc / R² / mean pnl_proxy | **81.6%** / **0.470** / **+0.816** |
+| Filtered Sharpe (per-trade) / Sharpe A | **0.83** / **3.93** |
+| Naive filtered (`|z_t|>0.5`, same panel) | DirAcc 70.5% / R² −0.28 / mean +0.48 |
 
 Caveat: offline holdout + subsampled test (150k); not a live paper-session Sharpe B. Ops conclusion unchanged — prep/RAM still dominate vs LGBM.
 
@@ -150,6 +150,6 @@ Caveat: offline holdout + subsampled test (150k); not a live paper-session Sharp
 
 ## Related files
 
-- LSTM prompt: [`docs/prompts/lstm_zscore_engineering_prompt.md`](prompts/lstm_zscore_engineering_prompt.md)
+- Consolidated results: [`docs/results_lstm_lgbm_consolidated.md`](results_lstm_lgbm_consolidated.md)
 - LGBM live notes: [`docs/paper_trading_lgbm.md`](paper_trading_lgbm.md)
 - LGBM vs mechanical: [`docs/baseline_lgbm_vs_mechanical_z.md`](baseline_lgbm_vs_mechanical_z.md)

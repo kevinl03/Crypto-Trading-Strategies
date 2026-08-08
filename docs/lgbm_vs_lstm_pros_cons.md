@@ -111,7 +111,7 @@ Caveat: LSTM test panel was stride/subsampled (150k all-rows); LGBM used the ful
 |---|---|
 | `statarb/outputs_lgbm_offline_jul25/` | Same-window LGBM pnl/Sharpe/R²/DirAcc |
 | `statarb/outputs_lstm_size_matched/` | Size-matched LSTM + `model_size_report.json` |
-| `docs/results_lstm_vs_lgbm.md` | Results + verification checklist |
+| `docs/results_lstm_lgbm_consolidated.md` | Consolidated results entrypoint |
 | `docs/lstm_vs_lgbm_resource_practicality.md` | Time/RAM/live practicality |
 | `docs/baseline_lgbm_vs_mechanical_z.md` | Live LGBM vs mechanical |
 | Tsoku & Makatjane (2026); Han & Li (2024); Sheng & Ma (2022) | Lit peers for LSTM / dual metrics / filter framing |

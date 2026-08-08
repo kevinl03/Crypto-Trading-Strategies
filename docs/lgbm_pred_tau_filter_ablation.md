@@ -2,7 +2,7 @@
 
 **Use in paper:** Methods (abstention filter) · Results (sensitivity table/figure) · Discussion (why τ=0.5)  
 **Holdout:** Jul 25–28 offline · **Model:** `statarb/outputs/statarb_lgbm.txt` (not retrained)  
-**Runner / data:** [`statarb/sweep_lgbm_pred_tau.py`](../statarb/sweep_lgbm_pred_tau.py) → [`statarb/outputs_lgbm_tau_sweep_jul25/`](../statarb/outputs_lgbm_tau_sweep_jul25/)
+**Runner / data:** [`statarb/sweep_lgbm_pred_tau.py`](../statarb/sweep_lgbm_pred_tau.py) → [`statarb/outputs_lgbm_tau_sweep_jul25/`](../statarb/outputs_lgbm_tau_sweep_jul25/) (`tau_sweep.csv` / `.json`)
 
 ---
 

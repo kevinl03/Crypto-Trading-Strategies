@@ -116,7 +116,8 @@ Abstention works (higher τ → better per-trade skill). Total z-proxy mass peak
 | [`docs/lgbm_pred_tau_filter_ablation.md`](lgbm_pred_tau_filter_ablation.md) | τ sensitivity |
 | [`docs/lgbm_vs_lstm_pros_cons.md`](lgbm_vs_lstm_pros_cons.md) | Pros/cons for Discussion |
 | [`docs/lstm_vs_lgbm_resource_practicality.md`](lstm_vs_lgbm_resource_practicality.md) | Ops / cost |
-| [`docs/results_lstm_vs_lgbm.md`](results_lstm_vs_lgbm.md) | Detailed offline notes |
 | `statarb/outputs_lgbm_offline_jul25/` | Same-window LGBM metrics |
 | `statarb/outputs_lstm_size_matched/` | Size-matched LSTM metrics |
-| `statarb/outputs_lgbm_tau_sweep_jul25/` | Full τ grid |
+| `statarb/outputs_lgbm_tau_sweep_jul25/` | Full τ grid (csv/json) |
+| `statarb/run_lstm_zscore.py` | Train/eval CLI |
+| `statarb/sweep_lgbm_pred_tau.py` | τ sweep runner |

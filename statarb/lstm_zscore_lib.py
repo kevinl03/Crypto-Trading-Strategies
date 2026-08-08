@@ -1,7 +1,7 @@
 """
 LSTM z-score forecasting pipeline for cross-exchange CEX spreads.
 
-Used by cex_lstm_zscore.ipynb. Protocol matches cex_gbm_new.ipynb Jul-25 split
+Used by run_lstm_zscore.py. Protocol matches cex_gbm_new.ipynb Jul-25 split
 and target (z_{t+1}), but uses LSTM-native sequence features (not LGBM columns).
 """
 
