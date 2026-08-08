@@ -18,7 +18,7 @@ Methodologically, this is a change of formulation, not only of market setting. T
 
     \item \textbf{Live paper-trading validation under real timing.} We deploy the policy in live campaigns (including a $\sim$72-hour session) with no future leakage, so decisions act on real-time, non-replayable market state rather than a fully delayed historical tape.
 
-    \item \textbf{Clear gains over matched mechanical baselines.} On the primary live session the filtered policy reaches 76.9\% directional accuracy, R$^2$ of 0.35, and hourly portfolio Sharpe 2.41, improving per-trade directional accuracy by 7.6\% and mean $\texttt{pnl\_proxy}$ by 71\% over capacity-matched z-score persistence under identical settlement rules.
+    \item \textbf{Clear gains over matched mechanical baselines on short and long live campaigns.} On a $\sim$73-hour out-of-sample paper-trading session the filtered policy reaches approximately 79\% directional accuracy, mean $\texttt{pnl\_proxy}$ of $+0.84$, and hourly portfolio Sharpe 4.38 (74/74 green hours); shorter $\sim$8-hour live sessions show the same qualitative pattern (76.9\% directional accuracy, R$^2$ of 0.35, hourly Sharpe 2.41), improving per-trade directional accuracy by 7.6~percentage points and mean $\texttt{pnl\_proxy}$ by 71\% over capacity-matched z-score persistence under identical settlement rules.
 
     \item \textbf{Public non-backfillable microstructure dataset.} We release synchronized L2 orderbook, trade-flow, funding, and open-interest features across 23 volatile assets and 6 exchanges---signals that cannot be reconstructed from standard historical exchange APIs.
 \end{enumerate}
