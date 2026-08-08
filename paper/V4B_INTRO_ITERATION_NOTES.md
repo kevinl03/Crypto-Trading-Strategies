@@ -1,14 +1,14 @@
-﻿# V4B Intro Iteration Notes
+# V4B Intro Iteration Notes
 
-Snapshot: `gradient-boosting-cross-market-spread-prediction-v4b.pdf`
+Snapshot: `versions/gradient-boosting-cross-market-spread-prediction-v4b.pdf`
 
 ## Scope
 
-Introduction rewrite to a 5-paragraph ICAIF-style blueprint (domain hook → mechanical-rule failure → next-z LightGBM insight → methodological/live evaluation contract → Contributions checklist), committed piecewise as five intro-only commits, then this PDF + notes snapshot.
+Introduction rewrite to a 5-paragraph ICAIF-style blueprint (domain hook ? mechanical-rule failure ? next-z LightGBM insight ? methodological/live evaluation contract ? Contributions checklist), committed piecewise as five intro-only commits, then this PDF + notes snapshot.
 
 ## Relation to v4
 
-- **v4**: related-work-only rewrite snapshot (`gradient-boosting-cross-market-spread-prediction-v4.pdf`).
+- **v4**: related-work-only rewrite snapshot (`versions/gradient-boosting-cross-market-spread-prediction-v4.pdf`).
 - **v4b**: post-introduction rewrite (keeps v4 as the related-work-only checkpoint).
 
 ## Intro structure (final)
