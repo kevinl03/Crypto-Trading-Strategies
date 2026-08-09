@@ -5,13 +5,13 @@
 
 Cryptocurrency markets are fragmented across dozens of centralized exchanges (CEXs), each with independent order books, heterogeneous fees, liquidity, and matching-engine latencies. Unlike equities, there is no consolidated tape that forces immediate price convergence. The result is recurrent cross-exchange price dislocations for identical assets~\cite{makarov2020trading}. These gaps present economically meaningful opportunities for same-asset statistical arbitrage, especially among high-volatility coins where short-lived Law-of-One-Price deviations appear at approximately one-minute granularity.
 
-\begin{figure*}[t]
+\begin{figure}[t]
 \centering
-\includegraphics[width=\textwidth]{figures/Trading_Diagram_Visual.jpg}
+\includegraphics[width=\columnwidth]{figures/Visual-Architecture.png}
 \caption{End-to-end paper protocol: live multi-venue inputs $\rightarrow$ cross-exchange spread and rolling z-score ($w{=}300$) $\rightarrow$ 68-D features (AR lags dominant) $\rightarrow$ LightGBM forecast $\hat{z}_{t+1}$ ($H{=}1$) $\rightarrow$ confidence gate $|\hat{z}|\geq\tau{=}0.9$ $\rightarrow$ selective trade and $t{+}1$ settlement in z-units.}
 \Description{Horizontal five-stage pipeline diagram. Stage 1: live mid prices and microstructure from six CEXs for 23 assets. Stage 2: spread in bps and rolling z-score with window 300. Stage 3: 68-D feature vector with primary AR lags and lighter microstructure features. Stage 4: LightGBM regressor predicting next-snapshot z. Stage 5: gate at absolute prediction at least 0.9, then abstain or execute with sign of prediction and settle at t+1.}
 \label{fig:trading_pipeline}
-\end{figure*}
+\end{figure}
 
 Existing high-frequency crypto pairs-trading systems largely treat the rolling z-score of a spread as a mechanical entry/exit rule: trade when $|z_t|$ exceeds a fixed threshold and exit on reversion~\cite{fil2020pairs, tadi2021evaluation, ko2023pairs, palazzi2025trading}. However, this design is not as reliable in the cross-exchange setting. At minute scale, spreads sometimes revert quickly and sometimes persist through funding or liquidity regimes; a fixed threshold always bets on mean reversion without understanding the broader context of the exchange dynamics at that moment. Venues also differ systematically in fees, depth, and latency, so a global rule treats every (coin, exchange-pair) identically, while missing potential systematic differences between exchanges. Checking $z_t$ at every snapshot is cheap, but it leaves these two sources of structure unused, which may in turn impact the quality of both the direction and magnitude of the short-horizon forecasts.
 
