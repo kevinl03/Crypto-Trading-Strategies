@@ -56,6 +56,13 @@ class Config:
     poll_sec: float = 15.0
     max_open: int = 50
     fee_bps_per_leg: float = 4.0  # rough taker fee; informational only
+    # Fee-aware gate (off by default — enable with --enable-fee-gate).
+    enable_fee_gate: bool = False
+    round_trip_fee_bps: float = 16.0
+    min_expected_gross_bps: float | None = None  # default = round_trip_fee_bps when gating
+    pred_bps_calib_path: Path | None = None
+    abs_pred_floor: float | None = None  # fallback if calib has a recommended floor
+    pred_bps_calib: list = field(default_factory=list)  # loaded knots
 
 
 @dataclass
@@ -89,6 +96,45 @@ class State:
     # How many in-memory rows have already been appended to disk shards.
     n_signals_flushed: int = 0
     n_closed_flushed: int = 0
+    n_skip_tau: int = 0
+    n_skip_fee_gate: int = 0
+    n_skip_abs_floor: int = 0
+
+
+def load_pred_bps_calib(path: Path | None) -> list[dict]:
+    """Load |pred| → E[gross_bps] knots from fee_aware_trade_gate.py output."""
+    if path is None or not path.exists():
+        return []
+    doc = json.loads(path.read_text(encoding="utf-8"))
+    knots = doc.get("knots") or doc.get("pred_bps_calib") or []
+    return sorted(
+        (
+            {
+                "abs_pred_min": float(k["abs_pred_min"]),
+                "expected_gross_bps": float(k["expected_gross_bps"]),
+            }
+            for k in knots
+            if "abs_pred_min" in k and "expected_gross_bps" in k
+        ),
+        key=lambda r: r["abs_pred_min"],
+    )
+
+
+def expected_gross_bps(abs_pred: float, calib: list[dict]) -> float:
+    """Interpolate expected gross bps from calibration knots."""
+    if not calib:
+        return float("nan")
+    if abs_pred <= calib[0]["abs_pred_min"]:
+        return float(calib[0]["expected_gross_bps"])
+    for i in range(1, len(calib)):
+        if abs_pred <= calib[i]["abs_pred_min"]:
+            x0, y0 = calib[i - 1]["abs_pred_min"], calib[i - 1]["expected_gross_bps"]
+            x1, y1 = calib[i]["abs_pred_min"], calib[i]["expected_gross_bps"]
+            if x1 == x0:
+                return float(y1)
+            t = (abs_pred - x0) / (x1 - x0)
+            return float(y0 + t * (y1 - y0))
+    return float(calib[-1]["expected_gross_bps"])
 
 
 def utc_now() -> str:
@@ -519,7 +565,28 @@ def score_snapshot(
         state.signals.append(sig)
 
         if abs(pred) < cfg.entry_tau:
+            state.n_skip_tau += 1
             continue
+        if cfg.enable_fee_gate:
+            # Optional hard floor from offline calibration (cleared fee in-sample).
+            if cfg.abs_pred_floor is not None and abs(pred) < cfg.abs_pred_floor:
+                state.n_skip_abs_floor += 1
+                continue
+            min_edge = (
+                cfg.min_expected_gross_bps
+                if cfg.min_expected_gross_bps is not None
+                else cfg.round_trip_fee_bps
+            )
+            if cfg.pred_bps_calib:
+                exp_bps = expected_gross_bps(abs(pred), cfg.pred_bps_calib)
+                sig["expected_gross_bps"] = exp_bps
+                if not (exp_bps == exp_bps) or exp_bps < min_edge:
+                    state.n_skip_fee_gate += 1
+                    continue
+            elif cfg.abs_pred_floor is None:
+                # Enabled but no calib and no floor → refuse entries (cannot estimate edge).
+                state.n_skip_fee_gate += 1
+                continue
         if (coin, pair) in open_keys:
             continue
         if len(state.open_bets) >= cfg.max_open:
@@ -571,6 +638,15 @@ def save_checkpoint(state: State, cfg: Config, force_summary: bool = False) -> N
 
 def summarize(state: State, cfg: Config) -> dict:
     closed = state.closed
+    base_meta = {
+        "n_skip_tau": state.n_skip_tau,
+        "n_skip_fee_gate": state.n_skip_fee_gate,
+        "n_skip_abs_floor": state.n_skip_abs_floor,
+        "enable_fee_gate": cfg.enable_fee_gate,
+        "round_trip_fee_bps": cfg.round_trip_fee_bps,
+        "min_expected_gross_bps": cfg.min_expected_gross_bps,
+        "abs_pred_floor": cfg.abs_pred_floor,
+    }
     if not closed:
         return {
             "n_closed": 0,
@@ -581,6 +657,7 @@ def summarize(state: State, cfg: Config) -> dict:
             "run_dir": str(cfg.run_dir),
             "entry_tau": cfg.entry_tau,
             "updated_at": utc_now(),
+            **base_meta,
         }
     hits = [t["dir_hit"] for t in closed if t.get("exit_z") is not None]
     pnls = [t["pnl_proxy"] for t in closed if t.get("pnl_proxy") == t.get("pnl_proxy")]
@@ -598,6 +675,7 @@ def summarize(state: State, cfg: Config) -> dict:
         "entry_tau": cfg.entry_tau,
         "horizon": HORIZON,
         "updated_at": utc_now(),
+        **base_meta,
     }
 
 
@@ -638,6 +716,35 @@ def main() -> None:
     ap.add_argument("--poll-sec", type=float, default=15.0)
     ap.add_argument("--output-dir", type=Path, default=None)
     ap.add_argument("--max-open", type=int, default=50)
+    ap.add_argument(
+        "--enable-fee-gate",
+        action="store_true",
+        help="Require expected gross bps (from calib) >= min-expected-gross-bps before entry",
+    )
+    ap.add_argument(
+        "--round-trip-fee-bps",
+        type=float,
+        default=16.0,
+        help="Assumed round-trip fee in bps (default 16 = 4 legs x 4 bps)",
+    )
+    ap.add_argument(
+        "--min-expected-gross-bps",
+        type=float,
+        default=None,
+        help="Minimum calibrated E[gross_bps]; default = round-trip-fee-bps when fee gate on",
+    )
+    ap.add_argument(
+        "--pred-bps-calib",
+        type=Path,
+        default=None,
+        help="JSON from scripts/fee_aware_trade_gate.py (pred_bps_calib.json)",
+    )
+    ap.add_argument(
+        "--abs-pred-floor",
+        type=float,
+        default=None,
+        help="Optional hard |pred| floor (overrides calib recommended floor if set)",
+    )
     args = ap.parse_args()
 
     model_path = args.model.resolve()
@@ -651,6 +758,26 @@ def main() -> None:
 
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     out = args.output_dir or (ROOT / "data" / "paper_trading" / f"lgbm_{stamp}")
+
+    calib_path = args.pred_bps_calib
+    if calib_path is None and args.enable_fee_gate:
+        default_calib = ROOT / "data" / "paper_trading" / "July31st_8_hr" / "pred_bps_calib.json"
+        if default_calib.exists():
+            calib_path = default_calib
+    calib_knots = load_pred_bps_calib(calib_path.resolve() if calib_path else None)
+    abs_floor = args.abs_pred_floor
+    if abs_floor is None and calib_path and Path(calib_path).exists():
+        try:
+            doc = json.loads(Path(calib_path).read_text(encoding="utf-8"))
+            if doc.get("recommended_abs_pred_floor_fee16") is not None:
+                abs_floor = float(doc["recommended_abs_pred_floor_fee16"])
+        except (json.JSONDecodeError, TypeError, ValueError):
+            pass
+
+    min_edge = args.min_expected_gross_bps
+    if args.enable_fee_gate and min_edge is None:
+        min_edge = args.round_trip_fee_bps
+
     cfg = Config(
         model_path=model_path,
         run_dir=run_dir,
@@ -659,6 +786,12 @@ def main() -> None:
         entry_tau=args.entry_tau,
         poll_sec=args.poll_sec,
         max_open=args.max_open,
+        enable_fee_gate=bool(args.enable_fee_gate),
+        round_trip_fee_bps=float(args.round_trip_fee_bps),
+        min_expected_gross_bps=min_edge,
+        pred_bps_calib_path=calib_path.resolve() if calib_path else None,
+        abs_pred_floor=abs_floor,
+        pred_bps_calib=calib_knots,
     )
     cfg.output_dir.mkdir(parents=True, exist_ok=True)
     # Fresh in-memory state always replays the collector from offset 0. Archive any
@@ -692,6 +825,12 @@ def main() -> None:
         "zscore_window": ZSCORE_WINDOW,
         "started_at": prev_cfg.get("started_at") or utc_now(),
         "jsonl_shard_max_lines": JSONL_SHARD_MAX_LINES,
+        "enable_fee_gate": cfg.enable_fee_gate,
+        "round_trip_fee_bps": cfg.round_trip_fee_bps,
+        "min_expected_gross_bps": cfg.min_expected_gross_bps,
+        "abs_pred_floor": cfg.abs_pred_floor,
+        "pred_bps_calib": str(cfg.pred_bps_calib_path) if cfg.pred_bps_calib_path else None,
+        "n_calib_knots": len(cfg.pred_bps_calib),
     }
     for key in ("hours_planned_total", "deadline_utc", "extended_at"):
         if key in prev_cfg:
@@ -709,6 +848,15 @@ def main() -> None:
     print(f"  output:  {cfg.output_dir}", flush=True)
     print(f"  hours:   {cfg.hours}  entry_tau={cfg.entry_tau}  horizon={HORIZON}", flush=True)
     print(f"  features:{len(feature_names)}  cats={ [len(c) for c in cat_maps] }", flush=True)
+    if cfg.enable_fee_gate:
+        print(
+            f"  fee_gate: ON  rt_fee={cfg.round_trip_fee_bps}  "
+            f"min_E_gross={cfg.min_expected_gross_bps}  "
+            f"abs_floor={cfg.abs_pred_floor}  calib_knots={len(cfg.pred_bps_calib)}",
+            flush=True,
+        )
+    else:
+        print("  fee_gate: OFF (pass --enable-fee-gate to require E[gross_bps] >= fee)", flush=True)
     print("=" * 60, flush=True)
 
     last_ckpt = 0.0
