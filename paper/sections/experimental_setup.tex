@@ -17,19 +17,9 @@ All collection windows before July~25, 2026 form the training set; July~25--28 f
 
 \subsection{Live Paper-Trading Protocol}
 
-For live validation, we run independent paper-trading campaigns that process incoming collector data in real time with no access to future snapshots. Capacity is $\text{max\_open} = 50$. The paper confidence gate is $\tau{=}0.9$ (Section~\ref{sec:ablation}); campaigns were deployed with live entry $|\hat{z}| \geq 0.5$, and $\tau{=}0.9$ live metrics are post-hoc filters on those filled books unless a capacity-matched baseline comparison says otherwise.
+For live validation, we run independent paper-trading campaigns that process incoming collector data in real time with no access to future snapshots. Capacity is $\text{max\_open} = 50$. The paper confidence gate is $\tau{=}0.9$ (Section~\ref{sec:ablation}).
 
-\subsubsection{Campaign A: Jul~30 (weekday)}
-
-\begin{itemize}
-    \item \textbf{Model}: 73-feature variant with orderbook fix (\texttt{outputs\_ob\_fix}).
-    \item \textbf{Horizon}: $H = 2$ (predict 2~snapshots ahead).
-    \item \textbf{Z-score window}: 120~snapshots.
-    \item \textbf{Duration}: approximately 8~hours (Wednesday/Thursday).
-    \item \textbf{Predictions scored}: 49,310 total; 5,054 filtered entries.
-\end{itemize}
-
-\subsubsection{Campaign B: Jul~31 (weekend)}
+\subsubsection{Campaign A: Jul~31}
 
 \begin{itemize}
     \item \textbf{Model}: 68-feature prediction model (\texttt{statarb\_lgbm.txt}).
@@ -37,19 +27,18 @@ For live validation, we run independent paper-trading campaigns that process inc
     \item \textbf{Z-score window}: 300~snapshots.
     \item \textbf{Duration}: approximately 8~hours of useful data (collector ran for 264~snapshots).
     \item \textbf{Warmup}: predictions become active after $\text{MIN\_PERIODS} = 90$ snapshots (approximately 2.5--3~hours).
-    \item \textbf{Predictions scored}: 58,995 total; 8,775 filtered entries.
-    \item \textbf{Settled trades}: 7,973 closed; 50 still open at session end.
+    \item \textbf{Predictions scored}: 58,995 total; 2,026 rows with $|\hat{z}|\geq 0.9$.
 \end{itemize}
 
-\subsubsection{Campaign C: Aug~4--7 (\textasciitilde72h)}
+\subsubsection{Campaign B: Aug~4--7 (\textasciitilde72h)}
 
 \begin{itemize}
-    \item \textbf{Model}: same 68-feature, $H{=}1$, $w{=}300$ policy as Campaign~B.
+    \item \textbf{Model}: same 68-feature, $H{=}1$, $w{=}300$ policy as Campaign~A.
     \item \textbf{Duration}: $\approx$72.9~hours of active trading (50,690 closed trades; 1.01M scored predictions).
     \item \textbf{Role}: multi-day live stress test; primary $\tau{=}0.9$ metrics are the post-hoc paper-protocol subset of this book (Section~\ref{sec:ablation}).
 \end{itemize}
 
-Campaigns~A/B are short weekday/weekend stress tests; Campaign~C extends the same live deployment settings over three days. We present them as complementary live evidence rather than a controlled factorial experiment.
+Campaign~A is a short live stress test; Campaign~B extends the same live deployment settings over three days. We present them as complementary live evidence rather than a controlled factorial experiment.
 
 \subsection{Baseline Definitions}
 
@@ -59,14 +48,14 @@ On every row where the model generates a prediction, we also record the naive fo
 
 \subsubsection{Mechanical z-score baselines}
 
-We replay two mechanical trading rules on the Jul~31 signal panel under the same capacity constraints ($\text{max\_open} = 50$) and settlement proxy as the model:
+We replay two mechanical trading rules on the Jul~31 signal panel under the same capacity constraints ($\text{max\_open} = 50$), settlement proxy, and paper gate $\tau{=}0.9$ as the model:
 
 \begin{itemize}
-    \item \textbf{Persistence}: enter when $|z_t| \geq 0.5$, direction $= \text{sign}(z_t)$.
-    \item \textbf{Mean-reversion}: enter when $|z_t| \geq 0.5$, direction $= -\text{sign}(z_t)$.
+    \item \textbf{Persistence}: enter when $|z_t| \geq 0.9$, direction $= \text{sign}(z_t)$.
+    \item \textbf{Mean-reversion}: enter when $|z_t| \geq 0.9$, direction $= -\text{sign}(z_t)$.
 \end{itemize}
 
-These represent the two canonical directions a rule-based z-score system can take: betting the spread continues (persistence) or reverts (classical pairs trading). Both settle at $t+1$ with $\text{pnl\_proxy} = \text{direction} \times z_{t+1}$, identical to the model's settlement.
+Scarce slots are filled by ranking $|\hat{z}|$ (model) or $|z_t|$ (mechanical). These represent the two canonical directions a rule-based z-score system can take: betting the spread continues (persistence) or reverts (classical pairs trading). Both settle at $t+1$ with $\text{pnl\_proxy} = \text{direction} \times z_{t+1}$, identical to the model's settlement.
 
 \subsection{Reproducibility}
 

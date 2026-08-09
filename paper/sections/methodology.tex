@@ -119,7 +119,7 @@ Early stopping selects iteration~74 out of 2,500 maximum rounds, indicating that
 At each live snapshot, the model generates a prediction $\hat{z}_{t+1}$ for every (coin, exchange-pair) observation. The trading policy is:
 
 \begin{enumerate}
-    \item \textbf{Entry}: open a position if $|\hat{z}_{t+1}| \geq \tau$ and the (coin, pair) slot is not already occupied. The paper protocol uses $\tau{=}0.9$ (Section~\ref{sec:ablation}); live campaigns were deployed at $\tau{=}0.5$ for coverage, with $\tau{=}0.9$ metrics reported as post-hoc abstention on those books.
+    \item \textbf{Entry}: open a position if $|\hat{z}_{t+1}| \geq \tau$ and the (coin, pair) slot is not already occupied. The paper protocol uses $\tau{=}0.9$ (Section~\ref{sec:ablation}).
     \item \textbf{Direction}: $\text{sign}(\hat{z}_{t+1})$. The model predicts whether the spread z-score will be positive or negative at $t+1$ and bets accordingly.
     \item \textbf{Capacity}: at most $\text{max\_open} = 50$ positions open simultaneously, enforced by a first-come queue.
     \item \textbf{Settlement}: each position settles at $t+H$ (one snapshot later for $H=1$). The proxy profit is $\text{pnl\_proxy} = \text{direction} \times z_{t+H}$.
