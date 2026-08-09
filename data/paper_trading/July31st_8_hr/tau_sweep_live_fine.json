@@ -1,0 +1,211 @@
+{
+  "session": "C:\\Users\\Kev\\repos\\stochastic-spread-modeling-analysis\\data\\paper_trading\\July31st_8_hr",
+  "horizon": 1,
+  "n_signals": 59340,
+  "n_aligned": 58995,
+  "n_closed_live": 7973,
+  "signal_filter": [
+    {
+      "tau": 0.75,
+      "n_signal_entries": 3609,
+      "fire_rate": 0.061174675819984745,
+      "diracc": 0.828761429758936,
+      "r2": 0.4659452000318721,
+      "mean_pnl_proxy": 1.0381146382231126,
+      "total_pnl_proxy": 3746.5557293472134,
+      "sharpe_per_trade": 0.9146421846168887,
+      "naive_diracc": 0.826821834303131,
+      "naive_r2": 0.3447441673497479,
+      "naive_mean_pnl_proxy": 0.975537666749771
+    },
+    {
+      "tau": 0.8,
+      "n_signal_entries": 2982,
+      "fire_rate": 0.05054665649631325,
+      "diracc": 0.8356807511737089,
+      "r2": 0.4817654721808846,
+      "mean_pnl_proxy": 1.0954766464872543,
+      "total_pnl_proxy": 3266.711359824992,
+      "sharpe_per_trade": 0.9534866745459398,
+      "naive_diracc": 0.829644533869886,
+      "naive_r2": 0.3708207880992923,
+      "naive_mean_pnl_proxy": 1.0178795684416795
+    },
+    {
+      "tau": 0.85,
+      "n_signal_entries": 2452,
+      "fire_rate": 0.04156284430883973,
+      "diracc": 0.8454323001631321,
+      "r2": 0.4974738211483074,
+      "mean_pnl_proxy": 1.1555527701592792,
+      "total_pnl_proxy": 2833.4153924305524,
+      "sharpe_per_trade": 0.9932798386622977,
+      "naive_diracc": 0.8364600326264274,
+      "naive_r2": 0.40019995323644586,
+      "naive_mean_pnl_proxy": 1.0692420750003104
+    },
+    {
+      "tau": 0.9,
+      "n_signal_entries": 2026,
+      "fire_rate": 0.034341893380794984,
+      "diracc": 0.8489634748272458,
+      "r2": 0.513952568762043,
+      "mean_pnl_proxy": 1.19536311282848,
+      "total_pnl_proxy": 2421.8056665905006,
+      "sharpe_per_trade": 1.0239574761310366,
+      "naive_diracc": 0.8435340572556762,
+      "naive_r2": 0.4240640712431606,
+      "naive_mean_pnl_proxy": 1.1224817733439447
+    },
+    {
+      "tau": 0.95,
+      "n_signal_entries": 1708,
+      "fire_rate": 0.028951606068310872,
+      "diracc": 0.8495316159250585,
+      "r2": 0.5163405180340626,
+      "mean_pnl_proxy": 1.2227698171893704,
+      "total_pnl_proxy": 2088.4908477594445,
+      "sharpe_per_trade": 1.026039816613356,
+      "naive_diracc": 0.8471896955503513,
+      "naive_r2": 0.43014049269634735,
+      "naive_mean_pnl_proxy": 1.1633850536602366
+    },
+    {
+      "tau": 1.0,
+      "n_signal_entries": 1426,
+      "fire_rate": 0.024171539961013646,
+      "diracc": 0.85273492286115,
+      "r2": 0.5344650945724325,
+      "mean_pnl_proxy": 1.2649497200011472,
+      "total_pnl_proxy": 1803.818300721636,
+      "sharpe_per_trade": 1.071763145458816,
+      "naive_diracc": 0.8492286115007013,
+      "naive_r2": 0.4408975992753781,
+      "naive_mean_pnl_proxy": 1.1951384573067891
+    }
+  ],
+  "live_trades_posthoc": [
+    {
+      "tau": 0.75,
+      "n_closed": 3262,
+      "diracc_closed": 0.8298589822194973,
+      "mean_pnl_closed": 1.034372538175897,
+      "total_pnl_closed": 3374.123219529776,
+      "sharpe_per_trade_closed": 0.914128758622458,
+      "sharpe_A_closed_hourly": 2.226376603764597,
+      "note": "posthoc filter on live closes (book was filled at lower tau)"
+    },
+    {
+      "tau": 0.8,
+      "n_closed": 2688,
+      "diracc_closed": 0.8377976190476191,
+      "mean_pnl_closed": 1.096430180527464,
+      "total_pnl_closed": 2947.2043252578237,
+      "sharpe_per_trade_closed": 0.9571674182491217,
+      "sharpe_A_closed_hourly": 2.173537994910898,
+      "note": "posthoc filter on live closes (book was filled at lower tau)"
+    },
+    {
+      "tau": 0.85,
+      "n_closed": 2216,
+      "diracc_closed": 0.8465703971119134,
+      "mean_pnl_closed": 1.1517405851776528,
+      "total_pnl_closed": 2552.2571367536784,
+      "sharpe_per_trade_closed": 0.9889847516765323,
+      "sharpe_A_closed_hourly": 2.123204871389272,
+      "note": "posthoc filter on live closes (book was filled at lower tau)"
+    },
+    {
+      "tau": 0.9,
+      "n_closed": 1826,
+      "diracc_closed": 0.8493975903614458,
+      "mean_pnl_closed": 1.1876982635342184,
+      "total_pnl_closed": 2168.737029213483,
+      "sharpe_per_trade_closed": 1.015025992061592,
+      "sharpe_A_closed_hourly": 2.0388570475811427,
+      "note": "posthoc filter on live closes (book was filled at lower tau)"
+    },
+    {
+      "tau": 0.95,
+      "n_closed": 1542,
+      "diracc_closed": 0.8482490272373541,
+      "mean_pnl_closed": 1.2043698160254728,
+      "total_pnl_closed": 1857.138256311279,
+      "sharpe_per_trade_closed": 1.006631835800689,
+      "sharpe_A_closed_hourly": 1.97693655528759,
+      "note": "posthoc filter on live closes (book was filled at lower tau)"
+    },
+    {
+      "tau": 1.0,
+      "n_closed": 1283,
+      "diracc_closed": 0.8519095869056897,
+      "mean_pnl_closed": 1.2492902331407307,
+      "total_pnl_closed": 1602.8393691195577,
+      "sharpe_per_trade_closed": 1.0560928109997796,
+      "sharpe_A_closed_hourly": 1.9855810663095368,
+      "note": "posthoc filter on live closes (book was filled at lower tau)"
+    }
+  ],
+  "sim_h1_fill": [
+    {
+      "tau": 0.75,
+      "n_closed": 3609,
+      "diracc": 0.828761429758936,
+      "mean_pnl_proxy": 1.0381146382231126,
+      "total_pnl_proxy": 3746.555729347213,
+      "sharpe_per_trade": 0.9146421846168887,
+      "sharpe_A": 2.111331376351314,
+      "note": "sim H=1 |pred| rank fill max_open=50"
+    },
+    {
+      "tau": 0.8,
+      "n_closed": 2982,
+      "diracc": 0.8356807511737089,
+      "mean_pnl_proxy": 1.0954766464872543,
+      "total_pnl_proxy": 3266.7113598249925,
+      "sharpe_per_trade": 0.9534866745459398,
+      "sharpe_A": 2.0297706786937337,
+      "note": "sim H=1 |pred| rank fill max_open=50"
+    },
+    {
+      "tau": 0.85,
+      "n_closed": 2452,
+      "diracc": 0.8454323001631321,
+      "mean_pnl_proxy": 1.1555527701592792,
+      "total_pnl_proxy": 2833.4153924305524,
+      "sharpe_per_trade": 0.9932798386622977,
+      "sharpe_A": 1.9772338153235935,
+      "note": "sim H=1 |pred| rank fill max_open=50"
+    },
+    {
+      "tau": 0.9,
+      "n_closed": 2026,
+      "diracc": 0.8489634748272458,
+      "mean_pnl_proxy": 1.19536311282848,
+      "total_pnl_proxy": 2421.8056665905006,
+      "sharpe_per_trade": 1.0239574761310366,
+      "sharpe_A": 1.905110425900882,
+      "note": "sim H=1 |pred| rank fill max_open=50"
+    },
+    {
+      "tau": 0.95,
+      "n_closed": 1708,
+      "diracc": 0.8495316159250585,
+      "mean_pnl_proxy": 1.2227698171893704,
+      "total_pnl_proxy": 2088.4908477594445,
+      "sharpe_per_trade": 1.026039816613356,
+      "sharpe_A": 1.8385874977535221,
+      "note": "sim H=1 |pred| rank fill max_open=50"
+    },
+    {
+      "tau": 1.0,
+      "n_closed": 1426,
+      "diracc": 0.85273492286115,
+      "mean_pnl_proxy": 1.2649497200011472,
+      "total_pnl_proxy": 1803.818300721636,
+      "sharpe_per_trade": 1.071763145458816,
+      "sharpe_A": 1.8069431399658875,
+      "note": "sim H=1 |pred| rank fill max_open=50"
+    }
+  ]
+}
