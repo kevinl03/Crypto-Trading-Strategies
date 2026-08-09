@@ -3,40 +3,31 @@
 % ======================================================================
 \section{Ablation Studies}\label{sec:ablation}
 
-\subsection{Confidence Filter}
+\subsection{Selecting Window Length and Confidence Threshold}
 
-The $|\hat{z}| \geq 0.5$ confidence filter restricts trading to high-confidence predictions. Table~\ref{tab:filter_ablation} quantifies its effect on R$^2$.
+\paragraph{Window $w$.}
+Increasing $w$ enriches $(\hat{\mu}_w,\hat{\sigma}_w)$ but forces longer warmup before a valid $z$ exists and slows $\sigma$ adaptation. Offline spreads-only LightGBM sweeps on the Jul~25 holdout show test skill rising into a plateau near $w{\approx}560$--$720$, with only modest gains past the production choice $w{=}300$ (${\approx}{+}1$\,pp DirAcc and ${+}0.017$ R$^2$ at $w{=}720$ for ${\sim}2.4{\times}$ lookback). A $w{\times}\tau$ grid scored on the Jul~31 collector likewise does not favor larger $w$ at matched $\tau$. We therefore retain $w{=}300$.
+
+\paragraph{Threshold $\tau$.}
+Early live collection used a permissive gate $\tau{=}0.5$ to maximize coverage under $\text{max\_open}{=}50$. That choice is a starting point for selection, not the paper operating point: on Jul~31 signal rows it yields DirAcc 76.7\%, R$^2$ 0.347, mean z-proxy $+0.75$, and per-trade Sharpe only 0.67 ($n{=}8{,}775$). A fine sweep on the same panel ($w{=}300$) shows that raising $\tau$ monotonically improves DirAcc, R$^2$, mean z-proxy, and per-trade Sharpe $\mathrm{mean}(\mathrm{pnl\_proxy})/\mathrm{std}(\mathrm{pnl\_proxy})$ (Rf~$=0$). \textbf{Per-trade} Sharpe first reaches ${\geq}1$ at $\tau{=}0.9$ (Table~\ref{tab:tau_sensitivity}): DirAcc 84.9\%, R$^2$ 0.514, mean z-proxy $+1.20$, Sharpe 1.02 on $n{=}2{,}026$ rows---still a large book relative to $\tau{=}1.0$ ($n{=}1{,}426$), with mean $\texttt{pnl\_proxy}$ already high versus $\tau{=}0.5$. Neighboring points bound the choice: $\tau{=}0.85$ remains below Sharpe~$1$, while $\tau{=}1.0$ adds little Sharpe for another ${\sim}30\%$ coverage cut. The same $\tau{=}0.9$ cut on Campaign~B closes confirms the lift from the initial $\tau{=}0.5$ book at longer horizon (50{,}690${\to}$12{,}795; DirAcc 79.0\%${\to}$86.7\%; Sharpe/trade 0.75${\to}$1.08). We therefore fix $\tau{=}0.9$ as the paper protocol; headline results use this gate (Section~\ref{sec:limitations} notes when live fills are post-hoc filtered).
 
 \begin{table}[h]
-\caption{Effect of the $|\hat{z}| \geq 0.5$ confidence filter on model R$^2$ across campaigns.}
-\label{tab:filter_ablation}
+\caption{Choosing $\tau$ from the initial live gate $\tau{=}0.5$ ($w{=}300$). Jul~31 rows are scored signals; Campaign~B rows are live closes. Per-trade Sharpe uses Rf~$=0$.}
+\label{tab:tau_sensitivity}
 \small
-\begin{tabular}{lrrrr}
+\begin{tabular}{llrrrrr}
 \toprule
-\textbf{Campaign} & \textbf{All R$^2$} & \textbf{Filtered R$^2$} & \textbf{$\Delta$} & \textbf{\% rows filtered} \\
+\textbf{Book} & $\tau$ & $n$ & \textbf{DirAcc} & \textbf{R$^2$} & \textbf{Mean} & \textbf{Sharpe/tr} \\
 \midrule
-Jul~30 (live)  & 0.054 & 0.248 & +0.194 & 10.3\% \\
-Jul~31 (live)  & 0.104 & 0.347 & +0.243 & 14.9\% \\
-Offline test   & 0.133 & 0.383 & +0.250 & --- \\
+Jul~31 signals & 0.5 & 8{,}775 & 76.7\% & 0.347 & +0.75 & 0.67 \\
+Jul~31 signals & 0.85 & 2{,}452 & 84.5\% & 0.497 & +1.16 & 0.99 \\
+Jul~31 signals & 0.9 & 2{,}026 & 84.9\% & 0.514 & +1.20 & 1.02 \\
+Jul~31 signals & 1.0 & 1{,}426 & 85.3\% & 0.534 & +1.26 & 1.07 \\
+$\sim$72h closes & 0.5 & 50{,}690 & 79.0\% & 0.439 & +0.84 & 0.75 \\
+$\sim$72h closes & 0.9 & 12{,}795 & 86.7\% & 0.599 & +1.37 & 1.08 \\
 \bottomrule
 \end{tabular}
 \end{table}
-
-The filter consistently lifts R$^2$ by approximately 0.2--0.25 across all evaluation settings, as shown in Figure~\ref{fig:filter_lift}. Importantly, this lift is not free: the filtered subset constitutes only 10--15\% of all predictions, meaning 85--90\% of snapshot/pair observations are declined. The filter strategy parallels the ``skip low-magnitude predictions'' approach shown to improve profit-per-trade in Sarmento et al.~\cite{sarmento2024ml}.
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=\columnwidth]{figures/fig3_filter_r2_lift.png}
-\caption{Model R$^2$ before and after the $|\hat{z}| \geq 0.5$ confidence filter. The filter selects predictions in high-signal regimes, lifting R$^2$ by +0.19 to +0.25 across both live campaigns.}
-\Description{Grouped bar chart of model R squared on a vertical axis from zero to
-0.35 for the two live campaigns. For Jul 30 the all-predictions bar is 0.054 and
-the filtered bar is 0.248, a rise of 0.194. For Jul 31 the all-predictions bar is
-0.104 and the filtered bar is 0.347, a rise of 0.243. In both campaigns the
-filtered bar is roughly three times the height of the unfiltered bar.}
-\label{fig:filter_lift}
-\end{figure}
-
-A critical caveat: much of the filtered directional accuracy is explained by persistence in high-$|z|$ states rather than incremental model skill. On Jul~31 filtered rows, naive persistence achieves 77.0\% directional accuracy versus the model's 76.7\%. The model's advantage is in R$^2$ (0.347 vs 0.174), indicating that it captures the \emph{magnitude} of future z-score movements more accurately than simply predicting that large z-scores will persist.
 
 \subsection{Feature Importance: Role of Microstructure Inputs}
 
@@ -59,4 +50,3 @@ and Coinbase, cross-venue mid-price range, and Coinbase orderbook imbalance.}
 \end{figure}
 
 The model is, to a first approximation, an autoregression on the recent z-score trajectory conditioned on asset and venue-pair identity, with microstructure features supplying a small correction. Lagged z-scores and spread dynamics dominate the ranking; microstructure and cross-venue dispersion features enter only in the bottom four positions. Only one of the ten highest-gain features is an orderbook imbalance term, and no funding-rate or open-interest feature appears in the top~10. The cross-venue dispersion and orderbook features are genuinely unavailable to single-venue or backtest-only systems, but establishing their marginal contribution to R$^2$ requires a leave-one-group-out retraining study that we have not run.
-

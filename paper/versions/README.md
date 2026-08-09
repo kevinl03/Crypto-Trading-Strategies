@@ -1,9 +1,9 @@
 ﻿# Paper version snapshots
 
-**Current checkpoint:** `v12-gradient-boosting-cross-market-spread-prediction.pdf`  
-(Sections 1–2: Introduction + Related Work.)
+**Current checkpoint:** [`../W-tau-gradient-boosting-cross-market-spread-prediction.pdf`](../W-tau-gradient-boosting-cross-market-spread-prediction.pdf)  
+(W=300 / τ=0.9 rationale integrated on top of main’s rewritten front matter.)
 
-The live Tectonic build output remains `../gradient-boosting-cross-market-spread-prediction.pdf` (gitignored).
+Prior checkpoint: `v12-gradient-boosting-cross-market-spread-prediction.pdf` (Sections 1–2).
 
 Older PDF checkpoints and iteration notes live under [`archive/`](archive/).
 
@@ -12,4 +12,5 @@ Older PDF checkpoints and iteration notes live under [`archive/`](archive/).
 ```powershell
 cd paper
 tectonic gradient-boosting-cross-market-spread-prediction.tex
+# then rename/copy output to W-tau-gradient-boosting-cross-market-spread-prediction.pdf if committing
 ```
