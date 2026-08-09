@@ -3,7 +3,7 @@
 % ======================================================================
 \section{Ablation Studies}\label{sec:ablation}
 
-\subsection{Confidence Filter at $\tau=0.5$}
+\subsection{Confidence Filter at tau~=~0.5}
 
 Live campaigns enter when $|\hat{z}| \geq 0.5$---a magnitude gate in rolling-$\sigma$ units (Section~\ref{sec:method}). Table~\ref{tab:filter_ablation} shows that this already-restrictive filter lifts R$^2$ by approximately 0.2--0.25 relative to scoring all predictions, while admitting only 10--15\% of rows (Figure~\ref{fig:filter_lift}). The strategy parallels abstention on low-magnitude forecasts in Sarmento et al.~\cite{sarmento2024ml}.
 
@@ -36,7 +36,7 @@ filtered bar is roughly three times the height of the unfiltered bar.}
 
 A critical caveat at $\tau{=}0.5$: much of the filtered directional accuracy is explained by persistence in high-$|z|$ states. On Jul~31 filtered rows, naive persistence achieves 77.0\% DirAcc versus the model's 76.7\%; the model's advantage is in R$^2$ (0.347 vs 0.174).
 
-\subsection{Selecting $w$ and a Stricter $\tau$}
+\subsection{Selecting Window Length and a Stricter Confidence Threshold}
 
 \paragraph{Window $w$.}
 Increasing $w$ enriches $(\hat{\mu}_w,\hat{\sigma}_w)$ but forces longer warmup before a valid $z$ exists and slows $\sigma$ adaptation. Offline spreads-only LightGBM sweeps on the Jul~25 holdout show test skill rising into a plateau near $w{\approx}560$--$720$, with only modest gains past the production choice $w{=}300$ (${\approx}{+}1$\,pp DirAcc and ${+}0.017$ R$^2$ at $w{=}720$ for ${\sim}2.4{\times}$ lookback). A $w{\times}\tau$ grid scored on the Jul~31 collector likewise does not favor larger $w$ at matched $\tau$. We therefore retain $w{=}300$.
