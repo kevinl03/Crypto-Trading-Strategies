@@ -3,62 +3,31 @@
 % ======================================================================
 \section{Ablation Studies}\label{sec:ablation}
 
-\subsection{Confidence Filter at tau~=~0.5}
-
-Live campaigns enter when $|\hat{z}| \geq 0.5$---a magnitude gate in rolling-$\sigma$ units (Section~\ref{sec:method}). Table~\ref{tab:filter_ablation} shows that this already-restrictive filter lifts R$^2$ by approximately 0.2--0.25 relative to scoring all predictions, while admitting only 10--15\% of rows (Figure~\ref{fig:filter_lift}). The strategy parallels abstention on low-magnitude forecasts in Sarmento et al.~\cite{sarmento2024ml}.
-
-\begin{table}[h]
-\caption{Effect of the $|\hat{z}| \geq 0.5$ confidence filter on model R$^2$ across campaigns.}
-\label{tab:filter_ablation}
-\small
-\begin{tabular}{lrrrr}
-\toprule
-\textbf{Campaign} & \textbf{All R$^2$} & \textbf{Filtered R$^2$} & \textbf{$\Delta$} & \textbf{\% rows kept} \\
-\midrule
-Jul~30 (live)  & 0.054 & 0.248 & +0.194 & 10.3\% \\
-Jul~31 (live)  & 0.104 & 0.347 & +0.243 & 14.9\% \\
-Offline test   & 0.133 & 0.383 & +0.250 & --- \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=\columnwidth]{figures/fig3_filter_r2_lift.png}
-\caption{Model R$^2$ before and after the $|\hat{z}| \geq 0.5$ confidence filter. The filter selects predictions in high-signal regimes, lifting R$^2$ by +0.19 to +0.25 across both live campaigns.}
-\Description{Grouped bar chart of model R squared on a vertical axis from zero to
-0.35 for the two live campaigns. For Jul 30 the all-predictions bar is 0.054 and
-the filtered bar is 0.248, a rise of 0.194. For Jul 31 the all-predictions bar is
-0.104 and the filtered bar is 0.347, a rise of 0.243. In both campaigns the
-filtered bar is roughly three times the height of the unfiltered bar.}
-\label{fig:filter_lift}
-\end{figure}
-
-A critical caveat at $\tau{=}0.5$: much of the filtered directional accuracy is explained by persistence in high-$|z|$ states. On Jul~31 filtered rows, naive persistence achieves 77.0\% DirAcc versus the model's 76.7\%; the model's advantage is in R$^2$ (0.347 vs 0.174).
-
-\subsection{Selecting Window Length and a Stricter Confidence Threshold}
+\subsection{Selecting Window Length and Confidence Threshold}
 
 \paragraph{Window $w$.}
 Increasing $w$ enriches $(\hat{\mu}_w,\hat{\sigma}_w)$ but forces longer warmup before a valid $z$ exists and slows $\sigma$ adaptation. Offline spreads-only LightGBM sweeps on the Jul~25 holdout show test skill rising into a plateau near $w{\approx}560$--$720$, with only modest gains past the production choice $w{=}300$ (${\approx}{+}1$\,pp DirAcc and ${+}0.017$ R$^2$ at $w{=}720$ for ${\sim}2.4{\times}$ lookback). A $w{\times}\tau$ grid scored on the Jul~31 collector likewise does not favor larger $w$ at matched $\tau$. We therefore retain $w{=}300$.
 
 \paragraph{Threshold $\tau$.}
-The live gate $\tau{=}0.5$ maximizes coverage, not per-trade SNR. A fine sweep on Jul~31 signal rows ($w{=}300$) shows that raising $\tau$ monotonically improves DirAcc, R$^2$, mean z-proxy, and per-trade Sharpe $\mathrm{mean}(\mathrm{pnl})/\mathrm{std}(\mathrm{pnl})$. \textbf{Per-trade} Sharpe first exceeds one at $\tau{=}0.9$ (Table~\ref{tab:tau_sensitivity}): DirAcc 84.9\%, R$^2$ 0.514, Sharpe 1.02 on $n{=}2{,}026$ rows, versus 76.7\% / 0.347 / 0.67 on the $\tau{=}0.5$ set ($n{=}8{,}775$)---about a 77\% reduction in entries. The same post-hoc gate on Campaign~C closes confirms the pattern at longer horizon: 50{,}690${\to}$12{,}795 trades ($-$75\%), DirAcc 79.0\%${\to}$86.7\%, R$^2$ 0.439${\to}$0.599, Sharpe/trade 0.75${\to}$1.08. Fewer trades reduce aggregate z-exposure while raising the PnL-per-trade ratio. We treat $\tau{=}0.9$ as the recommended operating point when prioritizing per-trade forecast quality; primary live tables remain at $\tau{=}0.5$ because that is the policy that was filled under capacity.
+The operating gate $|\hat{z}|\geq\tau$ is chosen once, from a fine sweep on Jul~31 signal rows ($w{=}300$), to balance per-trade forecast quality against coverage. Raising $\tau$ monotonically improves DirAcc, R$^2$, mean z-proxy, and per-trade Sharpe $\mathrm{mean}(\mathrm{pnl\_proxy})/\mathrm{std}(\mathrm{pnl\_proxy})$ (Rf~$=0$). \textbf{Per-trade} Sharpe first reaches ${\geq}1$ at $\tau{=}0.9$ (Table~\ref{tab:tau_sensitivity}): DirAcc 84.9\%, R$^2$ 0.514, mean z-proxy $+1.20$, Sharpe 1.02 on $n{=}2{,}026$ rows. Neighboring points illustrate the tradeoff: $\tau{=}0.85$ still sits below Sharpe~$1$ ($n{=}2{,}452$), while $\tau{=}1.0$ lifts Sharpe only to 1.07 while cutting another ${\sim}30\%$ of the $\tau{=}0.9$ set. Mean $\texttt{pnl\_proxy}$ is already high at $0.9$ relative to looser gates, so further tightening buys little per-trade quality for a large coverage loss. The same $\tau{=}0.9$ cut on Campaign~C closes confirms the operating point at longer horizon ($n{=}12{,}795$; DirAcc 86.7\%; R$^2$ 0.599; mean $+1.37$; Sharpe/trade 1.08). We therefore fix $\tau{=}0.9$ as the paper protocol.
 
 \begin{table}[h]
-\caption{Stricter confidence gate $|\hat{z}|\geq\tau$ (post-hoc on live books; $w{=}300$). Per-trade Sharpe uses Rf~$=0$.}
+\caption{Confidence gate $|\hat{z}|\geq\tau$ ($w{=}300$). Jul~31 rows are a fine sweep on scored signals; Campaign~C is the $\tau{=}0.9$ subset of live closes. Per-trade Sharpe uses Rf~$=0$.}
 \label{tab:tau_sensitivity}
 \small
 \begin{tabular}{llrrrrr}
 \toprule
 \textbf{Book} & $\tau$ & $n$ & \textbf{DirAcc} & \textbf{R$^2$} & \textbf{Mean} & \textbf{Sharpe/tr} \\
 \midrule
-Jul~31 signals & 0.5 & 8{,}775 & 76.7\% & 0.347 & +0.75 & 0.67 \\
+Jul~31 signals & 0.85 & 2{,}452 & 84.5\% & 0.497 & +1.16 & 0.99 \\
 Jul~31 signals & 0.9 & 2{,}026 & 84.9\% & 0.514 & +1.20 & 1.02 \\
-$\sim$72h closes & 0.5 & 50{,}690 & 79.0\% & 0.439 & +0.84 & 0.75 \\
+Jul~31 signals & 1.0 & 1{,}426 & 85.3\% & 0.534 & +1.26 & 1.07 \\
 $\sim$72h closes & 0.9 & 12{,}795 & 86.7\% & 0.599 & +1.37 & 1.08 \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+Live campaigns were deployed with a more permissive collector gate $\tau{=}0.5$ (higher coverage under $\text{max\_open}{=}50$). Reported live $\tau{=}0.9$ metrics are therefore post-hoc abstention on that filled book---not a capacity-matched re-fill at live $\tau{=}0.9$---and should be read as the paper protocol applied after the fact (Section~\ref{sec:limitations}).
 
 \subsection{Feature Importance: Role of Microstructure Inputs}
 

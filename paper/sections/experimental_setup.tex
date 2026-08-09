@@ -17,7 +17,7 @@ All collection windows before July~25, 2026 form the training set; July~25--28 f
 
 \subsection{Live Paper-Trading Protocol}
 
-For live validation, we run independent paper-trading campaigns that process incoming collector data in real time with no access to future snapshots. Unless noted, entry uses $|\hat{z}| \geq 0.5$ and $\text{max\_open} = 50$.
+For live validation, we run independent paper-trading campaigns that process incoming collector data in real time with no access to future snapshots. Capacity is $\text{max\_open} = 50$. The paper confidence gate is $\tau{=}0.9$ (Section~\ref{sec:ablation}); campaigns were deployed with live entry $|\hat{z}| \geq 0.5$, and $\tau{=}0.9$ live metrics are post-hoc filters on those filled books unless a capacity-matched baseline comparison says otherwise.
 
 \subsubsection{Campaign A: Jul~30 (weekday)}
 
@@ -46,10 +46,10 @@ For live validation, we run independent paper-trading campaigns that process inc
 \begin{itemize}
     \item \textbf{Model}: same 68-feature, $H{=}1$, $w{=}300$ policy as Campaign~B.
     \item \textbf{Duration}: $\approx$72.9~hours of active trading (50,690 closed trades; 1.01M scored predictions).
-    \item \textbf{Role}: longer live stress test of the $\tau{=}0.5$ book, and the evaluation surface for the post-hoc $\tau{=}0.9$ confidence gate (Section~\ref{sec:ablation}).
+    \item \textbf{Role}: multi-day live stress test; primary $\tau{=}0.9$ metrics are the post-hoc paper-protocol subset of this book (Section~\ref{sec:ablation}).
 \end{itemize}
 
-Campaigns~A/B are short weekday/weekend stress tests; Campaign~C extends the same production settings over three days. We present them as complementary live evidence rather than a controlled factorial experiment.
+Campaigns~A/B are short weekday/weekend stress tests; Campaign~C extends the same live deployment settings over three days. We present them as complementary live evidence rather than a controlled factorial experiment.
 
 \subsection{Baseline Definitions}
 

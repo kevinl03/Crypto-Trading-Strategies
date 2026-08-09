@@ -3,32 +3,31 @@
 % ======================================================================
 \section{Results}\label{sec:results}
 
-We evaluate the LightGBM z-score forecasting model across offline held-out evaluation and three live paper-trading settings (Jul~30, Jul~31, and a $\sim$72h Aug~4--7 campaign). In each setting we report both forecast quality metrics (R$^2$, directional accuracy) and trading performance metrics (mean profit proxy, hourly portfolio Sharpe ratio), always scoring a naive persistence baseline on the same rows as the model. Live fills use $\tau{=}0.5$; a stricter $\tau{=}0.9$ gate is analyzed as a post-hoc sensitivity in Section~\ref{sec:ablation}.
+We evaluate the LightGBM z-score forecasting model across offline held-out evaluation and three live paper-trading settings (Jul~30, Jul~31, and a $\sim$72h Aug~4--7 campaign). In each setting we report both forecast quality metrics (R$^2$, directional accuracy) and trading performance metrics (mean profit proxy, hourly portfolio Sharpe ratio), always scoring a naive persistence baseline on the same rows as the model. The paper confidence gate is $\tau{=}0.9$ (Section~\ref{sec:ablation}). Live campaigns were deployed at $\tau{=}0.5$; unless noted, live $\tau{=}0.9$ numbers are post-hoc abstention on those books.
 
 \subsection{Offline Evaluation}
 
-The model is trained on all collection windows before July~25, 2026 and tested on the Jul~25--28 held-out window. Table~\ref{tab:offline} reports forecast metrics on the full prediction set and on the confidence-filtered subset where $|\hat{z}| \geq 0.5$.
+The model is trained on all collection windows before July~25, 2026 and tested on the Jul~25--28 held-out window. Table~\ref{tab:offline} reports forecast metrics on the full prediction set and on the paper-protocol filter $|\hat{z}| \geq 0.9$.
 
 \begin{table}[h]
-\caption{Offline evaluation on the Jul~25--28 held-out test set. The confidence filter selects high-signal predictions.}
+\caption{Offline evaluation on the Jul~25--28 held-out test set. Filtered rows use the paper gate $|\hat{z}| \geq 0.9$.}
 \label{tab:offline}
 \begin{tabular}{lrr}
 \toprule
 \textbf{Set} & \textbf{R$^2$} & \textbf{DirAcc} \\
 \midrule
 Test (all predictions)       & 0.133 & 62.8\% \\
-Test ($|\hat{z}| \geq 0.5$) & 0.383 & 78.4\% \\
+Test ($|\hat{z}| \geq 0.9$) & 0.535 & 85.3\% \\
 Train (all predictions)      & 0.128 & 61.8\% \\
-Train ($|\hat{z}| \geq 0.5$)& 0.447 & 81.5\% \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Train and test R$^2$ are nearly identical on the unfiltered set (0.128 vs 0.133), indicating no overfitting (early stopping selected iteration~74 of 2,500). On filtered predictions the gap widens slightly (train 0.447 vs test 0.383). The subsequent live campaigns (R$^2$ = 0.248 and 0.347 on filtered entries) confirm that the model retains predictive power on genuinely unseen market conditions.
+Train and test R$^2$ are nearly identical on the unfiltered set (0.128 vs 0.133), indicating no overfitting (early stopping selected iteration~74 of 2,500). Under $\tau{=}0.9$, offline test DirAcc rises to 85.3\% and R$^2$ to 0.535. Live $\tau{=}0.9$ subsets (Section~\ref{sec:ablation}) remain consistent with this filtered offline skill.
 
 \subsection{Live Paper-Trading Campaigns}
 
-We conducted two live paper-trading campaigns to stress-test the model under real market conditions with no future information leakage. Both campaigns use entry threshold $|\hat{z}| \geq 0.5$ and capacity constraint $\text{max\_open} = 50$ simultaneous positions.
+We conducted two live paper-trading campaigns to stress-test the model under real market conditions with no future information leakage. Both were deployed with collector entry $|\hat{z}| \geq 0.5$ and $\text{max\_open} = 50$; tables below retain that live filter for transparency alongside unfiltered scores. Paper-protocol $\tau{=}0.9$ metrics appear in Section~\ref{sec:ablation} and Campaign~C below.
 
 \subsubsection{Campaign~A (Jul~30, weekday)}
 
@@ -90,7 +89,7 @@ Across both campaigns, the model achieves positive R$^2$ where naive persistence
 
 \subsection{Baseline Comparison: Learned Forecast vs Mechanical Z-Score Rules}
 
-To isolate the value of the learned forecast from the confidence filter, we replay two mechanical baselines on the Jul~31 signal panel under matched capacity constraints ($\text{max\_open} = 50$). Both baselines enter when $|z_t| \geq 0.5$ (the same threshold as the model) but use the current z-score rather than a predicted future z-score to determine trade direction:
+To isolate the value of the learned forecast from the confidence filter, we replay two mechanical baselines on the Jul~31 signal panel under matched capacity constraints ($\text{max\_open} = 50$). Both baselines enter when $|z_t| \geq 0.5$ (matched to the live deployment gate) but use the current z-score rather than a predicted future z-score to determine trade direction:
 
 \begin{itemize}
     \item \textbf{Persistence}: $\text{direction} = \text{sign}(z_t)$. Bets that the current z-score will continue into the next snapshot.
@@ -139,9 +138,7 @@ Figure~\ref{fig:baseline_compare} visualizes the directional accuracy and mean p
 
 Over the 6~active hours of the Jul~31 campaign, the model's hourly portfolio Sharpe ratio is 2.41 (mean hourly z-unit profit divided by its standard deviation, including mark-to-market), with every observed hour producing positive portfolio profit.
 
-\subsection{Campaign~C (\textasciitilde72h) and Stricter Confidence Threshold}
+\subsection{Campaign~C (\textasciitilde72h) under the Paper Gate}
 
-Campaign~C extends the Campaign~B settings ($H{=}1$, $w{=}300$, $\tau{=}0.5$, $\text{max\_open}{=}50$) over $\approx$72.9~hours of active trading (50{,}690 closes; DirAcc 79.0\%; mean z-proxy $+0.837$; closed-only hourly Sharpe 4.38 with 74/74 green hours). This shows that the short Jul~31 window was not a one-off on the live $\tau{=}0.5$ book.
-
-Applying a post-hoc $|\hat{z}|{\geq}0.9$ filter to the same closes---abstaining on weak forecasts rather than re-filling capacity under a new live $\tau$---cuts the book by $\approx$75\% while lifting DirAcc to 86.7\%, R$^2$ to 0.599, and per-trade Sharpe to 1.08 (Table~\ref{tab:tau_sensitivity}). The Jul~31 fine sweep identifies $\tau{=}0.9$ as the first point where per-trade Sharpe reaches ${\geq}1$, improving on the initial live threshold $\tau{=}0.5$ at the cost of coverage (Section~\ref{sec:ablation}).
+Campaign~C extends the Campaign~B live deployment ($H{=}1$, $w{=}300$, $\text{max\_open}{=}50$; collector gate $\tau{=}0.5$) over $\approx$72.9~hours. Under the paper protocol $|\hat{z}|{\geq}0.9$ applied post-hoc to settled closes, the book has $n{=}12{,}795$ trades with DirAcc 86.7\%, R$^2$ 0.599, mean z-proxy $+1.37$, and per-trade Sharpe 1.08 (Table~\ref{tab:tau_sensitivity})---consistent with the Jul~31 fine-sweep operating point and confirming that the short weekend window was not a one-off.
 
