@@ -16,7 +16,7 @@ We normalize the spread into a rolling z-score:
 \begin{equation}
     z_t = \frac{S_t - \hat{\mu}_w}{\hat{\sigma}_w}
 \end{equation}
-where $\hat{\mu}_w$ and $\hat{\sigma}_w$ are the estimated rolling mean and standard deviation over a window of $w$ snapshots, with a minimum period requirement before the z-score is defined.
+where $\hat{\mu}_w$ and $\hat{\sigma}_w$ are the estimated rolling mean and standard deviation over a window of $w$ snapshots, with a minimum period requirement before the z-score is defined. Model outputs $\hat{z}$ are therefore in units of this trailing $\hat{\sigma}_w$: $|\hat{z}|=1$ is a one-$\sigma$ forecasted dislocation. We use $w=300$ ($\text{MIN\_PERIODS}=90$); larger $w$ adds context but lengthens warmup (Section~\ref{sec:ablation}).
 
 \subsection{Supervised Prediction Target}
 
