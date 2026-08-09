@@ -17,7 +17,7 @@ All collection windows before July~25, 2026 form the training set; July~25--28 f
 
 \subsection{Live Paper-Trading Protocol}
 
-For live validation, we run two independent paper-trading campaigns that process incoming collector data in real time with no access to future snapshots.
+For live validation, we run independent paper-trading campaigns that process incoming collector data in real time with no access to future snapshots. Unless noted, entry uses $|\hat{z}| \geq 0.5$ and $\text{max\_open} = 50$.
 
 \subsubsection{Campaign A: Jul~30 (weekday)}
 
@@ -41,7 +41,15 @@ For live validation, we run two independent paper-trading campaigns that process
     \item \textbf{Settled trades}: 7,973 closed; 50 still open at session end.
 \end{itemize}
 
-Both campaigns use entry threshold $|\hat{z}| \geq 0.5$ and capacity constraint $\text{max\_open} = 50$. We present them as independent stress tests rather than a controlled experiment.
+\subsubsection{Campaign C: Aug~4--7 ($\sim$72h)}
+
+\begin{itemize}
+    \item \textbf{Model}: same 68-feature, $H{=}1$, $w{=}300$ policy as Campaign~B.
+    \item \textbf{Duration}: $\approx$72.9~hours of active trading (50,690 closed trades; 1.01M scored predictions).
+    \item \textbf{Role}: longer live stress test of the $\tau{=}0.5$ book, and the evaluation surface for the post-hoc $\tau{=}0.9$ confidence gate (Section~\ref{sec:ablation}).
+\end{itemize}
+
+Campaigns~A/B are short weekday/weekend stress tests; Campaign~C extends the same production settings over three days. We present them as complementary live evidence rather than a controlled factorial experiment.
 
 \subsection{Baseline Definitions}
 

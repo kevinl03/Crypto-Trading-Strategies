@@ -24,9 +24,9 @@ The model's target is the \emph{future} z-score at horizon $H$:
 \begin{equation}
     y_t = z_{t+H}
 \end{equation}
-computed via $\texttt{groupby(coin, pair).zscore.shift(-H)}$ on the training panel. This is a regression target, not a binary classification. The model predicts both the direction and magnitude of the z-score $H$ snapshots ahead, enabling the confidence filter to select trades where the predicted movement is large.
+computed via $\texttt{groupby(coin, pair).zscore.shift(-H)}$ on the training panel. This is a regression target, not a binary classification. The model predicts both the direction and magnitude of the z-score $H$ snapshots ahead, enabling a confidence filter on $|\hat{z}|$.
 
-For the prediction model used in the Jul~31 campaign, $H = 1$ (predict the next snapshot's z-score), $w = 300$ snapshots, and $\text{MIN\_PERIODS} = 90$.
+For the prediction model used in the paper-trading campaigns, $H = 1$ (predict the next snapshot's z-score), $w = 300$ snapshots, and $\text{MIN\_PERIODS} = 90$. Window length and gate $\tau$ are justified in Section~\ref{sec:ablation}.
 
 \subsection{Feature Engineering}\label{sec:features}
 
@@ -119,13 +119,14 @@ Early stopping selects iteration~74 out of 2,500 maximum rounds, indicating that
 At each live snapshot, the model generates a prediction $\hat{z}_{t+1}$ for every (coin, exchange-pair) observation. The trading policy is:
 
 \begin{enumerate}
-    \item \textbf{Entry}: open a position if $|\hat{z}_{t+1}| \geq 0.5$ and the (coin, pair) slot is not already occupied.
+    \item \textbf{Entry}: open a position if $|\hat{z}_{t+1}| \geq \tau$ and the (coin, pair) slot is not already occupied. Live campaigns use $\tau=0.5$; $\tau=0.9$ is the analysis gate where per-trade Sharpe first reaches ${\geq}1$ (Section~\ref{sec:ablation}).
     \item \textbf{Direction}: $\text{sign}(\hat{z}_{t+1})$. The model predicts whether the spread z-score will be positive or negative at $t+1$ and bets accordingly.
     \item \textbf{Capacity}: at most $\text{max\_open} = 50$ positions open simultaneously, enforced by a first-come queue.
     \item \textbf{Settlement}: each position settles at $t+H$ (one snapshot later for $H=1$). The proxy profit is $\text{pnl\_proxy} = \text{direction} \times z_{t+H}$.
 \end{enumerate}
 
 The settlement proxy measures whether the z-score moved in the predicted direction and by how much, in z-score units. It is not a dollar profit metric and does not account for transaction fees or slippage.
+
 
 \subsection{Evaluation Metrics}
 
@@ -135,6 +136,7 @@ We report both forecast quality and trading performance metrics:
     \item \textbf{R$^2$} (coefficient of determination): fraction of variance in the realized $z_{t+H}$ explained by the model's predictions. Reported on all predictions and on the filtered subset.
     \item \textbf{Directional accuracy (DirAcc)}: fraction of predictions where $\text{sign}(\hat{z}) = \text{sign}(z_{t+H})$.
     \item \textbf{Mean pnl\_proxy}: average $\text{direction} \times z_{t+H}$ across settled trades.
+    \item \textbf{Per-trade Sharpe}: $\text{mean}(\text{pnl\_proxy}) / \text{std}(\text{pnl\_proxy})$ on the filtered trade set (Rf~$=0$), used to select $\tau$ in Section~\ref{sec:ablation}.
     \item \textbf{Hourly portfolio Sharpe ratio}: $\text{mean}(\Delta\text{equity}_h) / \text{std}(\Delta\text{equity}_h)$ where hourly equity includes realized closed-trade profits plus mark-to-market valuation of open positions as $\text{direction} \times z_t$. Risk-free rate is zero because the z-unit proxy has no currency denomination and represents forecast quality rather than economic returns.
 \end{itemize}
 

@@ -35,7 +35,7 @@ The Jul~31 hourly Sharpe of 2.41 ($n=6$) characterizes forecast stability but is
 
 \subsection{Threats to Validity}\label{sec:limitations}
 
-\textbf{Evaluation horizon.} Each live campaign covers approximately six active hours---far too short to characterize regime dependence. The two campaigns differ in model vintage, horizon, z-score window, and market session, so neither is a controlled ablation.
+\textbf{Evaluation horizon.} Campaigns~A/B cover approximately six active hours each---too short alone to characterize regime dependence---but Campaign~C extends the same $w{=}300$, $\tau{=}0.5$ policy over $\approx$73~live hours with stable DirAcc and uniformly positive hourly z-proxy. The campaigns still differ in calendar window, so they are complementary stress tests rather than a controlled factorial ablation. Post-hoc $\tau{=}0.9$ results on Campaign~C are abstention analyses on the $\tau{=}0.5$ book, not a separate capacity-matched live fill.
 
 \textbf{Proxy settlement.} P\&L is measured in z-units gross of fees, slippage, and bid-ask crossing (Section~\ref{sec:proxy_gap}). No dollar return is claimed.
 

@@ -3,7 +3,7 @@
 % ======================================================================
 \section{Results}\label{sec:results}
 
-We evaluate the LightGBM z-score forecasting model across three settings: offline held-out evaluation, a weekday live paper-trading campaign (Jul~30), and a weekend live campaign (Jul~31). In each setting we report both forecast quality metrics (R$^2$, directional accuracy) and trading performance metrics (mean profit proxy, hourly portfolio Sharpe ratio), always scoring a naive persistence baseline on the same rows as the model.
+We evaluate the LightGBM z-score forecasting model across offline held-out evaluation and three live paper-trading settings (Jul~30, Jul~31, and a $\sim$72h Aug~4--7 campaign). In each setting we report both forecast quality metrics (R$^2$, directional accuracy) and trading performance metrics (mean profit proxy, hourly portfolio Sharpe ratio), always scoring a naive persistence baseline on the same rows as the model. Live fills use $\tau{=}0.5$; a stricter $\tau{=}0.9$ gate is analyzed as a post-hoc sensitivity in Section~\ref{sec:ablation}.
 
 \subsection{Offline Evaluation}
 
@@ -138,4 +138,10 @@ Figure~\ref{fig:baseline_compare} visualizes the directional accuracy and mean p
 \subsection{Portfolio Risk-Adjusted Performance}
 
 Over the 6~active hours of the Jul~31 campaign, the model's hourly portfolio Sharpe ratio is 2.41 (mean hourly z-unit profit divided by its standard deviation, including mark-to-market), with every observed hour producing positive portfolio profit.
+
+\subsection{Campaign~C ($\sim$72h) and Stricter $\tau$}
+
+Campaign~C extends the Campaign~B settings ($H{=}1$, $w{=}300$, $\tau{=}0.5$, $\text{max\_open}{=}50$) over $\approx$72.9~hours of active trading (50{,}690 closes; DirAcc 79.0\%; mean z-proxy $+0.837$; closed-only hourly Sharpe 4.38 with 74/74 green hours). This shows that the short Jul~31 window was not a one-off on the live $\tau{=}0.5$ book.
+
+Applying a post-hoc $|\hat{z}|{\geq}0.9$ filter to the same closes---abstaining on weak forecasts rather than re-filling capacity under a new live $\tau$---cuts the book by $\approx$75\% while lifting DirAcc to 86.7\%, R$^2$ to 0.599, and per-trade Sharpe to 1.08 (Table~\ref{tab:tau_sensitivity}). The Jul~31 fine sweep identifies $\tau{=}0.9$ as the first point where per-trade Sharpe reaches ${\geq}1$, improving on the initial live threshold $\tau{=}0.5$ at the cost of coverage (Section~\ref{sec:ablation}).
 
