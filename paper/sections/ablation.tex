@@ -58,5 +58,34 @@ and Coinbase, cross-venue mid-price range, and Coinbase orderbook imbalance.}
 \label{fig:importance}
 \end{figure}
 
-The model is, to a first approximation, an autoregression on the recent z-score trajectory conditioned on asset and venue-pair identity, with microstructure features supplying a small correction. Lagged z-scores and spread dynamics dominate the ranking; microstructure and cross-venue dispersion features enter only in the bottom four positions. Only one of the ten highest-gain features is an orderbook imbalance term, and no funding-rate or open-interest feature appears in the top~10. The cross-venue dispersion and orderbook features are genuinely unavailable to single-venue or backtest-only systems, but establishing their marginal contribution to R$^2$ requires a leave-one-group-out retraining study that we have not run.
+The model is, to a first approximation, an autoregression on the recent z-score trajectory conditioned on asset and venue-pair identity. Lagged z-scores and spread dynamics dominate the ranking; microstructure and cross-venue dispersion features enter only in the bottom four positions. Only one of the ten highest-gain features is an orderbook imbalance term, and no funding-rate or open-interest feature appears in the top~10.
+
+\subsection{Feature-Group Ablation}
+
+To test whether microstructure inputs add predictive power beyond the lagged z-score trajectory, we retrain the model under a nested leave-one-group-in design on the Jul~25--28 held-out test set. Hyperparameters are held fixed at the published \texttt{LGBM\_PARAMS}; every variant uses the same boosting-round budget (the full-model early-stopping iterate, here 49 rounds) so that feature value is not confounded with round-count differences. The comparison metric is filtered R$^2$ ($|\hat{z}| \geq 0.5$), the operationally meaningful regime. Feature groups follow the data-collection families; funding-rate and open-interest columns do not survive the null/weak-correlation prune and are absent from the trained feature set (consistent with the published 68-feature model).
+
+\begin{table}[h]
+\caption{Nested feature-group ablation on the Jul~25--28 offline test set.
+All variants share the same LightGBM hyperparameters and a fixed boosting-round
+budget. $\Delta$R$^2$ is relative to the autoregression (AR) baseline on the
+$|\hat{z}| \geq 0.5$ subset. Funding and open interest are marked pruned
+because no columns from those families enter the trained feature set.}
+\label{tab:logo_ablation}
+\small
+\begin{tabular}{lrrrrr}
+\toprule
+\textbf{Variant} & \textbf{\# feat.} & \textbf{R$^2$} & \textbf{R$^2$ filt.} & \textbf{DirAcc filt.} & \textbf{$\Delta$R$^2$ filt.} \\
+\midrule
+AR baseline (lags + momentum + identity) & 11 & 0.132 & 0.392 & 78.9\% & --- \\
++ ticker (mid, BA, volumes)              & 42 & 0.133 & 0.382 & 78.4\% & $-$0.010 \\
++ orderbook imbalance                    & 45 & 0.132 & 0.378 & 78.2\% & $-$0.014 \\
++ trade flow                             & 48 & 0.132 & 0.382 & 78.4\% & $-$0.010 \\
++ funding rate                           & --- & --- & --- & --- & pruned \\
++ open interest                          & --- & --- & --- & --- & pruned \\
++ cross-venue aggregates (full)          & 62 & 0.133 & 0.380 & 78.1\% & $-$0.012 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The AR baseline---lagged z-scores and spreads, momentum/acceleration terms, and the \texttt{coin}/\texttt{pair} categoricals---attains the highest filtered R$^2$ (0.392). Adding ticker, orderbook, trade-flow, or cross-venue groups does not improve filtered R$^2$; the full model sits 0.012 below the baseline. A complementary leave-one-group-out check confirms the same conclusion: dropping the baseline group collapses filtered R$^2$ from 0.381 to 0.124, whereas dropping ticker, orderbook, trades, or cross-venue features leaves filtered R$^2$ unchanged or slightly higher. Under this tree-ensemble protocol, the non-backfillable microstructure inputs are not predictively necessary for next-snapshot z-score forecasting. The live dataset remains a contribution---it enables architectures (e.g., sequence models over orderbook time series) that may use these signals more effectively than a gradient-boosted tree---but the claim that they are required for the published LightGBM forecast is not supported.
 

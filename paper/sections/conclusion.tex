@@ -7,4 +7,4 @@ We presented a gradient-boosting framework that replaces mechanical z-score thre
 
 \subsection{Future Work}
 
-Incorporating realistic fee structures, execution latency, and a direct spread-change training target would bridge the gap between z-unit performance and economic profitability. The released dataset enables the community to benchmark alternative architectures---including sequence models that may capture temporal dependencies the tree ensemble cannot---on the same cross-exchange microstructure panel.
+Incorporating realistic fee structures, execution latency, and a direct spread-change training target would bridge the gap between z-unit performance and economic profitability. The feature-group ablation shows that the published LightGBM forecast is essentially an autoregression on the recent z-score trajectory; the released microstructure panel therefore matters most as a benchmark for architectures that may use orderbook and trade-flow time series more effectively than a tree ensemble can.
