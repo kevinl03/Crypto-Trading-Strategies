@@ -1,0 +1,11 @@
+{
+  "session_id": "5day_20260807_164045",
+  "session_dir": "data\\paper_trading\\5day_Aug4_2026",
+  "start_time": "2026-08-07T16:40:45.757916+00:00",
+  "model_path": "statarb_lgbm.txt",
+  "entry_tau": 0.5,
+  "max_open": 50,
+  "duration_hours": 120,
+  "resume_run_dir": "20260804_062334",
+  "skip_ohlcv": true
+}
