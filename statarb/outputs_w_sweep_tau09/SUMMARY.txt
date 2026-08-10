@@ -1,0 +1,19 @@
+ZSCORE_WINDOW (W) sensitivity — Jul25 protocol (spread-only LGBM)
+train=['jun13', 'jun22', 'jul13', 'jul19_post', 'jul22_24']  val=jul19_pre  test=jul25_28  cut=3584
+HORIZON=1  N_LAGS=3  MIN_PERIODS=fixed=20
+W grid: [60, 120, 180, 240, 300, 400, 560, 720, 960]
+
+Ranked by test R2 (lgbm):
+  W=960  R2=0.1416  DirAcc=64.171%  R2@|p|>=0.9=0.5236  DirAcc@|p|>=0.9=87.823%  PnL=0.2901  best_iter=30  n=1,703,876  n_tau0.9=30,402
+  W=720  R2=0.1408  DirAcc=63.981%  R2@|p|>=0.9=0.5401  DirAcc@|p|>=0.9=87.746%  PnL=0.2865  best_iter=33  n=1,703,876  n_tau0.9=34,357
+  W=560  R2=0.1364  DirAcc=63.774%  R2@|p|>=0.9=0.5428  DirAcc@|p|>=0.9=87.183%  PnL=0.2819  best_iter=33  n=1,703,876  n_tau0.9=31,247
+  W=400  R2=0.1292  DirAcc=63.455%  R2@|p|>=0.9=0.5530  DirAcc@|p|>=0.9=86.810%  PnL=0.2741  best_iter=34  n=1,703,876  n_tau0.9=27,922
+  W=300  R2=0.1236  DirAcc=63.104%  R2@|p|>=0.9=0.5552  DirAcc@|p|>=0.9=86.023%  PnL=0.2655  best_iter=39  n=1,703,876  n_tau0.9=29,707
+  W=240  R2=0.1183  DirAcc=62.836%  R2@|p|>=0.9=0.5636  DirAcc@|p|>=0.9=85.780%  PnL=0.2588  best_iter=39  n=1,703,876  n_tau0.9=25,822
+  W=180  R2=0.1108  DirAcc=61.886%  R2@|p|>=0.9=0.5667  DirAcc@|p|>=0.9=85.714%  PnL=0.2472  best_iter=44  n=1,703,858  n_tau0.9=24,969
+  W=120  R2=0.0975  DirAcc=60.618%  R2@|p|>=0.9=0.5525  DirAcc@|p|>=0.9=84.612%  PnL=0.2277  best_iter=52  n=1,703,623  n_tau0.9=24,109
+  W= 60  R2=0.0776  DirAcc=58.685%  R2@|p|>=0.9=0.5522  DirAcc@|p|>=0.9=83.829%  PnL=0.1981  best_iter=224  n=1,702,405  n_tau0.9=26,418
+
+BEST by R2: W=960 (R2=0.1416, DirAcc=64.171%)
+
+Note: each W redefines the z-label; compare relative lift vs naive on the same W.
