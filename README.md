@@ -5,7 +5,7 @@
 Kevin Litvin, Tania Pocrnjic, Ke Li — Simon Fraser University
 *ICAIF '26 — 7th ACM International Conference on AI in Finance · Milan, Italy · November 14–17, 2026*
 
-[Paper (PDF)](paper/finals.pdf) · [Paper source](paper/gradient-boosting-cross-market-spread-prediction-public.tex) · [Citation](#citation)
+[Paper (PDF)](paper/finals.pdf) · [Paper source](paper/gradient-boosting-cross-market-spread-prediction-public.tex) · [Dataset (Hugging Face)](https://huggingface.co/datasets/SFU-fintech-AI/statarb-crypto-research) · [Citation](#citation)
 
 <p align="center">
   <img src="paper/figures/Visual-Architecture.png" width="700" alt="Figure 1: end-to-end paper protocol from live multi-venue inputs to a confidence-gated trade">
