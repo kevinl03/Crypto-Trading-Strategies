@@ -22,7 +22,7 @@ Methodologically, this is a change of formulation, not only of market setting. T
 \subsection{Contributions}
 
 \begin{enumerate}
-    \item \textbf{Learned next-snapshot z-score forecasting for same-asset cross-exchange spreads.} We replace mechanical $|z_t|$ thresholds with a tabular tree forecast of $z_{t+H}$ (LightGBM production head; Random Forest as a classical bagging control), conditioned on live microstructure and coin/venue categoricals, with a $|\hat{z}|\geq 0.9$ confidence gate for selective entry.
+    \item \textbf{Learned next-snapshot z-score forecasting for same-asset cross-exchange spreads.} We replace mechanical $|z_t|$ thresholds with a tabular tree forecast of $z_{t+H}$ (LightGBM~\cite{ke2017lightgbm} production head; Random Forest~\cite{breiman2001random} as a classical bagging control), conditioned on live microstructure and coin/venue categoricals, with a $|\hat{z}|\geq 0.9$ confidence gate for selective entry.
 
     \item \textbf{Live paper-trading under real decision latency.} We run the policy in live campaigns (including a $\sim$72-hour session) on direct centralized-exchange market data at approximately one-minute frequency: the trained LightGBM model predicts the next z-score at each snapshot and executes paper trades under the system's real collection and decision delay.
 
