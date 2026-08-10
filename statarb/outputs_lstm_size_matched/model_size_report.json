@@ -1,0 +1,12 @@
+{
+  "lgbm_path": "C:\\Users\\Kev\\repos\\stochastic-spread-modeling-analysis\\statarb\\outputs\\statarb_lgbm.txt",
+  "lgbm_disk_bytes": 1241056,
+  "lstm_path": "C:\\Users\\Kev\\repos\\stochastic-spread-modeling-analysis\\statarb\\outputs_lstm_size_matched\\statarb_lstm.pt",
+  "lstm_disk_bytes": 1290960,
+  "lstm_num_parameters": 321761,
+  "lstm_fp32_weight_bytes": 1287044,
+  "lstm_hidden_size": 160,
+  "size_ratio_lstm_disk_over_lgbm_disk": 1.0402109171544234,
+  "size_ratio_lstm_fp32_over_lgbm_disk": 1.0370555397983652,
+  "note": "LGBM artifact is a text booster file; LSTM .pt is binary state_dict (+cfg). Primary size-match target is LSTM fp32 weight bytes \u2248 LGBM disk bytes."
+}

@@ -1,0 +1,210 @@
+{
+  "source_session": "C:\\Users\\Kev\\repos\\stochastic-spread-modeling-analysis\\data\\paper_trading\\July31st_8_hr",
+  "definition": "expected_gross_bps \u2248 E[direction * spread_delta_bps | abs_pred]",
+  "round_trip_fee_bps_default": 16.0,
+  "recommended_abs_pred_floor_fee16": null,
+  "any_slice_clears_fee16": false,
+  "knots": [
+    {
+      "abs_pred_min": 0.5038849516517082,
+      "expected_gross_bps": -0.8618844221105528,
+      "n": 199
+    },
+    {
+      "abs_pred_min": 0.5114533289645629,
+      "expected_gross_bps": -0.8618844221105528,
+      "n": 199
+    },
+    {
+      "abs_pred_min": 0.5201645843182081,
+      "expected_gross_bps": -0.7121125867432401,
+      "n": 199
+    },
+    {
+      "abs_pred_min": 0.52894264738651,
+      "expected_gross_bps": -0.7121125867432401,
+      "n": 200
+    },
+    {
+      "abs_pred_min": 0.537151357287412,
+      "expected_gross_bps": -0.7121125867432401,
+      "n": 199
+    },
+    {
+      "abs_pred_min": 0.5458713352977789,
+      "expected_gross_bps": -0.7121125867432401,
+      "n": 199
+    },
+    {
+      "abs_pred_min": 0.555122668257138,
+      "expected_gross_bps": -0.7121125867432401,
+      "n": 200
+    },
+    {
+      "abs_pred_min": 0.5644876684023276,
+      "expected_gross_bps": -0.7121125867432401,
+      "n": 199
+    },
+    {
+      "abs_pred_min": 0.5733637329222908,
+      "expected_gross_bps": -0.7121125867432401,
+      "n": 199
+    },
+    {
+      "abs_pred_min": 0.5828489913252483,
+      "expected_gross_bps": -0.7121125867432401,
+      "n": 200
+    },
+    {
+      "abs_pred_min": 0.5918889891680927,
+      "expected_gross_bps": -0.7121125867432401,
+      "n": 199
+    },
+    {
+      "abs_pred_min": 0.6018010228129386,
+      "expected_gross_bps": -0.7121125867432401,
+      "n": 199
+    },
+    {
+      "abs_pred_min": 0.6125525207528629,
+      "expected_gross_bps": -0.7121125867432401,
+      "n": 200
+    },
+    {
+      "abs_pred_min": 0.6233198395017748,
+      "expected_gross_bps": -0.7121125867432401,
+      "n": 199
+    },
+    {
+      "abs_pred_min": 0.6340791722384138,
+      "expected_gross_bps": -0.7121125867432401,
+      "n": 199
+    },
+    {
+      "abs_pred_min": 0.6449245497845937,
+      "expected_gross_bps": -0.7121125867432401,
+      "n": 200
+    },
+    {
+      "abs_pred_min": 0.656688288614815,
+      "expected_gross_bps": -0.7121125867432401,
+      "n": 199
+    },
+    {
+      "abs_pred_min": 0.6680186802334596,
+      "expected_gross_bps": -0.7121125867432401,
+      "n": 199
+    },
+    {
+      "abs_pred_min": 0.6798659697823937,
+      "expected_gross_bps": -0.7121125867432401,
+      "n": 200
+    },
+    {
+      "abs_pred_min": 0.6917295134506593,
+      "expected_gross_bps": -0.7121125867432401,
+      "n": 199
+    },
+    {
+      "abs_pred_min": 0.7043240422837311,
+      "expected_gross_bps": -0.7121125867432401,
+      "n": 199
+    },
+    {
+      "abs_pred_min": 0.7176913021931018,
+      "expected_gross_bps": -0.7121125867432401,
+      "n": 200
+    },
+    {
+      "abs_pred_min": 0.7320366944076002,
+      "expected_gross_bps": -0.7121125867432401,
+      "n": 199
+    },
+    {
+      "abs_pred_min": 0.7477365767135874,
+      "expected_gross_bps": -0.6862027342595329,
+      "n": 199
+    },
+    {
+      "abs_pred_min": 0.7630413417269799,
+      "expected_gross_bps": -0.6862027342595329,
+      "n": 200
+    },
+    {
+      "abs_pred_min": 0.7797133344158593,
+      "expected_gross_bps": -0.6862027342595329,
+      "n": 199
+    },
+    {
+      "abs_pred_min": 0.7996330495257278,
+      "expected_gross_bps": -0.6862027342595329,
+      "n": 199
+    },
+    {
+      "abs_pred_min": 0.8191668523692635,
+      "expected_gross_bps": -0.6862027342595329,
+      "n": 200
+    },
+    {
+      "abs_pred_min": 0.8411075829625076,
+      "expected_gross_bps": -0.6862027342595329,
+      "n": 199
+    },
+    {
+      "abs_pred_min": 0.8660364233563324,
+      "expected_gross_bps": -0.6862027342595329,
+      "n": 199
+    },
+    {
+      "abs_pred_min": 0.891163088613619,
+      "expected_gross_bps": -0.6862027342595329,
+      "n": 200
+    },
+    {
+      "abs_pred_min": 0.9218911418786293,
+      "expected_gross_bps": -0.6862027342595329,
+      "n": 199
+    },
+    {
+      "abs_pred_min": 0.9583838937725704,
+      "expected_gross_bps": -0.6862027342595329,
+      "n": 199
+    },
+    {
+      "abs_pred_min": 0.9960586144671002,
+      "expected_gross_bps": -0.6862027342595329,
+      "n": 200
+    },
+    {
+      "abs_pred_min": 1.0397015520189001,
+      "expected_gross_bps": -0.6862027342595329,
+      "n": 199
+    },
+    {
+      "abs_pred_min": 1.0977362402468622,
+      "expected_gross_bps": -0.6862027342595329,
+      "n": 199
+    },
+    {
+      "abs_pred_min": 1.1654785010787818,
+      "expected_gross_bps": -0.6862027342595329,
+      "n": 200
+    },
+    {
+      "abs_pred_min": 1.2398361889340044,
+      "expected_gross_bps": -0.6862027342595329,
+      "n": 199
+    },
+    {
+      "abs_pred_min": 1.368202500432494,
+      "expected_gross_bps": -0.6862027342595329,
+      "n": 199
+    },
+    {
+      "abs_pred_min": 1.7752845403340638,
+      "expected_gross_bps": -0.6862027342595329,
+      "n": 200
+    }
+  ],
+  "note": "Enter only if expected_gross_bps(abs_pred) >= min_expected_gross_bps. If any_slice_clears_fee16 is false, no in-sample |pred| floor clears 16 bps."
+}

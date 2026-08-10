@@ -1,0 +1,80 @@
+{
+  "model": "lgbm_statarb_outputs",
+  "model_path": "C:\\Users\\Kev\\repos\\stochastic-spread-modeling-analysis\\statarb\\outputs\\statarb_lgbm.txt",
+  "split": "jul25_28 holdout (snapshot_idx>=3584)",
+  "n_lags": 3,
+  "lgbm": {
+    "all": {
+      "n": 1680081,
+      "mae": 0.7329247250282934,
+      "rmse": 0.9737192917307337,
+      "r2": 0.13165764071097374,
+      "diracc": 0.6307308992840226,
+      "mean_pnl_proxy": 0.2675120486356799,
+      "sharpe_per_trade": 0.26480545376501485,
+      "sharpe_closed_hourly_A": 6.330483228412314
+    },
+    "filtered": {
+      "n": 263464,
+      "mae": 0.7598317841330189,
+      "rmse": 1.0129040340975097,
+      "r2": 0.3890255379066787,
+      "diracc": 0.7867981963380196,
+      "mean_pnl_proxy": 0.765315003502315,
+      "sharpe_per_trade": 0.7276584183913776,
+      "sharpe_closed_hourly_A": 3.9012975099682987
+    },
+    "headline_filtered": {
+      "filter": "|pred| > 0.5",
+      "n": 263464,
+      "diracc": 0.7867981963380196,
+      "r2": 0.3890255379066787,
+      "mean_pnl_proxy": 0.765315003502315,
+      "sharpe_per_trade": 0.7276584183913776,
+      "sharpe_closed_hourly_A": 3.9012975099682987
+    }
+  },
+  "naive_zt": {
+    "all": {
+      "n": 1680081,
+      "mae": 0.7903857759535292,
+      "rmse": 1.1853746490087576,
+      "r2": -0.2868700935034241,
+      "diracc": 0.6702879206419214,
+      "mean_pnl_proxy": 0.3019640839180532,
+      "sharpe_per_trade": 0.3018242230302746,
+      "sharpe_closed_hourly_A": 5.94737989638468
+    },
+    "filtered": {
+      "n": 1043242,
+      "mae": 0.9048266321802396,
+      "rmse": 1.3186710091013638,
+      "r2": -0.39480158698166123,
+      "diracc": 0.6831828089743319,
+      "mean_pnl_proxy": 0.42792387694071443,
+      "sharpe_per_trade": 0.4147645225075797,
+      "sharpe_closed_hourly_A": 5.72004072189346
+    },
+    "headline_filtered": {
+      "filter": "|pred| > 0.5",
+      "n": 1043242,
+      "diracc": 0.6831828089743319,
+      "r2": -0.39480158698166123,
+      "mean_pnl_proxy": 0.42792387694071443,
+      "sharpe_per_trade": 0.4147645225075797,
+      "sharpe_closed_hourly_A": 5.72004072189346
+    }
+  },
+  "notes": {
+    "primary_slice": "|pred| > 0.5 (and |z_t| > 0.5 for naive)",
+    "primary_metrics": [
+      "diracc",
+      "r2",
+      "mean_pnl_proxy",
+      "sharpe_per_trade",
+      "sharpe_closed_hourly_A"
+    ],
+    "sharpe_closed_hourly_A": "sum filtered pnl_proxy by (window_id, snapshot_idx//33); Rf=0 mean/std. Offline closed-only proxy (Sharpe A family). Not live hourly portfolio Sharpe B with open MTM.",
+    "pnl_proxy": "sign(pred) * z_{t+1}"
+  }
+}
