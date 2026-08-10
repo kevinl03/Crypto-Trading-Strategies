@@ -79,12 +79,12 @@ They are not the engineering question: \texttt{coin} selects which asset's
 dynamics apply; \texttt{pair} selects which two venues the cross-exchange
 dislocation (and mean reversion) lives on.
 
-We retrain LightGBM on the Jul~25--28 offline holdout under fixed published
+We retrain LightGBM on the test set under fixed published
 \texttt{LGBM\_PARAMS} and a shared boosting-round budget (49 rounds). Filtered
 metrics use $|\hat{z}| \geq 0.9$ (Table~\ref{tab:tau_sensitivity}).
 
 \begin{table}[t]
-\caption{Engineered vs non-engineered microstructure features (Jul~25--28 offline,
+\caption{Engineered vs non-engineered microstructure features (test set,
 paper gate $|\hat{z}|\geq 0.9$). Identity (\texttt{coin}/\texttt{pair}) held
 fixed. $\Delta$ vs raw (non-engineered) columns: DirAcc$_f$ $+7.6$\,pp,
 R$^2_f$ $+0.523$.}
