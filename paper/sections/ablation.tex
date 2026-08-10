@@ -31,8 +31,7 @@ $\sim$72h closes & 0.9 & 12{,}795 & 86.7\% & 0.599 & +1.37 & 1.08 \\
 
 \subsection{Feature Importance}
 
-Figure~\ref{fig:importance} shows the top~10 of the model's 68~features ranked
-by LightGBM split gain.
+Figure~\ref{fig:importance} shows the top~10 of the model's 68~features ranked by LightGBM split gain.
 
 \begin{figure}[h]
 \centering
@@ -48,14 +47,7 @@ and Coinbase, cross-venue mid-price range, and Coinbase orderbook imbalance.}
 \label{fig:importance}
 \end{figure}
 
-The model mainly relies on z-score and spread lags. This semi-autoregressive
-structure makes sense given the problem context, wherein previous states are
-strong indicators of the future motion of the spread and z-scores. The
-\texttt{coin} and \texttt{pair} categorical variables are also included in the
-top~10, indicating that the model learns to differentiate among coins and
-exchange pairs. Finally, microstructure features---namely trade data and L2
-orderbook data---also appear in the top~10. Even though they are of smaller
-importance, these features still provide signal to the model.
+The model mainly relies on z-score and spread lags. This semi-autoregressive structure makes sense given the problem context, wherein the previous states are strong indicators of future motion of the spread and z-scores. The coin and pair categorical variables are also included in the top~10, indicating that the model learns to differentiate between different coins on different exchanges. Finally, the microstructure features, namely trade data and L2 order book data, are also included in the top~10. Even though they are of smaller importance, these features provide some insight to the model.
 
 \subsection{Ablation: Pre-Training Feature Engineering vs.\ Raw Market Features}
 
