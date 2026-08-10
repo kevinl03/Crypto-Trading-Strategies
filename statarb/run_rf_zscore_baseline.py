@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""Random Forest z-score baseline vs LightGBM (paper Jul-25 protocol).
+"""Random Forest z-score baseline vs LightGBM (paper train/test protocol).
 
-Role: classical tabular peer (like LSTM is the deep peer). LightGBM stays the
-deployed paper-trading head.
+Role: classical tabular bagging peer. LightGBM stays the deployed
+paper-trading / validation head.
 
-Shared contract (must match paper / LOGO cache):
+Shared contract (must match paper / LOGO cache / sec:splits):
   target y = z_{t+1}, W=300, min_periods=90, H=1, N_LAGS=3
-  train = pre Jul 25 · test = Jul 25–28
-  metrics: DirAcc, R², mean pnl_proxy = sign(pred) * y
-  gates: all-rows + tau in {0.5, 0.9}  (paper headline uses |pred| >= 0.9)
+  train = June->mid-July before cut · test = Jul 25-28 · validation = Aug 4-7 live
+  metrics: DirAcc, R2, mean pnl_proxy = sign(pred) * y
+  gates: all-rows + tau in {0.5, 0.9}  (paper headline uses |pred| >= 0.9 on validation)
 
 Prefer LOGO cache frames so feature engineering is not a confounder:
   statarb/outputs_logo/cache/df_{train,test}_logo.parquet
@@ -369,21 +369,22 @@ def write_metrics_md(
     lines = [
         "# Random Forest vs LightGBM (paper protocol)",
         "",
-        "Classical tabular baseline on the **same LOGO / Jul-25 feature frames** as LightGBM.",
-        "RF is a literature peer — not a live replacement. Production head remains LightGBM.",
+        "Classical bagging baseline on the **same LOGO train/test feature frames** as LightGBM.",
+        "RF is a literature peer — not a live replacement. Production / validation head remains LightGBM.",
         "",
         "## Protocol",
         "",
         f"- Target: `y = z_{{t+1}}` · W={protocol.get('zscore_window', 300)} · H={protocol.get('horizon', 1)} · N_LAGS={protocol.get('n_lags', 3)}",
-        f"- Split: train pre Jul 25 · test Jul 25–28 (LOGO cache)",
+        f"- Split (`sec:splits`): train = June->mid-July · test = Jul 25-28 · validation = Aug 4-7 ~72h live",
+        f"- This artifact scores the **test** set (architecture compare)",
         f"- Features: {protocol.get('n_features')} tabular cols (published intersection on cache)",
         f"- Missing vs 68-feat booster: {protocol.get('missing_published', [])}",
-        f"- Gate: `|pred| >= tau` (paper headline τ=0.9); also report all-rows and τ=0.5",
-        f"- Naive peer: `ẑ ← z_t` on identical rows",
+        f"- Gate: `|pred| >= tau` (paper headline τ=0.9 chosen on validation); also report all-rows and τ=0.5",
+        f"- Naive peer: `zhat <- z_t` on identical rows",
         "",
-        "## Comparison table",
+        "## Comparison table (test set)",
         "",
-        "| Model | Set | Filter | n | DirAcc | R² | mean pnl_proxy |",
+        "| Model | Set | Filter | n | DirAcc | R2 | mean pnl_proxy |",
         "|---|---|---|---:|---:|---:|---:|",
     ]
     for r in rows:
@@ -396,11 +397,15 @@ def write_metrics_md(
         "",
         "### Paper reference cells (LGBM validation live book)",
         "",
-        "| Model | Set | Filter | n | DirAcc | R² | mean pnl_proxy |",
+        "Paper τ table is validation-only; RF was not live-scored on validation.",
+        "",
+        "| Model | Set | Filter | n | DirAcc | R2 | mean pnl_proxy |",
         "|---|---|---|---:|---:|---:|---:|",
-        f"| LightGBM (paper / tau09 report) | validation | `|ẑ|≥0.9` | "
+        f"| LightGBM (paper / tau09 report) | validation | `|zhat|>=0.9` | "
         f"{paper_ref.get('n', 12795)} | {fmt_pct(paper_ref.get('diracc', 0.867))} | "
         f"{fmt_f(paper_ref.get('r2', 0.599))} | {fmt_f(paper_ref.get('mean_pnl', 1.372))} |",
+        "",
+        "See docs/lgbm_vs_rf_justification.md for matched-row analysis.",
         "",
         "## Resources",
         "",
@@ -414,7 +419,7 @@ def write_metrics_md(
         "",
         "## Artifacts",
         "",
-        "- `rf_model.joblib` — fitted RandomForestRegressor",
+        "- `rf_model.joblib` — fitted RandomForestRegressor (often gitignored)",
         "- `encoder.joblib` — OrdinalEncoder for coin/pair (+ medians)",
         "- `metrics_test.json` — full metric block",
         "- `METRICS.md` — this file",
@@ -748,9 +753,9 @@ def main() -> None:
         "table_rows": table_rows,
         "paper_validation_ref": paper_ref,
         "validation_note": (
-            "Aug 4–7 paper validation is the live LGBM book (tau09_w300_report). "
-            "RF validation requires the same campaign feature/signal panel for offline "
-            "re-prediction; not fitted here. See --help / handoff for HF download steps."
+            "Paper validation = Aug 4-7 ~72h live LGBM book (tau09_w300_report; "
+            "tau table is validation-only). RF is a test-set bagging peer only — "
+            "not live-scored on validation. See docs/lgbm_vs_rf_justification.md."
         ),
     }
     (out / "metrics_test.json").write_text(
