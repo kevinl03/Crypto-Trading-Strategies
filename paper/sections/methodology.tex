@@ -26,7 +26,7 @@ The model's target is the \emph{future} z-score at horizon $H$:
 \end{equation}
 computed via $\texttt{groupby(coin, pair).zscore.shift(-H)}$ on the training panel. This is a regression target, not a binary classification. The model predicts both the direction and magnitude of the z-score $H$ snapshots ahead, enabling a confidence filter on $|\hat{z}|$.
 
-For the prediction model used in the paper-trading campaigns, $H = 1$ (predict the next snapshot's z-score), $w = 300$ snapshots, and $\text{MIN\_PERIODS} = 90$. Window length and MIN_PERIODS ($\tau$) selection is described in Section~\ref{sec:ablation}.
+For the prediction model used in the paper-trading campaigns, $H = 1$ (predict the next snapshot's z-score), $w = 300$ snapshots, and $\text{MIN\_PERIODS} = 90$. Window length and confidence cutoff ($\tau$) selection is described in Section~\ref{sec:ablation}.
 
 \subsection{Feature Engineering}\label{sec:features}
 
