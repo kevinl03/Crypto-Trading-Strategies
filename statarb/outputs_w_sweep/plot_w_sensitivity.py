@@ -107,24 +107,6 @@ def main() -> None:
     ax.grid(True, alpha=0.3)
     add_baseline_vline(ax)
 
-    # Annotate diminishing returns past W=300 on the filtered DirAcc panel.
-    if BASELINE_W in set(w.astype(int)):
-        base = d.loc[d["zscore_window"] == BASELINE_W].iloc[0]
-        far = d.loc[d["zscore_window"] >= 700]
-        if len(far):
-            row = far.iloc[0]
-            d_pp = 100.0 * (float(row[dir_col]) - float(base[dir_col]))
-            ax.annotate(
-                rf"$W$={int(row['zscore_window'])}: {d_pp:+.1f}pp DirAcc "
-                rf"vs $W$=300 for ~{int(row['zscore_window'])/BASELINE_W:.1f}$\times$ context",
-                xy=(int(row["zscore_window"]), float(row[dir_col])),
-                xytext=(0.55, 0.18),
-                textcoords="axes fraction",
-                fontsize=8,
-                arrowprops=dict(arrowstyle="->", color="0.35"),
-                color="0.25",
-            )
-
     fig.tight_layout(rect=[0, 0, 1, 0.96])
     fig.savefig(OUT_MAIN, dpi=150, bbox_inches="tight")
     plt.close(fig)
