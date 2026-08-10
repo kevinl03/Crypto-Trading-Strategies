@@ -23,7 +23,30 @@ Train (all predictions)      & 0.128 & 61.8\% \\
 \end{tabular}
 \end{table}
 
-Train and test R$^2$ are nearly identical on the unfiltered set (0.128 vs 0.133), indicating no overfitting (early stopping selected iteration~74 of 2,500). Under $\tau{=}0.9$, test DirAcc rises to 85.3\% and R$^2$ to 0.535. Validation $\tau{=}0.9$ subsets (Section~\ref{sec:ablation}) remain consistent with this filtered test skill.
+Train and test R$^2$ are nearly identical on the unfiltered set (0.128 vs 0.133), indicating no overfitting (early stopping selected iteration~74 of 2,500). Under $\tau{=}0.9$, test DirAcc rises to 85.3\% and R$^2$ to 0.535. Validation $\tau{=}0.9$ subsets (Section~\ref{sec:ablation}) remain consistent with this filtered test skill (DirAcc 86.7\%, R$^2$ 0.599), so both held-out regimes support the same selective-forecast story.
+
+\subsection{Tree Ensemble Control: LightGBM vs Random Forest}
+
+As a classical Random Forest baseline within the tree family, we train a Random Forest~\cite{breiman2001random} on the same chronological feature matrix and score it on the \textbf{test} set alongside LightGBM and naive persistence $\hat{z}\leftarrow z_t$ (Table~\ref{tab:rf_test}).\footnote{Table~\ref{tab:rf_test} uses the shared LOGO feature cache (62 columns; six Coinbase volume lags pruned), so LightGBM $\tau{=}0.9$ figures (85.2\% / 0.525) differ slightly from the production booster in Table~\ref{tab:test} (85.3\% / 0.535).} Predictions are highly correlated ($\mathrm{corr}\approx 0.98$), but Random Forest magnitudes are compressed by leaf averaging, whereas LightGBM's residual boosting keeps more mass in the prediction tails, so fewer Random Forest rows clear the absolute gate $|\hat{z}|\geq 0.9$. We therefore report $n$ with every filtered metric: Random Forest's slightly higher own-gate DirAcc is a thinner slice, not a matched-row win. On LightGBM's $|\hat{z}|\geq 0.9$ rows, DirAcc ties at 85.2\% while LightGBM retains the R$^2$ advantage (0.525 vs 0.489). We keep LightGBM as the reported model because, at the paper gate, it yields about twice as many test trades, higher R$^2$, and larger total $\texttt{pnl\_proxy}$ mass ($\mathrm{mean}\times n$).
+
+\begin{table}[h]
+\caption{Test-set tree-family control on the shared LOGO feature matrix. Filtered rows use each model's own $|\hat{z}|\geq 0.9$ mask (except naive, which filters on $|z_t|\geq 0.9$). Bold marks the preferred LightGBM operating point on $n$ and R$^2$.}
+\label{tab:rf_test}
+\small
+\begin{tabular}{llrrrr}
+\toprule
+\textbf{Model} & \textbf{Filter} & \textbf{n} & \textbf{DirAcc} & \textbf{R$^2$} & \textbf{Mean pnl} \\
+\midrule
+LightGBM & all & 1{,}680{,}426 & 62.8\% & \textbf{0.133} & 0.269 \\
+Random Forest & all & 1{,}680{,}426 & 62.9\% & 0.126 & 0.267 \\
+Naive $z_t$ & all & 1{,}680{,}081 & 67.0\% & $-$0.287 & 0.302 \\
+\midrule
+LightGBM & $|\hat{z}|\geq 0.9$ & \textbf{66{,}513} & 85.2\% & \textbf{0.525} & 1.154 \\
+Random Forest & $|\hat{z}|\geq 0.9$ & 33{,}038 & 86.0\% & 0.478 & 1.299 \\
+Naive $z_t$ & $|z_t|\geq 0.9$ & 602{,}453 & 69.5\% & $-$0.523 & 0.545 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \subsection{Validation Campaign}
 

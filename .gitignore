@@ -64,3 +64,11 @@ statarb/outputs_lstm/*.pt
 statarb/outputs_lstm/**/*.pt
 statarb/outputs_lstm_size_matched/*.pt
 statarb/outputs_lstm_size_matched/**/*.pt
+
+# RF forest blob (~180MB; over GitHub limit). Keep encoder + metrics trackable.
+statarb/outputs_rf/rf_model.joblib
+statarb/outputs_rf_smoke/
+statarb/outputs_rf_run.log
+
+# HF paper-trading staging (re-downloadable)
+data/hf_download_3day/

@@ -13,15 +13,6 @@ The 23-asset universe was selected for high cross-exchange spread volatility and
 
 \subsection{Train / Test / Validation Split}\label{sec:splits}
 
-All collection windows before July~25, 2026 form the training set; July~25--28 forms the held-out test set. The split is strictly chronological with no shuffling. The training set contains approximately 2.9~million (coin, exchange-pair, snapshot) feature rows spanning multiple collection windows from June--July 2026. Cross-sectional rows within a snapshot are structurally dependent (they share the same market state), so this row count should not be interpreted as independent samples.
-
-\subsection{Live Paper-Trading Protocol}
-
-For live validation, we run independent paper-trading campaigns that process incoming collector data in real time with no access to future snapshots. Capacity is $\text{max\_open} = 50$. The paper confidence gate is $\tau{=}0.9$ (Section~\ref{sec:ablation}).git 
-
-We validate reuslts on a 72\-hour live trading campaign, using the same model and model parameters as in training and testing. 
-
-\subsubsection{Live trading campaign: Aug~4--7 (\textasciitilde72h)}
 All evaluation uses the same chronological partition; later sections refer to these sets by name without restating dates.
 
 \begin{itemize}
@@ -29,6 +20,10 @@ All evaluation uses the same chronological partition; later sections refer to th
     \item \textbf{Test set.} July~25--28, 2026. Approximately 1.7~million feature rows collected directly from CEX API endpoints and stored so we can score the trained model (roughly a 63/37 train/test row split, or ${\approx}1.7{:}1$). The split uses no shuffling.
     \item \textbf{Validation set.} A sequential ${\approx}$72-hour live paper-trading campaign on August~4--7, 2026 (50{,}690 closed trades at the live gate; 1.01M scored predictions), run on real CEX feeds under the system's collection and decision latency. Capacity is $\text{max\_open} = 50$. The paper confidence gate is $\tau{=}0.9$ (Section~\ref{sec:ablation}); headline validation metrics use the post-hoc $|\hat{z}|\geq 0.9$ subset of this book unless noted.
 \end{itemize}
+
+\subsection{Live Paper-Trading Protocol}
+
+For live validation, we run independent paper-trading campaigns that process incoming collector data in real time with no access to future snapshots. Capacity is $\text{max\_open} = 50$. The paper confidence gate is $\tau{=}0.9$ (Section~\ref{sec:ablation}). We validate on the August~4--7 ${\approx}$72-hour campaign using the same model and parameters as in training and testing.
 
 An earlier short live session under the same model settings ($H{=}1$, $w{=}300$) supplies the capacity-matched mechanical baseline comparison in Section~\ref{sec:results}; we treat it as part of the validation evidence rather than a separate dated campaign.
 
@@ -49,6 +44,10 @@ We replay two mechanical trading rules on the validation signal panel under the 
 
 Scarce slots are filled by ranking $|\hat{z}|$ (model) or $|z_t|$ (mechanical). These represent the two canonical directions a rule-based z-score system can take: betting the spread continues (persistence) or reverts (classical pairs trading). Both settle at $t+1$ with $\text{pnl\_proxy} = \text{direction} \times z_{t+1}$, identical to the model's settlement.
 
+\subsubsection{Tree ensemble control (Random Forest)}
+
+On the same out-of-sample \textbf{test} set used for LightGBM, we score a sklearn Random Forest regressor~\cite{breiman2001random} trained on the same chronological feature matrix (a classical Random Forest baseline as a control within the tree family; Section~\ref{sec:results}). Primary live claims remain capacity-matched mechanical baselines on the validation panel.
+
 \subsection{Reproducibility}
 
-All training, evaluation, and baseline scripts are available in the code repository (\coderef), and the dataset is released at \datasetref. 
+All training, evaluation, and baseline scripts are available in the code repository (\coderef), and the dataset is released at \datasetref.
