@@ -27,7 +27,7 @@ Reviewers can dismiss a thin RF comparison as “insufficient baselines” *or* 
 2. **Hard evaluation.** Chronological train/test, live validation under real collection latency, capacity-matched mechanical peers, selective \(\tau\) gate, z-unit settlement.
 3. **Intentional tree/forest baseline class.** Prior supervised spread work often uses DNN/LSTM; we instead use **tabular tree ensembles** (LightGBM production head; Random Forest bagging control) suited to engineered lags and native categoricals — a different inductive bias, not a “future bake-off.”
 4. **Simple effective baseline.** A gated tree regressor already beats matched persistence on validation; RF on the test set tracks the same ranking → lift is largely **formulation + setting + features + gate**.
-5. **Test-set RF is enough.** Both test and validation are OOS relative to training. LightGBM’s \(\tau{=}0.9\) skill is similar on the two sets → a separate RF validation campaign is unnecessary for this control.
+5. **RF on the same OOS test set as LightGBM.** State that simply; do not digress into why a separate RF validation campaign was not run.
 
 Use RF to show **robustness of the tree baseline class** (bagging ≈ boosting on ranking). Avoid claiming “we introduce a superior ML method” or “we will compare to LSTMs later.”
 
@@ -39,7 +39,7 @@ Use RF to show **robustness of the tree baseline class** (bagging ≈ boosting o
 
 **Method-second (test set):** On the shared LOGO test matrix, RF and LightGBM learn nearly the same ranking (`corr ≈ 0.98`). LightGBM remains the reported model for better \(\tau{=}0.9\) **throughput / R²** and because it is the model under live validation. RF’s slightly higher own-gate DirAcc is a **selection artifact** of compressed `|pred|`, not a skill win on matched rows — so do not market “LGBM wins the tree bake-off” as a contribution.
 
-**Why no RF on validation:** Test and validation are both held-out; LGBM filtered skill aligns across them; the forest peer on test is a sufficient tree-family control.
+**RF evaluation:** Same out-of-sample test set as LightGBM.
 
 ---
 
@@ -127,7 +127,7 @@ Keep these as the paper rationale for preferring LightGBM over RF — **not** CP
 | **Validation / live evaluation** | **LGBM** | Only LGBM has the Aug 4–7 validation book and paper τ table |
 | **What RF shows** | Shared signal | Bagging tracks boosting → lift is not “GBDT magic” |
 
-**Paper claim hierarchy:** (1) setting + live microstructure + next-\(z\) formulation vs mechanical rules on **validation**; (2) test-set RF control → simple tree baseline is robust; (3) LGBM chosen for gate throughput / R² and as the validation model — with test RF sufficient because test≈validation LGBM skill.
+**Paper claim hierarchy:** (1) setting + live microstructure + next-\(z\) formulation vs mechanical rules on **validation**; (2) RF on the same OOS test set as LGBM → simple tree baseline is robust; (3) LGBM chosen for gate throughput / R² and as the validation model.
 
 ---
 
@@ -142,8 +142,6 @@ Paper **validation** = Aug 4–7 ~72h live campaign. The paper’s τ sensitivit
 | Random Forest | validation | — | — | — | — | *not scored* |
 
 Mechanical baseline DirAcc / mean-PnL figures in Results are **validation-panel** capacity-matched replays — the right peer for the contribution. Keep RF out of that story.
-
-**Sufficiency argument:** validation DirAcc/R² under \(\tau{=}0.9\) sit close to the filtered test regime → OOS behavior is consistent; RF on test is an adequate tree-family control without a second live campaign.
 
 ---
 
@@ -169,11 +167,11 @@ Mechanical baseline DirAcc / mean-PnL figures in Results are **validation-panel*
 |---|---|
 | **Abstract / Intro contributions** | Lead with **cross-exchange live next-\(z\)** setting + selective gate + live validation vs mechanical peers. Mention LightGBM as the **simple tree baseline**, not the invention. |
 | **§Methodology** | Trees as tabular inductive bias; RF bagging control scored on test; LGBM for validation. |
-| **§Experimental Setup** | RF under Baseline Definitions as classical bagging control on **test**; note test↔validation similarity → no RF live campaign. |
+| **§Experimental Setup** | RF under Baseline Definitions as classical bagging control on the same OOS **test** set as LightGBM. |
 | **§Results — Test** | Compact LGBM vs RF vs naive table with **n**; favor LGBM on throughput / R²; sufficiency sentence for skipping RF validation. |
 | **§Ablation** | Prefer **boosting vs bagging** as a short robustness note, not a methods shootout. Do **not** put RF into the validation-only τ table. |
 | **§Discussion** | If asked “why not more models?”: contribution is the setting + protocol + released panel; tree baseline is intentionally simple; community can extend on the dataset release. |
-| **Do not** | Lead Results with RF; inflate “LGBM ≫ RF”; use offline/Campaign/Jul 31 labels; cite CPU-live as research motivation. |
+| **Do not** | Lead Results with RF; inflate “LGBM ≫ RF”; use offline/Campaign/Jul 31 labels; cite CPU-live as research motivation; justify why RF was not live-validated. |
 
 **Narrative ladder**
 
@@ -220,4 +218,4 @@ Understudied setting (cross-ex live L2 next-z)
 
 **RF footnote (secondary):**
 
-> On the test matrix, a Random Forest tracks LightGBM’s ranking almost one-to-one; we report LightGBM for gate throughput and R² and evaluate it under live validation. Because filtered LightGBM skill is similar on the chronological test set and the live validation campaign—both out-of-sample relative to training—a separate Random Forest validation run is unnecessary for this tree-family control.
+> On the same out-of-sample test set used for LightGBM, a Random Forest tracks LightGBM’s ranking almost one-to-one; we report LightGBM for gate throughput and R² and evaluate it under live validation.
