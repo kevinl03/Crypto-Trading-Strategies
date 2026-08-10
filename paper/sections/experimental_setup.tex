@@ -5,11 +5,7 @@
 
 \subsection{Data Collection}
 
-We collect live microstructure data from centralized cryptocurrency exchanges using a custom collector that polls 9~signal families (orderbook, trades, ticker, funding, open interest, withdrawal status, exchange status, spread matrices, OHLCV) via REST API at approximately 60-second target cadence across 23~assets and up to 6~exchanges (Binance, Bybit, OKX, Coinbase, Kraken, MEXC). Under full signal load, the observed cadence is approximately 110~seconds per snapshot. Data collection protocol and signal schema are documented in the repository accompanying \datasetref.
-
-\subsection{Asset Universe}
-
-The 23-asset universe was selected for high cross-exchange spread volatility and sufficient liquidity across multiple venues, requiring listing on at least 3~of the 6~target exchanges. See the repository for the full asset list.
+We collect live microstructure data from centralized cryptocurrency exchanges using a custom collector that polls 9~signal families (orderbook, trades, ticker, funding, open interest, withdrawal status, exchange status, spread matrices, OHLCV) via REST API at approximately 60-second target cadence across 23~assets and 6~exchanges (Binance, Bybit, OKX, Coinbase, Kraken, MEXC). Under full signal load, the observed cadence is approximately 110~seconds per snapshot. Data collection protocol and signal schema are documented in the repository accompanying \datasetref.
 
 \subsection{Train/Test Split}
 
@@ -19,7 +15,7 @@ All collection windows before July~25, 2026 form the training set; July~25--28 f
 
 For live validation, we run independent paper-trading campaigns that process incoming collector data in real time with no access to future snapshots. Capacity is $\text{max\_open} = 50$. The paper confidence gate is $\tau{=}0.9$ (Section~\ref{sec:ablation}).
 
-\subsubsection{Campaign A: Jul~31}
+\subsubsection{Campaign A: Jul~31 - TO REMOVE}
 
 \begin{itemize}
     \item \textbf{Model}: 68-feature prediction model (\texttt{statarb\_lgbm.txt}).
@@ -30,6 +26,8 @@ For live validation, we run independent paper-trading campaigns that process inc
     \item \textbf{Predictions scored}: 58,995 total; 2,026 rows with $|\hat{z}|\geq 0.9$.
 \end{itemize}
 
+We validate reuslts on a 72\-hour live trading campaign, using the same model and model parameters as in training and testing. 
+
 \subsubsection{Campaign B: Aug~4--7 (\textasciitilde72h)}
 
 \begin{itemize}
@@ -38,9 +36,7 @@ For live validation, we run independent paper-trading campaigns that process inc
     \item \textbf{Role}: multi-day live stress test; primary $\tau{=}0.9$ metrics are the post-hoc paper-protocol subset of this book (Section~\ref{sec:ablation}).
 \end{itemize}
 
-Campaign~A is a short live stress test; Campaign~B extends the same live deployment settings over three days. We present them as complementary live evidence rather than a controlled factorial experiment.
-
-\subsection{Baseline Definitions}
+\subsection{Baseline Definitions - NEED TO UPDATE }
 
 \subsubsection{Naive persistence}
 
@@ -59,4 +55,4 @@ Scarce slots are filled by ranking $|\hat{z}|$ (model) or $|z_t|$ (mechanical). 
 
 \subsection{Reproducibility}
 
-All training, evaluation, and baseline scripts are available in the code repository (\coderef), and the dataset is released at \datasetref. LightGBM training is reproducible given the hyperparameters in Table~\ref{tab:hyperparams}.
+All training, evaluation, and baseline scripts are available in the code repository (\coderef), and the dataset is released at \datasetref. 
