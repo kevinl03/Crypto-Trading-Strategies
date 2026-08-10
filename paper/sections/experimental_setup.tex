@@ -46,7 +46,7 @@ Scarce slots are filled by ranking $|\hat{z}|$ (model) or $|z_t|$ (mechanical). 
 
 \subsubsection{Tree ensemble control (Random Forest)}
 
-On the test set we additionally score a sklearn Random Forest regressor~\cite{breiman2001random} trained on the same chronological feature matrix as LightGBM (bagging control within the tree family). Primary live claims remain capacity-matched mechanical baselines on the validation panel; the forest peer checks that test-set ranking skill is not unique to gradient boosting.
+On the \textbf{test} set we score a sklearn Random Forest regressor~\cite{breiman2001random} trained on the same chronological feature matrix as LightGBM (bagging control within the tree family). We do not require a separate Random Forest validation campaign: both the test set and the validation campaign are out-of-sample relative to training, and LightGBM's $\tau{=}0.9$ skill is similar on the two sets (Section~\ref{sec:results}), so the test-set forest peer is sufficient to check that ranking skill is not unique to gradient boosting. Primary live claims remain capacity-matched mechanical baselines on the validation panel.
 
 \subsection{Reproducibility}
 
