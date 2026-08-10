@@ -30,62 +30,11 @@ For the prediction model used in the paper-trading campaigns, $H = 1$ (predict t
 
 \subsection{Feature Engineering}\label{sec:features}
 
-The feature matrix is constructed from four synchronized signal families collected at each snapshot: spread matrices, ticker quotes, L2 orderbook, and recent trades. Features are computed per (coin, exchange-pair, snapshot) observation.
-
-\subsubsection{Spread and z-score features}
-
-Lagged values of the spread in basis points and the rolling z-score form the base feature set:
-\begin{itemize}
-    \item $\texttt{spread\_bps\_lag}\{1, 2, 3\}$: raw spread at lags 1--3.
-    \item $\texttt{zscore\_lag}\{1, 2, 3\}$: rolling z-score at lags 1--3.
-    \item $\texttt{spread\_momentum\_1\_3}$: difference between lag-1 and lag-3 spread, capturing short-term trend.
-    \item $\texttt{zscore\_momentum\_1\_3}$: same for z-scores.
-    \item $\texttt{zscore\_accel}$: second-order difference $z_{t-1} - 2z_{t-2} + z_{t-3}$, capturing acceleration in z-score trajectory.
-\end{itemize}
-
-\subsubsection{Ticker microstructure features}
-
-From each exchange's best-bid/ask quotes:
-\begin{itemize}
-    \item $\texttt{tk\_mid\_lag}\{1,2\}$: lagged mid-prices per exchange.
-    \item $\texttt{tk\_spread\_bps\_lag}\{1,2\}$: lagged bid-ask spreads in bps per exchange. Wider spreads indicate lower liquidity and higher execution cost.
-    \item $\texttt{tk\_bid\_volume\_lag}, \texttt{tk\_ask\_volume\_lag}$: lagged top-of-book volumes per exchange.
-\end{itemize}
-
-\subsubsection{Orderbook imbalance features}
-
-From the top~20 price levels on each side of each exchange's order book, we compute:
+The model uses a 68-dimensional feature matrix per (coin, exchange-pair, snapshot), built from four synchronized live signal families: (i)~lagged cross-exchange spreads and rolling z-scores, with short momentum and acceleration of those series; (ii)~ticker top-of-book mids, bid--ask widths, and volumes; (iii)~L2 orderbook imbalance over the top~20 levels on each venue,
 \begin{equation}
-    \texttt{imbalance}_i = \frac{V_{\text{bid},i} - V_{\text{ask},i}}{V_{\text{bid},i} + V_{\text{ask},i}}
+    \texttt{imbalance}_i = \frac{V_{\text{bid},i} - V_{\text{ask},i}}{V_{\text{bid},i} + V_{\text{ask},i}},
 \end{equation}
-where $V_{\text{bid},i}$ and $V_{\text{ask},i}$ are the total volumes on the bid and ask sides of exchange $i$'s top-20 levels. This ratio ranges from $-1$ (entirely ask-dominated) to $+1$ (entirely bid-dominated) and captures directional pressure in the order book. Lagged imbalance values $\texttt{ob\_imbalance\_lag}\{1,2,3\}$ for each exchange provide the model with recent order flow dynamics.
-
-\subsubsection{Trade flow features}
-
-From the most recent trades on each exchange:
-\begin{itemize}
-    \item $\texttt{tr\_buy\_sell\_ratio}$: ratio of buy-initiated to sell-initiated trade volume, indicating whether recent execution flow is dominated by buyers or sellers.
-    \item $\texttt{tr\_total\_volume}$: total trade volume, a proxy for activity and liquidity.
-\end{itemize}
-
-Both are lagged at 1--2 snapshots per exchange.
-
-\subsubsection{Cross-exchange aggregates}
-
-Features that capture the state of the multi-venue market as a whole:
-\begin{itemize}
-    \item $\texttt{cross\_mid\_range}, \texttt{cross\_mid\_std}$: range and standard deviation of mid-prices across exchanges, measuring instantaneous cross-venue dispersion.
-    \item $\texttt{cross\_ba\_std}, \texttt{cross\_ob\_std}, \texttt{cross\_ob\_range}$: cross-exchange variability in bid-ask spreads and orderbook imbalance.
-    \item $\texttt{net\_ob\_pressure}$: aggregate orderbook imbalance across venues.
-    \item $\texttt{price\_rank\_\{exchange\}}$: ordinal rank of each exchange's mid-price within the venue set, identifying which exchange is currently pricing high or low.
-    \item $\texttt{tightest\_ba}, \texttt{widest\_ba}, \texttt{ba\_range}$: spread-liquidity extremes across venues.
-\end{itemize}
-
-\subsubsection{Categorical identifiers}
-
-$\texttt{coin}$ and $\texttt{pair}$ (exchange-pair label) are encoded as LightGBM native categoricals, allowing the model to learn asset-specific and venue-pair-specific dynamics without separate per-pair models.
-
-The prediction model uses 68~features in total.
+with short lags of that ratio; and (iv)~recent trade-flow intensity and buy/sell imbalance, plus cross-venue aggregates (mid dispersion, BA/OB variability, and price ranks). $\texttt{coin}$ and $\texttt{pair}$ enter as LightGBM native categoricals so one panel model can specialize by asset and venue pair. Exact column names and construction details ship with the public dataset release (\datasetref); Section~\ref{sec:ablation} ablates the engineered spread/$z$ trajectory against raw live columns.
 
 \subsection{Model: LightGBM Gradient Boosting}\label{sec:lgbm}
 
