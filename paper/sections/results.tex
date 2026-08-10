@@ -66,20 +66,22 @@ Table~\ref{tab:baselines} reports the capacity-matched baseline comparison, whic
 \begin{table}[h]
 \caption{Capacity-matched baseline comparison on the validation panel at paper gate $\tau{=}0.9$ ($\text{max\_open}=50$, ranked fill). Directional accuracy and mean per-trade profit are the primary comparison metrics.}
 \label{tab:baselines}
-\begin{tabular}{llrrr}
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}lrrr@{}}
 \toprule
-\textbf{Strategy} & \textbf{Direction} & \textbf{n closed} & \textbf{DirAcc} & \textbf{Mean PnL} \\
+\textbf{Strategy} & \textbf{$n$} & \textbf{DirAcc} & \textbf{Mean PnL} \\
 \midrule
-\textbf{LightGBM}      & $\text{sign}(\hat{z})$  & 2{,}026  & \textbf{84.9\%} & \textbf{+1.195} \\
-Mech.\ persistence     & $\text{sign}(z_t)$      & 8{,}550  & 69.5\%          & +0.731 \\
-Mech.\ mean-reversion  & $-\text{sign}(z_t)$     & 8{,}550  & 30.5\%          & $-$0.731 \\
+\textbf{LightGBM}      & 2{,}026  & \textbf{84.9\%} & \textbf{+1.195} \\
+Mech.\ persistence     & 8{,}550  & 69.5\%          & +0.731 \\
+Mech.\ mean-reversion  & 8{,}550  & 30.5\%          & $-$0.731 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 As shown in Table~\ref{tab:baselines}, the learned policy improves directional accuracy by 15.4~percentage points and mean per-trade profit by 63\% over mechanical persistence under the same $\tau{=}0.9$ gate and capacity. Classical mean-reversion produces negative z-unit returns at this hold horizon. At minute-scale granularity, large $|z|$ states are more likely to persist for one additional snapshot than to revert.
 
-Figure~\ref{fig:baseline_diracc} and Figure~\ref{fig:baseline_mean_pnl} show capacity-matched directional accuracy and mean per-trade profit for all three policies on the validation panel.
+Figure~\ref{fig:baseline_diracc} shows capacity-matched directional accuracy for all three policies on the validation panel (mean per-trade profit is in Table~\ref{tab:baselines}).
 
 \begin{figure}[h]
 \centering
@@ -87,14 +89,6 @@ Figure~\ref{fig:baseline_diracc} and Figure~\ref{fig:baseline_mean_pnl} show cap
 \caption{Validation set: capacity-matched directional accuracy at $\tau{=}0.9$ ($\text{max\_open}=50$, ranked fill). The learned policy improves DirAcc by 15.4~pp over mechanical persistence.}
 \Description{Bar chart of directional accuracy on the validation panel: LightGBM at 84.9 percent, mechanical persistence at 69.5 percent, and mechanical mean-reversion at 30.5 percent.}
 \label{fig:baseline_diracc}
-\end{figure}
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=\columnwidth]{figures/fig7b_baseline_mean_pnl.png}
-\caption{Validation set: capacity-matched mean per-trade PnL proxy at $\tau{=}0.9$ ($\text{max\_open}=50$, ranked fill). The learned policy improves mean z-unit profit by 63\% over mechanical persistence; mean-reversion is negative.}
-\Description{Bar chart of mean per-trade PnL proxy in z-units on the validation panel: LightGBM at +1.195, mechanical persistence at +0.731, and mechanical mean-reversion at -0.731.}
-\label{fig:baseline_mean_pnl}
 \end{figure}
 
 \subsection{Portfolio Risk-Adjusted Performance}
