@@ -168,7 +168,7 @@ Mechanical baseline DirAcc / mean-PnL figures in Results are **validation-panel*
 | **Abstract / Intro contributions** | Lead with **cross-exchange live next-\(z\)** setting + selective gate + live validation vs mechanical peers. Mention LightGBM as the **simple tree baseline**, not the invention. |
 | **§Methodology** | Trees as tabular inductive bias; RF bagging control scored on test; LGBM for validation. |
 | **§Experimental Setup** | RF under Baseline Definitions as classical bagging control on the same OOS **test** set as LightGBM. |
-| **§Results — Test** | Compact LGBM vs RF vs naive table with **n**; favor LGBM on throughput / R²; sufficiency sentence for skipping RF validation. |
+| **§Results — Test** | Compact LGBM vs RF vs naive table with **n**; favor LGBM on throughput / R². |
 | **§Ablation** | Prefer **boosting vs bagging** as a short robustness note, not a methods shootout. Do **not** put RF into the validation-only τ table. |
 | **§Discussion** | If asked “why not more models?”: contribution is the setting + protocol + released panel; tree baseline is intentionally simple; community can extend on the dataset release. |
 | **Do not** | Lead Results with RF; inflate “LGBM ≫ RF”; use offline/Campaign/Jul 31 labels; cite CPU-live as research motivation; justify why RF was not live-validated. |
@@ -190,7 +190,7 @@ Understudied setting (cross-ex live L2 next-z)
 
 1. LOGO cache is **62 features**; production booster lists **68** (six Coinbase volume lags missing — NaN-filled for LGBM). Same frame for both.
 2. RF used `max_samples=1e6` bootstrap draws; full-panel `X` still held for fit.
-3. **Validation** headline is live LGBM only; RF not re-traded live (by design — see sufficiency argument).
+3. **Validation** headline is live LGBM only; RF is compared on the same OOS test set as LightGBM.
 4. Own-gate RF τ=0.9 mean pnl can look high; always pair with \(n\) and matched-row tables (§2).
 5. Paper train-size text (~2.9M) may differ from LOGO cache (~4.95M) — cite LOGO when reporting these RF numbers.
 6. A single RF peer will not satisfy every reviewer; treat it as **robustness**, and keep the contribution **setting-first**.
