@@ -1,24 +1,24 @@
 # Stochastic Spread Modeling
 
-**Stochastic Spread Modeling for Cross-Venue Cryptocurrency Trading: An Ornstein–Uhlenbeck Framework on High-Frequency OHLCV Data**
+**Learned Z-Score Forecasting for Cross-Exchange Cryptocurrency Spreads: A Gradient-Boosting Approach on Live Microstructure Data**
 
-Kevin Litvin, Tania Pocrnjic — Simon Fraser University
-*ICAIF '26 — 7th ACM International Conference on AI in Finance · Milan, Italy · November 2026*
+Kevin Litvin, Tania Pocrnjic, Ke Li — Simon Fraser University
+*ICAIF '26 — 7th ACM International Conference on AI in Finance · Milan, Italy · November 14–17, 2026*
 
-[Paper source](paper/stochastic-cross-venue-ohlcv-trading.tex) · [Citation](#citation)
+[Paper (PDF)](paper/finals.pdf) · [Paper source](paper/gradient-boosting-cross-market-spread-prediction-public.tex) · [Citation](#citation)
 
 <p align="center">
-  <img src="paper/figures/Visual-Architecture.png" width="700" alt="System architecture: cross-exchange spread forecast to high-confidence trade">
+  <img src="paper/figures/Visual-Architecture.png" width="700" alt="Figure 1: end-to-end paper protocol from live multi-venue inputs to a confidence-gated trade">
 </p>
-<p align="center"><sub><b>Figure 1.</b> End-to-end pipeline: multi-venue data ingestion → spread/rolling z-score computation → 68-D feature vector → LightGBM forecast → confidence-gated trade execution.</sub></p>
+<p align="center"><sub><b>Figure 1.</b> End-to-end paper protocol: live multi-venue inputs → cross-exchange spread and rolling z-score (w=300) → 68-D features (AR lags dominant) → LightGBM forecast ẑ<sub>t+1</sub> (H=1) → confidence gate |ẑ|≥τ=0.9 → selective trade and t+1 settlement in z-units.</sub></p>
 
 ## Abstract
 
-Cross-exchange price deviations in cryptocurrency markets have been widely documented, yet few studies build and evaluate systematic trading strategies that exploit them. We model the price spread of identical assets across centralized exchanges as an Ornstein–Uhlenbeck (OU) process and trade when deviations exceed a calibrated threshold. Across 30 days of 1-minute OHLCV data (5 assets, 7 exchanges, 50 exchange-pair–model combinations), OU-based mean-reversion is profitable exactly when an asset's cross-exchange spread volatility exceeds the round-trip fee (WIF, PEPE, CRV) and uniformly unprofitable otherwise (DOGE, SOL). The effect traces back to structural price latency on specific exchanges (e.g. a 38-minute lag on Crypto.com for CRV). The OU model consistently beats a rolling z-score baseline on Sharpe ratio and win rate.
+Identical cryptocurrencies often trade at different prices across exchanges. Most high-frequency pairs strategies still turn that gap into a trade with a simple rule: enter when the rolling z-score of the spread is large, and wait for mean reversion. We instead *forecast* the next z-score and show that a tree-based ML model can outperform those mechanical z-score rules under live cross-exchange trading. LightGBM forecasts the next-snapshot cross-exchange z-score $z_{t+1}$ from live multi-venue L2 and microstructure features, using a systematically-selected confidence filter ($|\hat{z}_{t+1}| \geq 0.9$) — the least restrictive threshold at which per-trade Sharpe reaches ≥1. On the live validation book under this filter, LightGBM achieves ~87% directional accuracy and R² of 0.599 across 12,795 closes, with an hourly portfolio Sharpe of 1.90 — a 15.4 percentage-point directional-accuracy improvement over mechanical z-score persistence at matched capacity. We publicly release the code (this repo) and the synchronized multi-exchange microstructure dataset on [Hugging Face](https://huggingface.co/datasets/SFU-fintech-AI/statarb-crypto-research).
 
 ## Overview
 
-The system models cross-exchange price spreads as Ornstein–Uhlenbeck processes, estimates mean-reversion parameters online, and generates trading signals when z-scores breach configurable thresholds. It supports 12 exchanges (Binance, Kraken, KuCoin, Bybit, OKX, Gate.io, etc.) via [ccxt](https://github.com/ccxt/ccxt) and runs on 1-minute OHLCV candles.
+The repo covers the full pipeline behind the paper: a live multi-venue collector computes cross-exchange spreads and rolling z-scores (mechanical OU/z-score mean-reversion baselines), engineers a 68-D live microstructure feature vector, and trains a LightGBM model to forecast the next-snapshot z-score. A confidence gate on the forecast selects high-conviction trades, which are evaluated against the mechanical baselines on live paper-trading data. It supports 12 exchanges (Binance, Kraken, KuCoin, Bybit, OKX, Gate.io, etc.) via [ccxt](https://github.com/ccxt/ccxt).
 
 ### Project Structure
 
@@ -175,9 +175,9 @@ pytest tests/
 ## Citation
 
 ```bibtex
-@inproceedings{litvin2026stochastic,
-  title     = {Stochastic Spread Modeling for Cross-Venue Cryptocurrency Trading: An Ornstein--Uhlenbeck Framework on High-Frequency OHLCV Data},
-  author    = {Litvin, Kevin and Pocrnjic, Tania},
+@inproceedings{litvin2026learned,
+  title     = {Learned Z-Score Forecasting for Cross-Exchange Cryptocurrency Spreads: A Gradient-Boosting Approach on Live Microstructure Data},
+  author    = {Litvin, Kevin and Pocrnjic, Tania and Li, Ke},
   booktitle = {Proceedings of the 7th ACM International Conference on AI in Finance (ICAIF '26)},
   year      = {2026},
   address   = {Milan, Italy}
