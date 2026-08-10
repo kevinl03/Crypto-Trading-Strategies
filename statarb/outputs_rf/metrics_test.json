@@ -1,0 +1,307 @@
+{
+  "protocol": {
+    "horizon": 1,
+    "zscore_window": 300,
+    "n_lags": 3,
+    "n_features": 62,
+    "feat_cols": [
+      "coin",
+      "pair",
+      "spread_bps_lag1",
+      "zscore_lag1",
+      "spread_bps_lag2",
+      "zscore_lag2",
+      "spread_bps_lag3",
+      "zscore_lag3",
+      "tk_mid_lag1_binance",
+      "tk_mid_lag1_bybit",
+      "tk_mid_lag1_coinbase",
+      "tk_mid_lag1_kraken",
+      "tk_mid_lag1_mexc",
+      "tk_mid_lag1_okx",
+      "tk_mid_lag2_binance",
+      "tk_mid_lag2_bybit",
+      "tk_mid_lag2_coinbase",
+      "tk_mid_lag2_kraken",
+      "tk_mid_lag2_mexc",
+      "tk_mid_lag2_okx",
+      "tk_mid_lag3_binance",
+      "tk_mid_lag3_bybit",
+      "tk_mid_lag3_coinbase",
+      "tk_mid_lag3_kraken",
+      "tk_mid_lag3_mexc",
+      "tk_mid_lag3_okx",
+      "tk_spread_bps_lag1_binance",
+      "tk_spread_bps_lag1_bybit",
+      "tk_spread_bps_lag1_kraken",
+      "tk_spread_bps_lag1_okx",
+      "tk_spread_bps_lag2_binance",
+      "tk_spread_bps_lag2_bybit",
+      "tk_spread_bps_lag2_kraken",
+      "tk_spread_bps_lag2_okx",
+      "tk_spread_bps_lag3_binance",
+      "tk_spread_bps_lag3_bybit",
+      "tk_spread_bps_lag3_coinbase",
+      "tk_spread_bps_lag3_kraken",
+      "tk_spread_bps_lag3_okx",
+      "ob_imbalance_lag1_coinbase",
+      "ob_imbalance_lag2_coinbase",
+      "ob_imbalance_lag3_coinbase",
+      "tr_total_volume_lag1_bybit",
+      "tr_total_volume_lag2_bybit",
+      "tr_total_volume_lag3_bybit",
+      "cross_mid_std",
+      "cross_mid_range",
+      "price_rank_binance",
+      "price_rank_bybit",
+      "price_rank_okx",
+      "price_rank_coinbase",
+      "price_rank_kraken",
+      "cross_ba_std",
+      "tightest_ba",
+      "widest_ba",
+      "ba_range",
+      "cross_ob_std",
+      "cross_ob_range",
+      "net_ob_pressure",
+      "spread_momentum_1_3",
+      "zscore_momentum_1_3",
+      "zscore_accel"
+    ],
+    "missing_published": [
+      "tk_bid_volume_lag1_coinbase",
+      "tk_bid_volume_lag2_coinbase",
+      "tk_bid_volume_lag3_coinbase",
+      "tk_ask_volume_lag1_coinbase",
+      "tk_ask_volume_lag2_coinbase",
+      "tk_ask_volume_lag3_coinbase"
+    ],
+    "taus": [
+      0.5,
+      0.9
+    ],
+    "filter_op": ">=",
+    "cache_dir": "C:\\Users\\Kev\\repos\\stochastic-spread-modeling-analysis\\statarb\\outputs_logo\\cache",
+    "lgbm_model": "C:\\Users\\Kev\\repos\\stochastic-spread-modeling-analysis\\statarb\\outputs\\statarb_lgbm.txt",
+    "smoke": 0,
+    "meta": {}
+  },
+  "resources": {
+    "backend": "sklearn.ensemble.RandomForestRegressor",
+    "fit_seconds": 0.0,
+    "predict_seconds": 5.51,
+    "n_train_used": 4947685,
+    "n_train_available": 4947685,
+    "n_test": 1680426,
+    "n_test_available": 1711131,
+    "rf_params": {
+      "n_estimators": 400,
+      "max_depth": 20,
+      "min_samples_leaf": 200,
+      "max_features": "sqrt",
+      "n_jobs": 8,
+      "random_state": 42,
+      "max_samples": 1000000
+    },
+    "mem_estimate": {
+      "x_train_gb": 2.2855138033628464,
+      "x_test_gb": 0.7904330044984818,
+      "bootstrap_per_worker_gb": 0.46193599700927734,
+      "workers_gb": 3.6954879760742188,
+      "fudge_gb": 2.093350622802973,
+      "peak_est_gb": 8.074352402240038,
+      "n_jobs_effective": 8.0,
+      "bootstrap_rows": 1000000.0
+    },
+    "note": "CPU only. Defaults cap train rows / n_jobs / max_samples after a 32 GiB box hit ~13 GiB private with full 4.7M X and n_jobs=-1. Use --mem-check-only first."
+  },
+  "test": {
+    "Random Forest": {
+      "all": {
+        "n": 1680426,
+        "mae": 0.7373215096867507,
+        "rmse": 0.976641133042913,
+        "r2": 0.12645185130747216,
+        "diracc": 0.629298761147471,
+        "mean_pnl_proxy": 0.26705216475685056,
+        "sharpe_per_trade": 0.2643161224641765,
+        "filter": null
+      },
+      "tau_0p5": {
+        "n": 216627,
+        "mae": 0.7830381055704349,
+        "rmse": 1.0303415313542,
+        "r2": 0.37996431973235933,
+        "diracc": 0.7924219972579596,
+        "mean_pnl_proxy": 0.8048788229666705,
+        "sharpe_per_trade": 0.7608703012306086,
+        "filter": "|pred| >= 0.5"
+      },
+      "tau_0p9": {
+        "n": 33038,
+        "mae": 0.9076117779341688,
+        "rmse": 1.1735428922406037,
+        "r2": 0.47819736189230533,
+        "diracc": 0.8602820994006901,
+        "mean_pnl_proxy": 1.2989510539193911,
+        "sharpe_per_trade": 1.1026918965714445,
+        "filter": "|pred| >= 0.9"
+      }
+    },
+    "Naive z_t": {
+      "all": {
+        "n": 1680081,
+        "mae": 0.7903857759685109,
+        "rmse": 1.1853746490404908,
+        "r2": -0.28687009351649695,
+        "diracc": 0.6702879206419214,
+        "mean_pnl_proxy": 0.30196408391168966,
+        "sharpe_per_trade": 0.3018242230160196,
+        "filter": null
+      },
+      "tau_0p5": {
+        "n": 1043242,
+        "mae": 0.9048266321744733,
+        "rmse": 1.3186710090921663,
+        "r2": -0.3948015870735717,
+        "diracc": 0.6831828089743319,
+        "mean_pnl_proxy": 0.4279238769118871,
+        "sharpe_per_trade": 0.41476452249367934,
+        "filter": "|pred| >= 0.5"
+      },
+      "tau_0p9": {
+        "n": 602453,
+        "mae": 1.0653306998164134,
+        "rmse": 1.5004172765159556,
+        "r2": -0.5231118877753935,
+        "diracc": 0.6952177182286419,
+        "mean_pnl_proxy": 0.544897274839144,
+        "sharpe_per_trade": 0.5001726868170452,
+        "filter": "|pred| >= 0.9"
+      }
+    },
+    "LightGBM": {
+      "all": {
+        "n": 1680426,
+        "mae": 0.7331071654701232,
+        "rmse": 0.973217006460374,
+        "r2": 0.13256647383102027,
+        "diracc": 0.6284489766285454,
+        "mean_pnl_proxy": 0.2687973062402446,
+        "sharpe_per_trade": 0.2661653253760705,
+        "filter": null
+      },
+      "tau_0p5": {
+        "n": 273183,
+        "mae": 0.757543552498542,
+        "rmse": 1.0105210709581791,
+        "r2": 0.3836931745285226,
+        "diracc": 0.784184960264731,
+        "mean_pnl_proxy": 0.7575197689989647,
+        "sharpe_per_trade": 0.7215915174757863,
+        "filter": "|pred| >= 0.5"
+      },
+      "tau_0p9": {
+        "n": 66513,
+        "mae": 0.8150022586469476,
+        "rmse": 1.0889820105701464,
+        "r2": 0.5253275670512916,
+        "diracc": 0.8517733375430367,
+        "mean_pnl_proxy": 1.1539758550277186,
+        "sharpe_per_trade": 1.0217814630231798,
+        "filter": "|pred| >= 0.9"
+      }
+    }
+  },
+  "table_rows": [
+    {
+      "model": "LightGBM",
+      "set": "test",
+      "filter": "all",
+      "n": 1680426,
+      "diracc": 0.6284489766285454,
+      "r2": 0.13256647383102027,
+      "mean_pnl_proxy": 0.2687973062402446
+    },
+    {
+      "model": "LightGBM",
+      "set": "test",
+      "filter": "|\u1e91|\u22650.5",
+      "n": 273183,
+      "diracc": 0.784184960264731,
+      "r2": 0.3836931745285226,
+      "mean_pnl_proxy": 0.7575197689989647
+    },
+    {
+      "model": "LightGBM",
+      "set": "test",
+      "filter": "|\u1e91|\u22650.9",
+      "n": 66513,
+      "diracc": 0.8517733375430367,
+      "r2": 0.5253275670512916,
+      "mean_pnl_proxy": 1.1539758550277186
+    },
+    {
+      "model": "Random Forest",
+      "set": "test",
+      "filter": "all",
+      "n": 1680426,
+      "diracc": 0.629298761147471,
+      "r2": 0.12645185130747216,
+      "mean_pnl_proxy": 0.26705216475685056
+    },
+    {
+      "model": "Random Forest",
+      "set": "test",
+      "filter": "|\u1e91|\u22650.5",
+      "n": 216627,
+      "diracc": 0.7924219972579596,
+      "r2": 0.37996431973235933,
+      "mean_pnl_proxy": 0.8048788229666705
+    },
+    {
+      "model": "Random Forest",
+      "set": "test",
+      "filter": "|\u1e91|\u22650.9",
+      "n": 33038,
+      "diracc": 0.8602820994006901,
+      "r2": 0.47819736189230533,
+      "mean_pnl_proxy": 1.2989510539193911
+    },
+    {
+      "model": "Naive z_t",
+      "set": "test",
+      "filter": "all",
+      "n": 1680081,
+      "diracc": 0.6702879206419214,
+      "r2": -0.28687009351649695,
+      "mean_pnl_proxy": 0.30196408391168966
+    },
+    {
+      "model": "Naive z_t",
+      "set": "test",
+      "filter": "|\u1e91|\u22650.5",
+      "n": 1043242,
+      "diracc": 0.6831828089743319,
+      "r2": -0.3948015870735717,
+      "mean_pnl_proxy": 0.4279238769118871
+    },
+    {
+      "model": "Naive z_t",
+      "set": "test",
+      "filter": "|\u1e91|\u22650.9",
+      "n": 602453,
+      "diracc": 0.6952177182286419,
+      "r2": -0.5231118877753935,
+      "mean_pnl_proxy": 0.544897274839144
+    }
+  ],
+  "paper_validation_ref": {
+    "n": 12795,
+    "diracc": 0.8671355998436889,
+    "r2": 0.5990371393573842,
+    "mean_pnl": 1.3722711889530343,
+    "source": "C:\\Users\\Kev\\repos\\stochastic-spread-modeling-analysis\\data\\paper_trading\\5day_Aug4_2026\\tau09_w300_report.json"
+  },
+  "validation_note": "Aug 4\u20137 paper validation is the live LGBM book (tau09_w300_report). RF validation requires the same campaign feature/signal panel for offline re-prediction; not fitted here. See --help / handoff for HF download steps."
+}
