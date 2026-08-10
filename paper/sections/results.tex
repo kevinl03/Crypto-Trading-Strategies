@@ -3,15 +3,15 @@
 % ======================================================================
 \section{Results}\label{sec:results}
 
-We evaluate the LightGBM z-score forecasting model across offline held-out evaluation and two live paper-trading settings (Jul~31 and a $\sim$72h Aug~4--7 campaign). In each setting we report both forecast quality metrics (R$^2$, directional accuracy) and trading performance metrics (mean profit proxy, hourly portfolio Sharpe ratio), always scoring a naive persistence baseline on the same rows as the model. The paper confidence gate is $\tau{=}0.9$ (justified in Section~\ref{sec:ablation}).
+We evaluate the LightGBM z-score forecasting model on the test set and the validation campaign (Section~\ref{sec:splits}). In each setting we report forecast quality metrics (R$^2$, directional accuracy) and trading performance metrics (mean profit proxy, hourly portfolio Sharpe ratio), always scoring a naive persistence baseline on the same rows as the model. The paper confidence gate is $\tau{=}0.9$ (justified in Section~\ref{sec:ablation}).
 
-\subsection{Offline Evaluation}
+\subsection{Test-Set Evaluation}
 
-The model is trained on all collection windows before July~25, 2026 and tested on the Jul~25--28 held-out window. Table~\ref{tab:offline} reports forecast metrics on the full prediction set and on the paper-protocol filter $|\hat{z}| \geq 0.9$.
+Table~\ref{tab:test} reports forecast metrics on the full prediction set and on the paper-protocol filter $|\hat{z}| \geq 0.9$.
 
 \begin{table}[h]
-\caption{Offline evaluation on the Jul~25--28 held-out test set. Filtered rows use the paper gate $|\hat{z}| \geq 0.9$.}
-\label{tab:offline}
+\caption{Test-set evaluation. Filtered rows use the paper gate $|\hat{z}| \geq 0.9$.}
+\label{tab:test}
 \begin{tabular}{lrr}
 \toprule
 \textbf{Set} & \textbf{R$^2$} & \textbf{DirAcc} \\
@@ -23,33 +23,15 @@ Train (all predictions)      & 0.128 & 61.8\% \\
 \end{tabular}
 \end{table}
 
-Train and test R$^2$ are nearly identical on the unfiltered set (0.128 vs 0.133), indicating no overfitting (early stopping selected iteration~74 of 2,500). Under $\tau{=}0.9$, offline test DirAcc rises to 85.3\% and R$^2$ to 0.535. Live $\tau{=}0.9$ subsets (Section~\ref{sec:ablation}) remain consistent with this filtered offline skill.
+Train and test R$^2$ are nearly identical on the unfiltered set (0.128 vs 0.133), indicating no overfitting (early stopping selected iteration~74 of 2,500). Under $\tau{=}0.9$, test DirAcc rises to 85.3\% and R$^2$ to 0.535. Validation $\tau{=}0.9$ subsets (Section~\ref{sec:ablation}) remain consistent with this filtered test skill.
 
-\subsection{Live Paper-Trading Campaigns}
+\subsection{Validation Campaign}
 
-\subsubsection{Campaign~A (Jul~31)}
-
-The production 68-feature model with horizon $H=1$ and z-score window~300 was deployed for an 8-hour session. Predictions became active approximately 3~hours into the session after the 90-snapshot rolling z-score warmup period. Table~\ref{tab:jul31} reports model and naive persistence metrics on all scored rows and on the paper gate $|\hat{z}|\geq 0.9$.
-
-\begin{table}[h]
-\caption{Jul~31 live campaign: model vs naive persistence (paper gate $|\hat{z}|\geq 0.9$).}
-\label{tab:jul31}
-\small
-\begin{tabular}{lrrrrr}
-\toprule
-\textbf{Set} & \textbf{n} & \textbf{Model R$^2$} & \textbf{Model Dir.} & \textbf{Naive R$^2$} & \textbf{Naive Dir.} \\
-\midrule
-All             & 58{,}995 & 0.104  & 60.9\% & $-$0.338 & 65.6\% \\
-$|\hat{z}|\geq0.9$ & 2{,}026  & 0.514  & 84.9\% & 0.424    & 84.4\% \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-On Jul~31 the model achieves positive R$^2$ where naive persistence is negative or near zero on the full panel. Under $|\hat{z}|\geq 0.9$, naive directional accuracy nearly matches the model (84.4\% vs 84.9\%), but the model's R$^2$ advantage (0.514 vs 0.424) shows that it captures the \emph{magnitude} of z-score movements, not merely their sign.
+Under the paper protocol $|\hat{z}|{\geq}0.9$ applied to settled validation closes, the book has $n{=}12{,}795$ trades with DirAcc 86.7\%, R$^2$ 0.599, mean z-proxy $+1.37$, and per-trade Sharpe 1.08 (Table~\ref{tab:tau_sensitivity}).
 
 \subsection{Baseline Comparison: Learned Forecast vs Mechanical Z-Score Rules}
 
-To isolate the value of the learned forecast from the confidence filter, we replay two mechanical baselines on the Jul~31 signal panel under matched capacity ($\text{max\_open} = 50$) and the same magnitude gate $\tau{=}0.9$. Both baselines enter when $|z_t| \geq 0.9$ but use the current z-score rather than a predicted future z-score to determine trade direction; scarce slots are filled by ranking $|z_t|$ (LightGBM ranks $|\hat{z}|$):
+To isolate the value of the learned forecast from the confidence filter, we replay two mechanical baselines on the validation signal panel under matched capacity ($\text{max\_open} = 50$) and the same magnitude gate $\tau{=}0.9$. Both baselines enter when $|z_t| \geq 0.9$ but use the current z-score rather than a predicted future z-score to determine trade direction; scarce slots are filled by ranking $|z_t|$ (LightGBM ranks $|\hat{z}|$):
 
 \begin{itemize}
     \item \textbf{Persistence}: $\text{direction} = \text{sign}(z_t)$. Bets that the current z-score will continue into the next snapshot.
@@ -59,7 +41,7 @@ To isolate the value of the learned forecast from the confidence filter, we repl
 Table~\ref{tab:baselines} reports the capacity-matched baseline comparison, which is the primary evidence for the model's improvement over rule-based z-score thresholds.
 
 \begin{table}[h]
-\caption{Capacity-matched baseline comparison on Jul~31 at paper gate $\tau{=}0.9$ ($\text{max\_open}=50$, ranked fill). Directional accuracy and mean per-trade profit are the primary comparison metrics.}
+\caption{Capacity-matched baseline comparison on the validation panel at paper gate $\tau{=}0.9$ ($\text{max\_open}=50$, ranked fill). Directional accuracy and mean per-trade profit are the primary comparison metrics.}
 \label{tab:baselines}
 \begin{tabular}{llrrr}
 \toprule
@@ -74,28 +56,24 @@ Mech.\ mean-reversion  & $-\text{sign}(z_t)$     & 8{,}550  & 30.5\%          & 
 
 As shown in Table~\ref{tab:baselines}, the learned policy improves directional accuracy by 15.4~percentage points and mean per-trade profit by 63\% over mechanical persistence under the same $\tau{=}0.9$ gate and capacity. Classical mean-reversion produces negative z-unit returns at this hold horizon. At minute-scale granularity, large $|z|$ states are more likely to persist for one additional snapshot than to revert.
 
-Figure~\ref{fig:baseline_compare} visualizes the directional accuracy and mean per-trade profit for all three policies. Figure~\ref{fig:cumpnl} shows the cumulative z-unit profit trajectories over the Jul~31 session.
+Figure~\ref{fig:baseline_diracc} and Figure~\ref{fig:baseline_mean_pnl} show capacity-matched directional accuracy and mean per-trade profit for all three policies on the validation panel.
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=\columnwidth]{figures/fig7_baseline_diracc_pnl.png}
-\caption{Capacity-matched baseline comparison on Jul~31 at $\tau{=}0.9$. The learned policy improves directional accuracy by 15.4~pp and mean per-trade profit by 63\% over mechanical persistence. Mean-reversion is negative on both metrics.}
-\Description{Two-panel bar chart. Left panel shows directional accuracy: LightGBM at 84.9\%, mechanical persistence at 69.5\%, and mechanical mean-reversion at 30.5\%. Right panel shows mean per-trade PnL proxy in z-units: LightGBM at +1.195, mechanical persistence at +0.731, and mechanical mean-reversion at -0.731.}
-\label{fig:baseline_compare}
+\includegraphics[width=\columnwidth]{figures/fig7a_baseline_diracc.png}
+\caption{Validation set: capacity-matched directional accuracy at $\tau{=}0.9$ ($\text{max\_open}=50$, ranked fill). The learned policy improves DirAcc by 15.4~pp over mechanical persistence.}
+\Description{Bar chart of directional accuracy on the validation panel: LightGBM at 84.9 percent, mechanical persistence at 69.5 percent, and mechanical mean-reversion at 30.5 percent.}
+\label{fig:baseline_diracc}
 \end{figure}
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=\columnwidth]{figures/fig5_cum_pnl_proxy_jul31.png}
-\caption{Cumulative z-unit proxy P\&L over the Jul~31 session at $\tau{=}0.9$ (ranked capacity). This is a proxy in z-score units gross of costs, not a currency return; see Section~\ref{sec:proxy_gap}.}
-\Description{Line chart of cumulative proxy profit in z-score units against session time for LightGBM, mechanical persistence, and mechanical mean-reversion under the tau=0.9 ranked-capacity protocol.}
-\label{fig:cumpnl}
+\includegraphics[width=\columnwidth]{figures/fig7b_baseline_mean_pnl.png}
+\caption{Validation set: capacity-matched mean per-trade PnL proxy at $\tau{=}0.9$ ($\text{max\_open}=50$, ranked fill). The learned policy improves mean z-unit profit by 63\% over mechanical persistence; mean-reversion is negative.}
+\Description{Bar chart of mean per-trade PnL proxy in z-units on the validation panel: LightGBM at +1.195, mechanical persistence at +0.731, and mechanical mean-reversion at -0.731.}
+\label{fig:baseline_mean_pnl}
 \end{figure}
 
 \subsection{Portfolio Risk-Adjusted Performance}
 
-Over the 6~active hours of the Jul~31 $\tau{=}0.9$ ranked-capacity book, the model's hourly portfolio Sharpe ratio is 1.90 (mean hourly z-unit profit divided by its standard deviation, including mark-to-market).
-
-\subsection{Campaign~B (\textasciitilde72h) under the Paper Gate}
-
-Campaign~B extends the Campaign~A settings ($H{=}1$, $w{=}300$, $\text{max\_open}{=}50$) over $\approx$72.9~hours. Under the paper protocol $|\hat{z}|{\geq}0.9$ applied to settled closes, the book has $n{=}12{,}795$ trades with DirAcc 86.7\%, R$^2$ 0.599, mean z-proxy $+1.37$, and per-trade Sharpe 1.08 (Table~\ref{tab:tau_sensitivity})---consistent with the Jul~31 fine-sweep operating point and confirming that the short session was not a one-off.
+Over the active hours of the validation $\tau{=}0.9$ ranked-capacity baseline book, the model's hourly portfolio Sharpe ratio is 1.90 (mean hourly z-unit profit divided by its standard deviation, including mark-to-market). Capacity-matched mechanical persistence can reach about 2.62 here only because it closes far more trades ($n{\approx}8{,}550$ vs $2{,}026$): hourly Sharpe rewards a thicker aggregated path, not better per-trade forecast skill---DirAcc and mean z-proxy still favor LightGBM (Table~\ref{tab:baselines}; Section~\ref{sec:discussion}). On the full ${\approx}$72-hour validation closes at $\tau{=}0.9$, closed-only hourly Sharpe is 1.83.

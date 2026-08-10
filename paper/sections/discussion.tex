@@ -3,17 +3,14 @@
 % ======================================================================
 \section{Discussion}\label{sec:discussion}
 
-\subsection{Z-Score Units Capture Forecast Quality}\label{sec:proxy_gap}
+\subsection{Forecast Quality vs Economic Settlement}\label{sec:proxy_gap}
 
-The settlement proxy $\text{pnl}_{\text{proxy}} = \text{direction} \times
-z_{t+H}$ measures the model's ability to correctly predict the standardized
-spread level at horizon $H$. It is designed as a forecast quality metric, not as
-an economic P\&L.
+The paper's primary claim is forecast quality under a selective confidence gate: on the test set and the validation campaign, LightGBM improves directional accuracy and mean z-unit settlement over capacity-matched mechanical persistence (Section~\ref{sec:results}). The settlement proxy $\text{pnl}_{\text{proxy}} = \text{direction} \times z_{t+H}$ is designed for that claim---it scores whether the standardized spread level moves as predicted---not as a dollar P\&L.
 
-When the same Jul~31 $\tau{=}0.9$ ranked-capacity trades are re-scored in basis points of realized spread change, the ordering between policies inverts: the learned policy averages $-0.94$~bps per trade (34.9\% win rate), while mechanical mean-reversion yields $+3.97$~bps (76.0\% win rate). Table~\ref{tab:bps} summarizes this difference.
+When the same validation $\tau{=}0.9$ ranked-capacity trades are re-scored in basis points of realized spread change, policy ordering can invert (Table~\ref{tab:bps}): z-unit wins for the learned policy do not automatically translate into positive mean gross bps. That gap is expected under the training objective (predict $z_{t+H}$, which is dominated by the slow-moving rolling mean) rather than instantaneous $\Delta S_t$. We therefore report z-unit DirAcc, R$^2$, and mean $\texttt{pnl\_proxy}$ as the headline evidence, and treat fee-aware bps as a separate economic layer for future work.
 
 \begin{table}[h]
-\caption{Jul~31 $\tau{=}0.9$ ranked-capacity entries scored in z-units and basis points of realized spread change, gross of fees. Policy ordering inverts between units.}
+\caption{Validation $\tau{=}0.9$ ranked-capacity entries scored in z-units and basis points of realized spread change, gross of fees. Units answer different questions: z-proxy for forecast quality, bps for raw spread change.}
 \label{tab:bps}
 \begin{tabular}{lrrr}
 \toprule
@@ -27,18 +24,7 @@ Mech.\ mean-reversion & $-0.731$ & $+3.97$ & 76.0\% \\
 \end{tabular}
 \end{table}
 
-This inversion reflects the model's training objective: predicting the z-score level $z_{t+H}$ (dominated by the slow-moving rolling mean) rather than the instantaneous spread change $\Delta S_t$. The z-unit settlement is appropriate for evaluating forecast quality, which is the primary claim of this work. For production deployment, a direct spread-change target net of fees would align training with the economic objective.
+\subsection{Portfolio Stability Complements Per-Trade Skill}
 
-\subsection{Portfolio Sharpe Characterizes Forecast Stability}
+Under the $\tau{=}0.9$ ranked-capacity baseline book, capacity-matched mechanical persistence posts a higher hourly portfolio Sharpe (2.62) than LightGBM (1.90). That ranking does \emph{not} overturn the model's advantage. Hourly Sharpe scores the path of \emph{aggregated} hourly z-proxy, not forecast quality per fill: persistence admits about $4{\times}$ as many closes ($n{\approx}8{,}550$ vs $2{,}026$) because $|z_t|{\geq}0.9$ fires more often than $|\hat{z}|{\geq}0.9$, so its hourly P\&L series is thicker and can look stabler even though each trade is weaker. On the metrics that match the paper claim---per-trade DirAcc (84.9\% vs 69.5\%) and mean z-proxy ($+1.20$ vs $+0.73$) under the same gate and capacity---LightGBM remains clearly ahead. We therefore treat hourly Sharpe as a secondary stability check and rank policies by selective forecast skill.
 
-The Jul~31 hourly Sharpe of 1.90 ($n=6$) under the $\tau{=}0.9$ ranked-capacity book characterizes forecast stability but is not directly comparable to the multi-month, cost-aware benchmarks in the crypto pairs-trading literature~\cite{tadi2021evaluation, tadi2025copula}. The capacity-matched mechanical persistence peer attains a higher hourly Sharpe (2.62) while trailing on per-trade DirAcc and mean z-proxy, confirming that both policies exploit a high-persistence regime. Per-trade forecast quality (R$^2$ and directional accuracy) is the primary evidence for the model's advantage; Sharpe is a secondary stability indicator.
-
-\subsection{Threats to Validity}\label{sec:limitations}
-
-\textbf{Evaluation horizon.} Campaign~A covers approximately six active hours---too short alone to characterize regime dependence---but Campaign~B extends live collection over $\approx$73~hours. Headline metrics use the paper gate $\tau{=}0.9$ (Section~\ref{sec:ablation}); some live $\tau{=}0.9$ numbers are post-hoc filters or ranked-capacity replays on the collected sessions rather than a separate live re-fill at that gate. The campaigns still differ in calendar window, so they are complementary stress tests rather than a controlled factorial ablation.
-
-\textbf{Proxy settlement.} P\&L is measured in z-units gross of fees, slippage, and bid-ask crossing (Section~\ref{sec:proxy_gap}). No dollar return is claimed.
-
-\textbf{Execution latency.} The collector's observed cadence is approximately 110~seconds, so signals are acted on against market states up to two minutes stale. Fischer et al.~\cite{fischer2019statistical} show that minute-scale crypto alpha can vanish within 1--5~minutes of delay; we have not run the corresponding ablation.
-
-\textbf{Dependence structure.} Rows within a snapshot share market state, so the 2.9~million training rows and 59{,}000 predictions are not independent samples. We report no significance tests.

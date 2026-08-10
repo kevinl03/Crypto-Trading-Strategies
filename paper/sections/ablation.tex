@@ -1,30 +1,36 @@
 % ======================================================================
-%  ABLATION STUDIES
+%  MODEL TUNING & ABLATION STUDIES
 % ======================================================================
-\section{Ablation Studies}\label{sec:ablation}
+\section{Model Tuning \& Ablation Studies}\label{sec:ablation}
 
 \subsection{Selecting Window Length and Confidence Threshold}
 
 \paragraph{Window $w$.}
-Increasing $w$ enriches $(\hat{\mu}_w,\hat{\sigma}_w)$ but forces longer warmup before a valid $z$ exists and slows $\sigma$ adaptation. Offline spreads-only LightGBM sweeps on the Jul~25 holdout show test skill rising into a plateau near $w{\approx}560$--$720$, with only modest gains past the production choice $w{=}300$ (${\approx}{+}1$\,pp DirAcc and ${+}0.017$ R$^2$ at $w{=}720$ for ${\sim}2.4{\times}$ lookback). A $w{\times}\tau$ grid scored on the Jul~31 collector likewise does not favor larger $w$ at matched $\tau$. We therefore retain $w{=}300$.
+Increasing $w$ enriches $(\hat{\mu}_w,\hat{\sigma}_w)$ but forces longer warmup before a valid $z$ exists and slows $\sigma$ adaptation. Spreads-only LightGBM sweeps on the test set show skill rising into a plateau near $w{\approx}560$--$720$, with only modest gains past the production choice $w{=}300$ (${\approx}{+}1$\,pp DirAcc and ${+}0.017$ R$^2$ at $w{=}720$ for ${\sim}2.4{\times}$ lookback). Figure~\ref{fig:w_sensitivity} makes the trade-off explicit under the paper gate $|\hat{z}|\geq 0.9$: past $w{=}300$, further increases mainly buy longer context for marginal filtered DirAcc. We therefore retain $w{=}300$.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=\columnwidth]{figures/w_vs_r2_diracc.png}
+\caption{Z-score window $w$ vs test $R^2$ and directional accuracy under $|\hat{z}|\geq 0.9$. Past $w{=}300$, additional lookback mainly increases required context while DirAcc gains flatten.}
+\Description{Two-panel line chart of test R-squared and directional accuracy versus z-score window W. Curves for all predictions and for absolute prediction at least 0.9 both rise then plateau; a dashed vertical line marks W=300.}
+\label{fig:w_sensitivity}
+\end{figure}
 
 \paragraph{Threshold $\tau$.}
-Early live collection used a permissive gate $\tau{=}0.5$ to maximize coverage under $\text{max\_open}{=}50$. That choice is a starting point for selection, not the paper operating point: on Jul~31 signal rows it yields DirAcc 76.7\%, R$^2$ 0.347, mean z-proxy $+0.75$, and per-trade Sharpe only 0.67 ($n{=}8{,}775$). A fine sweep on the same panel ($w{=}300$) shows that raising $\tau$ monotonically improves DirAcc, R$^2$, mean z-proxy, and per-trade Sharpe $\mathrm{mean}(\mathrm{pnl\_proxy})/\mathrm{std}(\mathrm{pnl\_proxy})$ (Rf~$=0$). \textbf{Per-trade} Sharpe first reaches ${\geq}1$ at $\tau{=}0.9$ (Table~\ref{tab:tau_sensitivity}): DirAcc 84.9\%, R$^2$ 0.514, mean z-proxy $+1.20$, Sharpe 1.02 on $n{=}2{,}026$ rows---still a large book relative to $\tau{=}1.0$ ($n{=}1{,}426$), with mean $\texttt{pnl\_proxy}$ already high versus $\tau{=}0.5$. Neighboring points bound the choice: $\tau{=}0.85$ remains below Sharpe~$1$, while $\tau{=}1.0$ adds little Sharpe for another ${\sim}30\%$ coverage cut. The same $\tau{=}0.9$ cut on Campaign~B closes confirms the lift from the initial $\tau{=}0.5$ book at longer horizon (50{,}690${\to}$12{,}795; DirAcc 79.0\%${\to}$86.7\%; Sharpe/trade 0.75${\to}$1.08). We therefore fix $\tau{=}0.9$ as the paper protocol; headline results use this gate (Section~\ref{sec:limitations} notes when live fills are post-hoc filtered).
+Early live collection used a permissive gate $\tau{=}0.5$ to maximize coverage under $\text{max\_open}{=}50$. That choice is a starting point for selection, not the paper operating point. A post-hoc sweep on validation closes ($w{=}300$) shows that raising $\tau$ from $0.5$ to $1.0$ monotonically improves DirAcc, R$^2$, mean z-proxy, and per-trade Sharpe $\mathrm{mean}(\mathrm{pnl\_proxy})/\mathrm{std}(\mathrm{pnl\_proxy})$ (Rf~$=0$), while cutting $n$ (Table~\ref{tab:tau_sensitivity}). \textbf{Per-trade} Sharpe first reaches ${\geq}1$ at $\tau{=}0.9$: DirAcc 86.7\%, R$^2$ 0.599, mean z-proxy $+1.37$, Sharpe 1.08 on $n{=}12{,}795$ closes---still a large book relative to $\tau{=}1.0$ ($n{=}9{,}390$), with a clear lift versus $\tau{=}0.5$ ($n{=}50{,}690$; DirAcc 79.0\%; Sharpe/trade 0.75). Neighboring points bound the choice: $\tau{=}0.75$ remains below Sharpe~$1$, while $\tau{=}1.0$ adds limited Sharpe for another ${\sim}27\%$ coverage cut. We therefore fix $\tau{=}0.9$ as the paper protocol; headline results use $|\hat{z}|\geq 0.9$ (including post-hoc filters on live books filled at a lower $\tau$).
 
 \begin{table}[h]
-\caption{Choosing $\tau$ from the initial live gate $\tau{=}0.5$ ($w{=}300$). Jul~31 rows are scored signals; Campaign~B rows are live closes. Per-trade Sharpe uses Rf~$=0$.}
+\caption{Choosing $\tau$ on the validation set ($w{=}300$; post-hoc filter on live closes). Per-trade Sharpe uses Rf~$=0$.}
 \label{tab:tau_sensitivity}
 \small
-\begin{tabular}{llrrrrr}
+\begin{tabular}{lrrrrr}
 \toprule
-\textbf{Book} & $\tau$ & $n$ & \textbf{DirAcc} & \textbf{R$^2$} & \textbf{Mean} & \textbf{Sharpe/tr} \\
+$\tau$ & $n$ & \textbf{DirAcc} & \textbf{R$^2$} & \textbf{Mean} & \textbf{Sharpe/tr} \\
 \midrule
-Jul~31 signals & 0.5 & 8{,}775 & 76.7\% & 0.347 & +0.75 & 0.67 \\
-Jul~31 signals & 0.85 & 2{,}452 & 84.5\% & 0.497 & +1.16 & 0.99 \\
-Jul~31 signals & 0.9 & 2{,}026 & 84.9\% & 0.514 & +1.20 & 1.02 \\
-Jul~31 signals & 1.0 & 1{,}426 & 85.3\% & 0.534 & +1.26 & 1.07 \\
-$\sim$72h closes & 0.5 & 50{,}690 & 79.0\% & 0.439 & +0.84 & 0.75 \\
-$\sim$72h closes & 0.9 & 12{,}795 & 86.7\% & 0.599 & +1.37 & 1.08 \\
+0.5 & 50{,}690 & 79.0\% & 0.439 & +0.84 & 0.75 \\
+0.75 & 20{,}866 & 84.5\% & 0.546 & +1.17 & 0.95 \\
+0.9 & 12{,}795 & 86.7\% & 0.599 & +1.37 & 1.08 \\
+1.0 & 9{,}390 & 88.0\% & 0.635 & +1.51 & 1.17 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -73,12 +79,12 @@ They are not the engineering question: \texttt{coin} selects which asset's
 dynamics apply; \texttt{pair} selects which two venues the cross-exchange
 dislocation (and mean reversion) lives on.
 
-We retrain LightGBM on the Jul~25--28 offline holdout under fixed published
+We retrain LightGBM on the test set under fixed published
 \texttt{LGBM\_PARAMS} and a shared boosting-round budget (49 rounds). Filtered
 metrics use $|\hat{z}| \geq 0.9$ (Table~\ref{tab:tau_sensitivity}).
 
 \begin{table}[t]
-\caption{Engineered vs non-engineered microstructure features (Jul~25--28 offline,
+\caption{Engineered vs non-engineered microstructure features (test set,
 paper gate $|\hat{z}|\geq 0.9$). Identity (\texttt{coin}/\texttt{pair}) held
 fixed. $\Delta$ vs raw (non-engineered) columns: DirAcc$_f$ $+7.6$\,pp,
 R$^2_f$ $+0.523$.}

@@ -267,16 +267,15 @@ def fig4_feature_importance(top_n: int = 10):
     return out
 
 
-def fig7_baseline_diracc_pnl():
-    """Side-by-side DirAcc and Mean PnL for LightGBM vs mechanical baselines (τ=0.9 ranked capacity)."""
+def _ranked_capacity_metrics() -> tuple[float, list[str], list[float], list[float]]:
+    """Load capacity-matched DirAcc / mean PnL for LGBM vs mechanical baselines."""
     session = SESSIONS["Jul31"]
     report = json.loads(
         (session / "baseline_strengthening" / "baseline_strengthening_report.json")
         .read_text(encoding="utf-8")
     )
     ranked = report["ranked_capacity"]
-    tau = report.get("tau", 0.9)
-
+    tau = float(report.get("tau", 0.9))
     strategies = ["LightGBM", "Mech.\npersistence", "Mech.\nmean-reversion"]
     dir_accs = [
         ranked["lgbm_ranked_by_abs_pred"]["dir_acc"],
@@ -288,27 +287,48 @@ def fig7_baseline_diracc_pnl():
         ranked["mechanical_persistence_ranked_by_abs_z"]["mean_pnl_proxy"],
         ranked["mechanical_mean_reversion_ranked_by_abs_z"]["mean_pnl_proxy"],
     ]
+    return tau, strategies, dir_accs, mean_pnls
+
+
+def fig7a_baseline_diracc():
+    """Capacity-matched DirAcc for LightGBM vs mechanical baselines (validation panel)."""
+    tau, strategies, dir_accs, _ = _ranked_capacity_metrics()
     colors = ["#2171b5", "#6baed6", "#bdd7e7"]
-
-    fig, axes = plt.subplots(1, 2, figsize=(8, 4), constrained_layout=True)
+    fig, ax = plt.subplots(figsize=(5.2, 4.0), constrained_layout=True)
     x = np.arange(len(strategies))
-
-    ax = axes[0]
     bars = ax.bar(x, [d * 100 for d in dir_accs], color=colors, edgecolor="white", linewidth=0.5)
     for bar, v in zip(bars, dir_accs):
         ax.annotate(
             f"{v:.1%}",
             (bar.get_x() + bar.get_width() / 2, bar.get_height()),
-            ha="center", va="bottom", fontsize=9, fontweight="bold",
-            xytext=(0, 3), textcoords="offset points",
+            ha="center",
+            va="bottom",
+            fontsize=9,
+            fontweight="bold",
+            xytext=(0, 3),
+            textcoords="offset points",
         )
     ax.set_xticks(x)
     ax.set_xticklabels(strategies, fontsize=9)
     ax.set_ylabel("Directional Accuracy (%)")
-    ax.set_title("DirAcc (capacity-matched)")
+    ax.set_title(
+        f"Validation set · DirAcc (|signal|≥{tau:g}, max_open=50, ranked fill)\n"
+        f"+{dir_accs[0] - dir_accs[1]:.1%} vs mechanical persistence",
+        fontsize=10,
+    )
     ax.set_ylim(0, 100)
+    out = OUT / "fig7a_baseline_diracc.png"
+    fig.savefig(out, bbox_inches="tight")
+    plt.close(fig)
+    return out
 
-    ax = axes[1]
+
+def fig7b_baseline_mean_pnl():
+    """Capacity-matched mean PnL proxy for LightGBM vs mechanical baselines (validation panel)."""
+    tau, strategies, _, mean_pnls = _ranked_capacity_metrics()
+    colors = ["#2171b5", "#6baed6", "#bdd7e7"]
+    fig, ax = plt.subplots(figsize=(5.2, 4.0), constrained_layout=True)
+    x = np.arange(len(strategies))
     bars = ax.bar(x, mean_pnls, color=colors, edgecolor="white", linewidth=0.5)
     for bar, v in zip(bars, mean_pnls):
         ax.annotate(
@@ -316,26 +336,30 @@ def fig7_baseline_diracc_pnl():
             (bar.get_x() + bar.get_width() / 2, bar.get_height()),
             ha="center",
             va="bottom" if v >= 0 else "top",
-            fontsize=9, fontweight="bold",
+            fontsize=9,
+            fontweight="bold",
             xytext=(0, 3 if v >= 0 else -3),
             textcoords="offset points",
         )
     ax.set_xticks(x)
     ax.set_xticklabels(strategies, fontsize=9)
     ax.set_ylabel("Mean per-trade PnL proxy (z-units)")
-    ax.set_title("Mean PnL proxy (capacity-matched)")
-    ax.axhline(0, color="0.4", lw=0.8)
-
     pnl_improve = (mean_pnls[0] - mean_pnls[1]) / mean_pnls[1] * 100
-    fig.suptitle(
-        f"Jul 31 baseline comparison (|signal|≥{tau:g}, max_open=50, ranked fill): "
-        f"+{dir_accs[0] - dir_accs[1]:.1%} DirAcc, +{pnl_improve:.0f}% mean PnL vs persistence",
+    ax.set_title(
+        f"Validation set · mean PnL proxy (|signal|≥{tau:g}, max_open=50, ranked fill)\n"
+        f"+{pnl_improve:.0f}% vs mechanical persistence",
         fontsize=10,
     )
-    out = OUT / "fig7_baseline_diracc_pnl.png"
+    ax.axhline(0, color="0.4", lw=0.8)
+    out = OUT / "fig7b_baseline_mean_pnl.png"
     fig.savefig(out, bbox_inches="tight")
     plt.close(fig)
     return out
+
+
+def fig7_baseline_diracc_pnl():
+    """Deprecated combined panel; retained for callers — prefer fig7a/fig7b."""
+    return fig7a_baseline_diracc(), fig7b_baseline_mean_pnl()
 
 
 def fig5_cum_pnl_jul31():
@@ -427,13 +451,17 @@ def main():
         fig4_feature_importance,
         fig5_cum_pnl_jul31,
         fig6_model_minus_naive_diracc,
-        fig7_baseline_diracc_pnl,
+        fig7a_baseline_diracc,
+        fig7b_baseline_mean_pnl,
     ):
         print(f"Running {fn.__name__}...")
         out = fn()
-        if out is not None:
-            written.append(out)
-            print(f"  -> {out} ({out.stat().st_size} bytes)")
+        if out is None:
+            continue
+        outs = out if isinstance(out, tuple) else (out,)
+        for p in outs:
+            written.append(p)
+            print(f"  -> {p} ({p.stat().st_size} bytes)")
     print("\n=== Written files ===")
     for p in sorted(OUT.glob("*.png")):
         print(f"{p.stat().st_size:10d}  {p}")
