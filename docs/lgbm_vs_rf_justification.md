@@ -19,13 +19,14 @@ Paper gate: \(\tau{=}0.9\) (chosen on **validation** closes; τ table is validat
 
 ## Framing advice (read before citing RF in the paper)
 
-Reviewers can dismiss a thin RF comparison as “insufficient baselines.” Do **not** lead with method novelty. Lead with:
+Reviewers can dismiss a thin RF comparison as “insufficient baselines” *or* as a weak bake-off. Do **not** lead with method novelty of GBDT, and do **not** promise deferred DNN/LSTM comparisons. Lead with:
 
 1. **Understudied setting.** Same-asset **cross-exchange** spreads at ~1-minute cadence with **live L2 / trade-flow** features that candle APIs cannot reconstruct; mechanical \(|z_t|\) rules dominate prior crypto pairs work and miss venue/regime structure.
 2. **Hard evaluation.** Chronological train/test, live validation under real collection latency, capacity-matched mechanical peers, selective \(\tau\) gate, z-unit settlement.
-3. **Simple effective baseline.** A single tabular tree panel model + \(|\hat z|\ge\tau\) already beats matched persistence on validation; RF on the test set tracks the same ranking signal — i.e. the lift is largely from **formulation + setting + features + gate**, not from an exotic architecture.
+3. **Intentional tree/forest baseline class.** Prior supervised spread work often uses DNN/LSTM; we instead use **tabular tree ensembles** (LightGBM production head; Random Forest bagging control) suited to engineered lags, native categoricals, and CPU live inference — a different inductive bias, not a “future bake-off.”
+4. **Simple effective baseline.** A gated tree regressor already beats matched persistence on validation; RF on the test set tracks the same ranking → lift is largely **formulation + setting + features + gate**.
 
-Use RF to show **robustness of the baseline class** (bagging ≈ boosting on ranking), then keep LightGBM for ops / calibration / live throughput. Avoid claiming “we introduce a superior ML method.”
+Use RF to show **robustness of the tree baseline class** (bagging ≈ boosting on ranking). Avoid claiming “we introduce a superior ML method” or “we will compare to LSTMs later.”
 
 ---
 
@@ -206,8 +207,8 @@ Understudied setting (cross-ex live L2 next-z)
 
 **Contribution (preferred):**
 
-> We study next-snapshot forecasting of same-asset cross-exchange z-scores under live multi-venue microstructure—a setting poorly covered by mechanical \(|z_t|\) pairs rules—and show that a simple confidence-gated tabular tree baseline already improves selective direction and z-unit settlement versus matched persistence in live validation, with public code and data for stronger models to beat.
+> We study next-snapshot forecasting of same-asset cross-exchange z-scores under live multi-venue microstructure—a setting poorly covered by mechanical \(|z_t|\) pairs rules—and show that a simple confidence-gated *tabular tree* baseline (LightGBM; Random Forest as bagging control), rather than the DNN/LSTM architectures common in prior spread work, already improves selective direction and z-unit settlement versus matched persistence in live validation, with public code and data for stronger models to beat.
 
 **RF footnote (secondary):**
 
-> On the test matrix, a Random Forest tracks LightGBM’s ranking almost one-to-one; we deploy LightGBM for calibration and live throughput, and treat RF as a classical bagging control rather than a competing contribution.
+> On the test matrix, a Random Forest tracks LightGBM’s ranking almost one-to-one; we deploy LightGBM for calibration and live throughput, and treat RF as a classical bagging control within an intentional tree/forest baseline class—not as a deferred comparison to deep sequence models.
