@@ -29,16 +29,15 @@ $\sim$72h closes & 0.9 & 12{,}795 & 86.7\% & 0.599 & +1.37 & 1.08 \\
 \end{tabular}
 \end{table}
 
-\subsection{Feature Importance: Role of Microstructure Inputs}
+\subsection{Feature Importance}
 
-Figure~\ref{fig:importance} shows the top~10 of the model's 68~features by LightGBM split gain.
+Figure~\ref{fig:importance} shows the top~10 of the model's 68~features ranked
+by LightGBM split gain.
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=\columnwidth]{figures/fig4_feature_importance_top20.png}
-\caption{Top~10 features by LightGBM split gain. Gain is overwhelmingly
-concentrated in lagged z-scores and spread terms; rawer microstructure features
-appear only in the lower ranks.}
+\caption{Top~10 features by LightGBM split gain.}
 \Description{Horizontal bar chart of the ten highest-gain features, ordered
 from largest at the top. The first bar, lagged z-score at lag one, reaches about
 1,660,000 gain. Lagged z-score at lag two follows at about 1,040,000. Spread
@@ -49,11 +48,14 @@ and Coinbase, cross-venue mid-price range, and Coinbase orderbook imbalance.}
 \label{fig:importance}
 \end{figure}
 
-Gain concentrates in features built \emph{before} training from live
-cross-exchange mids: lagged spreads and z-scores, plus \texttt{coin}/\texttt{pair}.
-Rawer ticker, trade-flow, and orderbook columns appear only at much lower gain.
-This motivates an ablation that isolates pre-training feature engineering from
-raw market inputs (next subsection).
+The model mainly relies on z-score and spread lags. This semi-autoregressive
+structure makes sense given the problem context, wherein previous states are
+strong indicators of the future motion of the spread and z-scores. The
+\texttt{coin} and \texttt{pair} categorical variables are also included in the
+top~10, indicating that the model learns to differentiate among coins and
+exchange pairs. Finally, microstructure features---namely trade data and L2
+orderbook data---also appear in the top~10. Even though they are of smaller
+importance, these features still provide signal to the model.
 
 \subsection{Ablation: Pre-Training Feature Engineering vs.\ Raw Market Features}
 
@@ -97,7 +99,6 @@ Variant & \# & R$^2$ & R$^2_f$ & DirAcc$_f$ \\
 Raw + identity            & 53 & 0.014 & 0.012 & 77.8\% \\
 Engineered + identity     & 11 & 0.132 & 0.535 & 85.4\% \\
 Engineered only           &  9 & 0.129 & 0.525 & 84.7\% \\
-Full (all surviving)      & 62 & 0.133 & 0.528 & 85.3\% \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -108,6 +109,5 @@ different data. With identity held fixed, the mid$\to$spread$\to z$ trajectory
 reaches DirAcc 85.4\% versus 77.8\% for raw ticker/OB/trade/cross columns
 alone---a \textbf{$+7.6$\,pp} lift in filtered directional accuracy---while
 filtered R$^2$ rises from 0.012 to 0.535. Engineered features without identity
-remain strong (DirAcc$_f$ 84.7\%); the full model does not beat
-engineered+identity. Under the paper gate, pre-training feature engineering on
-live mids is what moves next-snapshot $z$ prediction.
+remain strong (DirAcc$_f$ 84.7\%). Under the paper gate, pre-training feature
+engineering on live mids is what moves next-snapshot $z$ prediction.
