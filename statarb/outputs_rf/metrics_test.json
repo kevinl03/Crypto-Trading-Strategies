@@ -303,5 +303,5 @@
     "mean_pnl": 1.3722711889530343,
     "source": "C:\\Users\\Kev\\repos\\stochastic-spread-modeling-analysis\\data\\paper_trading\\5day_Aug4_2026\\tau09_w300_report.json"
   },
-  "validation_note": "Aug 4\u20137 paper validation is the live LGBM book (tau09_w300_report). RF validation requires the same campaign feature/signal panel for offline re-prediction; not fitted here. See --help / handoff for HF download steps."
+  "validation_note": "Paper validation = Aug 4-7 ~72h live LGBM book (tau09_w300_report; tau table is validation-only). RF is a test-set bagging peer only — not live-scored on validation. See docs/lgbm_vs_rf_justification.md."
 }

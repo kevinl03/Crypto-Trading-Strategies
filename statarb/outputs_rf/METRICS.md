@@ -1,18 +1,20 @@
 # Random Forest vs LightGBM (paper protocol)
 
-Classical tabular baseline on the **same LOGO / Jul-25 feature frames** as LightGBM.
-RF is a literature peer — not a live replacement. Production head remains LightGBM.
+Classical **bagging** tabular baseline on the same LOGO **train / test** feature frames as LightGBM (`sec:splits`).
+RF is a literature peer — not a live replacement. Production / **validation** head remains LightGBM.
 
 ## Protocol
 
 - Target: `y = z_{t+1}` · W=300 · H=1 · N_LAGS=3
-- Split: train pre Jul 25 · test Jul 25–28 (LOGO cache)
+- Split (paper names only): **train** = June→mid-July before cut · **test** = Jul 25–28 · **validation** = Aug 4–7 ~72h live
+- This table is the **test-set** architecture compare (LOGO cache)
 - Features: 62 tabular cols (published intersection on cache)
 - Missing vs 68-feat booster: ['tk_bid_volume_lag1_coinbase', 'tk_bid_volume_lag2_coinbase', 'tk_bid_volume_lag3_coinbase', 'tk_ask_volume_lag1_coinbase', 'tk_ask_volume_lag2_coinbase', 'tk_ask_volume_lag3_coinbase']
-- Gate: `|pred| >= tau` (paper headline τ=0.9); also report all-rows and τ=0.5
+- Gate: `|pred| >= tau` (paper headline τ=0.9, chosen on **validation**); also report all-rows and τ=0.5
 - Naive peer: `ẑ ← z_t` on identical rows
+- Framing note: do not call this “offline / Campaign A–B / Jul 31”
 
-## Comparison table
+## Comparison table (test set)
 
 | Model | Set | Filter | n | DirAcc | R² | mean pnl_proxy |
 |---|---|---|---:|---:|---:|---:|
@@ -28,23 +30,27 @@ RF is a literature peer — not a live replacement. Production head remains Ligh
 
 ### Paper reference cells (LGBM validation live book)
 
+Validation-only τ table in the paper; RF was not live-scored here.
+
 | Model | Set | Filter | n | DirAcc | R² | mean pnl_proxy |
 |---|---|---|---:|---:|---:|---:|
 | LightGBM (paper / tau09 report) | validation | `|ẑ|≥0.9` | 12795 | 86.7% | 0.599 | 1.372 |
 
+See `docs/lgbm_vs_rf_justification.md` for matched-row analysis and why LGBM stays the head (~2× τ=0.9 volume, higher R²).
+
 ## Resources
 
 - Backend: `sklearn.ensemble.RandomForestRegressor` (CPU)
-- Fit wall-clock: 0.0 s
-- Predict (test) wall-clock: 5.51 s
+- Fit wall-clock: ~318 s (full train panel, n_jobs=8); predict re-score may show 0 if `--skip-fit`
+- Predict (test) wall-clock: ~5–7 s
 - Train rows used: 4947685 / available 4947685
 - Test rows: 1680426
 - RF params: `{"max_depth": 20, "max_features": "sqrt", "max_samples": 1000000, "min_samples_leaf": 200, "n_estimators": 400, "n_jobs": 8, "random_state": 42}`
-- Peak note: CPU only. Defaults cap train rows / n_jobs / max_samples after a 32 GiB box hit ~13 GiB private with full 4.7M X and n_jobs=-1. Use --mem-check-only first.
+- Peak note: CPU only. Prefer `--mem-check-only` before large fits; `rf_model.joblib` is gitignored (~180 MB).
 
 ## Artifacts
 
-- `rf_model.joblib` — fitted RandomForestRegressor
+- `rf_model.joblib` — fitted RandomForestRegressor (local / gitignored)
 - `encoder.joblib` — OrdinalEncoder for coin/pair (+ medians)
 - `metrics_test.json` — full metric block
 - `METRICS.md` — this file
