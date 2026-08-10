@@ -13,6 +13,15 @@ The 23-asset universe was selected for high cross-exchange spread volatility and
 
 \subsection{Train / Test / Validation Split}\label{sec:splits}
 
+All collection windows before July~25, 2026 form the training set; July~25--28 forms the held-out test set. The split is strictly chronological with no shuffling. The training set contains approximately 2.9~million (coin, exchange-pair, snapshot) feature rows spanning multiple collection windows from June--July 2026. Cross-sectional rows within a snapshot are structurally dependent (they share the same market state), so this row count should not be interpreted as independent samples.
+
+\subsection{Live Paper-Trading Protocol}
+
+For live validation, we run independent paper-trading campaigns that process incoming collector data in real time with no access to future snapshots. Capacity is $\text{max\_open} = 50$. The paper confidence gate is $\tau{=}0.9$ (Section~\ref{sec:ablation}).git 
+
+We validate reuslts on a 72\-hour live trading campaign, using the same model and model parameters as in training and testing. 
+
+\subsubsection{Live trading campaign: Aug~4--7 (\textasciitilde72h)}
 All evaluation uses the same chronological partition; later sections refer to these sets by name without restating dates.
 
 \begin{itemize}
@@ -42,4 +51,4 @@ Scarce slots are filled by ranking $|\hat{z}|$ (model) or $|z_t|$ (mechanical). 
 
 \subsection{Reproducibility}
 
-All training, evaluation, and baseline scripts are available in the code repository (\coderef), and the dataset is released at \datasetref. LightGBM training is reproducible given the hyperparameters in Table~\ref{tab:hyperparams}.
+All training, evaluation, and baseline scripts are available in the code repository (\coderef), and the dataset is released at \datasetref. 
