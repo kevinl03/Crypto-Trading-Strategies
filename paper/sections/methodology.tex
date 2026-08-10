@@ -114,6 +114,8 @@ L2 regularization         & 0.1 \\
 
 Early stopping selects iteration~74 out of 2,500 maximum rounds, indicating that the model converges rapidly and additional boosting does not improve validation loss. The large minimum child sample (200) and sub-unity feature/bagging fractions provide regularization against overfitting to the dependent cross-sectional structure of the panel.
 
+We deliberately choose tree ensembles over the DNN/LSTM architectures common in prior spread-forecasting work: the feature matrix is a heterogeneous tabular panel (lags, microstructure, categoricals) for which boosted trees are a strong, CPU-friendly default, and live paper trading favors a compact booster artifact. As a classical bagging control on the same train/test feature matrix, we also fit a Random Forest regressor (regularized leaf size analogous to $\texttt{min\_child\_samples}$); LightGBM remains the production head used in validation campaigns.
+
 \subsection{Trading Policy}\label{sec:policy}
 
 At each live snapshot, the model generates a prediction $\hat{z}_{t+1}$ for every (coin, exchange-pair) observation. The trading policy is:

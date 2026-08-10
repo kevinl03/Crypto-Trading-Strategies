@@ -40,6 +40,10 @@ We replay two mechanical trading rules on the validation signal panel under the 
 
 Scarce slots are filled by ranking $|\hat{z}|$ (model) or $|z_t|$ (mechanical). These represent the two canonical directions a rule-based z-score system can take: betting the spread continues (persistence) or reverts (classical pairs trading). Both settle at $t+1$ with $\text{pnl\_proxy} = \text{direction} \times z_{t+1}$, identical to the model's settlement.
 
+\subsubsection{Tree ensemble control (Random Forest)}
+
+On the test set we additionally score a sklearn Random Forest regressor trained on the same chronological feature matrix as LightGBM (bagging control within the tree family). Primary live claims remain capacity-matched mechanical baselines on the validation panel; the forest peer checks that test-set ranking skill is not unique to gradient boosting.
+
 \subsection{Reproducibility}
 
 All training, evaluation, and baseline scripts are available in the code repository (\coderef), and the dataset is released at \datasetref. LightGBM training is reproducible given the hyperparameters in Table~\ref{tab:hyperparams}.
