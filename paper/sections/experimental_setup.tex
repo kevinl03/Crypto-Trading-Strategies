@@ -5,7 +5,7 @@
 
 \subsection{Data Collection}
 
-We collect live microstructure data from centralized cryptocurrency exchanges using a custom collector that polls 9~signal families (orderbook, trades, ticker, funding, open interest, withdrawal status, exchange status, spread matrices, OHLCV) via REST API at approximately 60-second target cadence across 23~assets and up to 6~exchanges (Binance, Bybit, OKX, Coinbase, Kraken, MEXC). Under full signal load, the observed cadence is approximately 110~seconds per snapshot. Data collection protocol and signal schema are documented in the repository accompanying \datasetref.
+We collect live microstructure data from centralized cryptocurrency exchanges using a custom collector that polls 9~signal families (orderbook, trades, ticker, funding, open interest, withdrawal status, exchange status, spread matrices, OHLCV) via REST API at approximately 60-second target cadence across 23~assets and up to 6~exchanges (Binance, Bybit, OKX, Coinbase, Kraken, MEXC). Under full signal load, the observed cadence is approximately 110~seconds per snapshot. L2 orderbook imbalance, top-of-book sizes, and withdrawal/exchange status flags are not available from historical candle APIs and must be recorded live. Data collection protocol and signal schema are documented in the repository accompanying \datasetref.
 
 \subsection{Asset Universe}
 
