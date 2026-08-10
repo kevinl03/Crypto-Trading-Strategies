@@ -78,28 +78,30 @@ We retrain LightGBM on the Jul~25--28 offline holdout under fixed published
 metrics use $|\hat{z}| \geq 0.9$ (Table~\ref{tab:tau_sensitivity}).
 
 \begin{table}[t]
-\caption{Transforming live microstructure vs raw columns (Jul~25--28 offline,
+\caption{Engineered vs non-engineered microstructure features (Jul~25--28 offline,
 paper gate $|\hat{z}|\geq 0.9$). Identity (\texttt{coin}/\texttt{pair}) held
-fixed where noted. Engineered+identity lifts DirAcc$_f$ by $+7.6$\,pp vs raw.}
+fixed. $\Delta$ vs raw (non-engineered) columns: DirAcc$_f$ $+7.6$\,pp,
+R$^2_f$ $+0.523$.}
 \label{tab:fe_vs_raw}
 \footnotesize
 \setlength{\tabcolsep}{3.2pt}
 \begin{tabular}{@{}lrrrr@{}}
 \toprule
-Variant & \# & R$^2$ & R$^2_f$ & DirAcc$_f$ \\
+Variant & R$^2_f$ & $\Delta$R$^2_f$ & DirAcc$_f$ & $\Delta$DirAcc$_f$ \\
 \midrule
-Raw + identity            & 53 & 0.014 & 0.012 & 77.8\% \\
-Engineered + identity     & 11 & 0.132 & 0.535 & 85.4\% \\
-Engineered only           &  9 & 0.129 & 0.525 & 84.7\% \\
+Raw + identity        & 0.012 & --- & 77.8\% & --- \\
+Engineered + identity & 0.535 & $+0.523$ & 85.4\% & $+7.6$\,pp \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \paragraph{Result.}
 The gain comes from transforming the initial microstructure, not from seeing
-different data. With identity held fixed, the mid$\to$spread$\to z$ trajectory
-reaches DirAcc 85.4\% versus 77.8\% for raw ticker/OB/trade/cross columns
-alone---a \textbf{$+7.6$\,pp} lift in filtered directional accuracy---while
-filtered R$^2$ rises from 0.012 to 0.535. Engineered features without identity
-remain strong (DirAcc$_f$ 84.7\%). Under the paper gate, pre-training feature
-engineering on live mids is what moves next-snapshot $z$ prediction.
+different data. Compared to non-engineered microstructure features
+(raw ticker/OB/trade/cross columns with identity fixed), the
+mid$\to$spread$\to z$ trajectory improves filtered directional accuracy by
+\textbf{$+7.6$\,pp} (77.8\%$\to$85.4\%) and filtered R$^2$ by
+\textbf{$+0.523$} (0.012$\to$0.535). Under the paper gate, pre-training
+feature engineering on live mids is what moves next-snapshot $z$ prediction,
+and the same lift carries through to higher mean $\texttt{pnl\_proxy}$ and
+per-trade Sharpe.
