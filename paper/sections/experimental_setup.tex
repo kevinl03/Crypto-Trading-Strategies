@@ -13,22 +13,11 @@ All collection windows before July~25, 2026 form the training set; July~25--28 f
 
 \subsection{Live Paper-Trading Protocol}
 
-For live validation, we run independent paper-trading campaigns that process incoming collector data in real time with no access to future snapshots. Capacity is $\text{max\_open} = 50$. The paper confidence gate is $\tau{=}0.9$ (Section~\ref{sec:ablation}).
-
-\subsubsection{Campaign A: Jul~31 - TO REMOVE}
-
-\begin{itemize}
-    \item \textbf{Model}: 68-feature prediction model (\texttt{statarb\_lgbm.txt}).
-    \item \textbf{Horizon}: $H = 1$ (predict next snapshot).
-    \item \textbf{Z-score window}: 300~snapshots.
-    \item \textbf{Duration}: approximately 8~hours of useful data (collector ran for 264~snapshots).
-    \item \textbf{Warmup}: predictions become active after $\text{MIN\_PERIODS} = 90$ snapshots (approximately 2.5--3~hours).
-    \item \textbf{Predictions scored}: 58,995 total; 2,026 rows with $|\hat{z}|\geq 0.9$.
-\end{itemize}
+For live validation, we run independent paper-trading campaigns that process incoming collector data in real time with no access to future snapshots. Capacity is $\text{max\_open} = 50$. The paper confidence gate is $\tau{=}0.9$ (Section~\ref{sec:ablation}).git 
 
 We validate reuslts on a 72\-hour live trading campaign, using the same model and model parameters as in training and testing. 
 
-\subsubsection{Campaign B: Aug~4--7 (\textasciitilde72h)}
+\subsubsection{Live trading campaign: Aug~4--7 (\textasciitilde72h)}
 
 \begin{itemize}
     \item \textbf{Model}: same 68-feature, $H{=}1$, $w{=}300$ policy as Campaign~A.
@@ -44,7 +33,7 @@ On every row where the model generates a prediction, we also record the naive fo
 
 \subsubsection{Mechanical z-score baselines}
 
-We replay two mechanical trading rules on the Jul~31 signal panel under the same capacity constraints ($\text{max\_open} = 50$), settlement proxy, and paper gate $\tau{=}0.9$ as the model:
+We replay two mechanical trading rules on the live panel under the same capacity constraints ($\text{max\_open} = 50$), settlement proxy, and paper gate $\tau{=}0.9$ as the model:
 
 \begin{itemize}
     \item \textbf{Persistence}: enter when $|z_t| \geq 0.9$, direction $= \text{sign}(z_t)$.
