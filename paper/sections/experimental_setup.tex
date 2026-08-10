@@ -21,6 +21,10 @@ All evaluation uses the same chronological partition; later sections refer to th
     \item \textbf{Validation set.} A sequential ${\approx}$72-hour live paper-trading campaign on August~4--7, 2026 (50{,}690 closed trades at the live gate; 1.01M scored predictions), run on real CEX feeds under the system's collection and decision latency. Capacity is $\text{max\_open} = 50$. The paper confidence gate is $\tau{=}0.9$ (Section~\ref{sec:ablation}); headline validation metrics use the post-hoc $|\hat{z}|\geq 0.9$ subset of this book unless noted.
 \end{itemize}
 
+\subsection{Live Paper-Trading Protocol}
+
+For live validation, we run independent paper-trading campaigns that process incoming collector data in real time with no access to future snapshots. Capacity is $\text{max\_open} = 50$. The paper confidence gate is $\tau{=}0.9$ (Section~\ref{sec:ablation}). We validate on the August~4--7 ${\approx}$72-hour campaign using the same model and parameters as in training and testing.
+
 An earlier short live session under the same model settings ($H{=}1$, $w{=}300$) supplies the capacity-matched mechanical baseline comparison in Section~\ref{sec:results}; we treat it as part of the validation evidence rather than a separate dated campaign.
 
 \subsection{Baseline Definitions}
@@ -46,4 +50,4 @@ On the test set we additionally score a sklearn Random Forest regressor trained 
 
 \subsection{Reproducibility}
 
-All training, evaluation, and baseline scripts are available in the code repository (\coderef), and the dataset is released at \datasetref. LightGBM training is reproducible given the hyperparameters in Table~\ref{tab:hyperparams}.
+All training, evaluation, and baseline scripts are available in the code repository (\coderef), and the dataset is released at \datasetref.
