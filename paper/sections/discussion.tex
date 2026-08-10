@@ -10,19 +10,19 @@ z_{t+H}$ measures the model's ability to correctly predict the standardized
 spread level at horizon $H$. It is designed as a forecast quality metric, not as
 an economic P\&L.
 
-When the same Jul~31 trades are re-scored in basis points of realized spread change, the ordering between policies inverts: the learned policy averages $-0.71$~bps per trade (35.5\% win rate), while mechanical mean-reversion yields $+2.15$~bps (62.2\% win rate). Table~\ref{tab:bps} summarizes this difference.
+When the same Jul~31 $\tau{=}0.9$ ranked-capacity trades are re-scored in basis points of realized spread change, the ordering between policies inverts: the learned policy averages $-0.94$~bps per trade (34.9\% win rate), while mechanical mean-reversion yields $+3.97$~bps (76.0\% win rate). Table~\ref{tab:bps} summarizes this difference.
 
 \begin{table}[h]
-\caption{Jul~31 entries scored in z-units and basis points of realized spread change, gross of fees. Policy ordering inverts between units.}
+\caption{Jul~31 $\tau{=}0.9$ ranked-capacity entries scored in z-units and basis points of realized spread change, gross of fees. Policy ordering inverts between units.}
 \label{tab:bps}
 \begin{tabular}{lrrr}
 \toprule
 \textbf{Policy} & \textbf{Mean} & \textbf{Mean gross} & \textbf{Gross} \\
  & \textbf{z-proxy} & \textbf{(bps)} & \textbf{win rate} \\
 \midrule
-LightGBM              & $+0.746$ & $-0.71$ & 35.5\% \\
-Mech.\ persistence    & $+0.437$ & $-2.15$ & 18.1\% \\
-Mech.\ mean-reversion & $-0.437$ & $+2.15$ & 62.2\% \\
+LightGBM              & $+1.195$ & $-0.94$ & 34.9\% \\
+Mech.\ persistence    & $+0.731$ & $-3.97$ & 9.9\% \\
+Mech.\ mean-reversion & $-0.731$ & $+3.97$ & 76.0\% \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -31,11 +31,11 @@ This inversion reflects the model's training objective: predicting the z-score l
 
 \subsection{Portfolio Sharpe Characterizes Forecast Stability}
 
-The Jul~31 hourly Sharpe of 2.41 ($n=6$) characterizes forecast stability but is not directly comparable to the multi-month, cost-aware benchmarks in the crypto pairs-trading literature~\cite{tadi2021evaluation, tadi2025copula}. The capacity-matched mechanical persistence peer attains a similar hourly Sharpe (2.63), confirming that both policies exploit the same high-persistence regime. Per-trade forecast quality (R$^2$ and directional accuracy) is the primary evidence for the model's advantage; Sharpe is a secondary stability indicator.
+The Jul~31 hourly Sharpe of 1.90 ($n=6$) under the $\tau{=}0.9$ ranked-capacity book characterizes forecast stability but is not directly comparable to the multi-month, cost-aware benchmarks in the crypto pairs-trading literature~\cite{tadi2021evaluation, tadi2025copula}. The capacity-matched mechanical persistence peer attains a higher hourly Sharpe (2.62) while trailing on per-trade DirAcc and mean z-proxy, confirming that both policies exploit a high-persistence regime. Per-trade forecast quality (R$^2$ and directional accuracy) is the primary evidence for the model's advantage; Sharpe is a secondary stability indicator.
 
 \subsection{Threats to Validity}\label{sec:limitations}
 
-\textbf{Evaluation horizon.} Each live campaign covers approximately six active hours---far too short to characterize regime dependence. The two campaigns differ in model vintage, horizon, z-score window, and market session, so neither is a controlled ablation.
+\textbf{Evaluation horizon.} Campaign~A covers approximately six active hours---too short alone to characterize regime dependence---but Campaign~B extends live collection over $\approx$73~hours. Headline metrics use the paper gate $\tau{=}0.9$ (Section~\ref{sec:ablation}); some live $\tau{=}0.9$ numbers are post-hoc filters or ranked-capacity replays on the collected sessions rather than a separate live re-fill at that gate. The campaigns still differ in calendar window, so they are complementary stress tests rather than a controlled factorial ablation.
 
 \textbf{Proxy settlement.} P\&L is measured in z-units gross of fees, slippage, and bid-ask crossing (Section~\ref{sec:proxy_gap}). No dollar return is claimed.
 

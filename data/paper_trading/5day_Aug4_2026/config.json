@@ -1,0 +1,11 @@
+{
+  "model": "statarb_lgbm.txt",
+  "run_dir": "20260804_062334",
+  "hours": 120.0,
+  "entry_tau": 0.5,
+  "horizon": 1,
+  "zscore_window": 300,
+  "started_at": "2026-08-04T15:40:14.638520+00:00",
+  "jsonl_shard_max_lines": 50000,
+  "restarted_at": "2026-08-07T16:41:07.333919+00:00"
+}

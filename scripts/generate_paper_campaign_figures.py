@@ -268,24 +268,25 @@ def fig4_feature_importance(top_n: int = 10):
 
 
 def fig7_baseline_diracc_pnl():
-    """Side-by-side DirAcc and Mean PnL for LightGBM vs mechanical baselines (capacity-matched)."""
+    """Side-by-side DirAcc and Mean PnL for LightGBM vs mechanical baselines (τ=0.9 ranked capacity)."""
     session = SESSIONS["Jul31"]
-    summary = json.loads((session / "summary.json").read_text(encoding="utf-8"))
-    baseline = json.loads(
-        (session / "mechanical_z_baseline" / "mechanical_z_baseline_report.json")
+    report = json.loads(
+        (session / "baseline_strengthening" / "baseline_strengthening_report.json")
         .read_text(encoding="utf-8")
     )
+    ranked = report["ranked_capacity"]
+    tau = report.get("tau", 0.9)
 
     strategies = ["LightGBM", "Mech.\npersistence", "Mech.\nmean-reversion"]
     dir_accs = [
-        summary["dir_acc"],
-        baseline["persistence"]["capacity_matched"]["dir_acc"],
-        baseline["mean_reversion"]["capacity_matched"]["dir_acc"],
+        ranked["lgbm_ranked_by_abs_pred"]["dir_acc"],
+        ranked["mechanical_persistence_ranked_by_abs_z"]["dir_acc"],
+        ranked["mechanical_mean_reversion_ranked_by_abs_z"]["dir_acc"],
     ]
     mean_pnls = [
-        summary["mean_pnl_proxy"],
-        baseline["persistence"]["capacity_matched"]["mean_pnl_proxy"],
-        baseline["mean_reversion"]["capacity_matched"]["mean_pnl_proxy"],
+        ranked["lgbm_ranked_by_abs_pred"]["mean_pnl_proxy"],
+        ranked["mechanical_persistence_ranked_by_abs_z"]["mean_pnl_proxy"],
+        ranked["mechanical_mean_reversion_ranked_by_abs_z"]["mean_pnl_proxy"],
     ]
     colors = ["#2171b5", "#6baed6", "#bdd7e7"]
 
@@ -327,7 +328,7 @@ def fig7_baseline_diracc_pnl():
 
     pnl_improve = (mean_pnls[0] - mean_pnls[1]) / mean_pnls[1] * 100
     fig.suptitle(
-        f"Jul 31 baseline comparison (max_open=50): "
+        f"Jul 31 baseline comparison (|signal|≥{tau:g}, max_open=50, ranked fill): "
         f"+{dir_accs[0] - dir_accs[1]:.1%} DirAcc, +{pnl_improve:.0f}% mean PnL vs persistence",
         fontsize=10,
     )
@@ -338,27 +339,32 @@ def fig7_baseline_diracc_pnl():
 
 
 def fig5_cum_pnl_jul31():
-    trades_path = SESSIONS["Jul31"] / "trades.jsonl"
-    rows = []
-    with trades_path.open(encoding="utf-8") as fh:
-        for line in fh:
-            line = line.strip()
-            if line:
-                rows.append(json.loads(line))
-    df = pd.DataFrame(rows)
-    df["exit_ts"] = pd.to_datetime(df["exit_ts"], utc=True)
-    df = df.sort_values("exit_ts")
-    df["cum_pnl"] = df["pnl_proxy"].cumsum()
-
+    """Cumulative PnL for τ=0.9 ranked-capacity LightGBM vs mechanical peers."""
+    base = SESSIONS["Jul31"] / "baseline_strengthening"
+    series = [
+        ("LightGBM", base / "trades_lgbm_ranked_capacity.jsonl", "#1f77b4"),
+        ("Mech. persistence", base / "trades_mechanical_persistence_ranked_capacity.jsonl", "#ff7f0e"),
+        ("Mech. mean-reversion", base / "trades_mechanical_mean_reversion_ranked_capacity.jsonl", "#2ca02c"),
+    ]
     fig, ax = plt.subplots(figsize=(8, 4.2), constrained_layout=True)
-    ax.plot(df["exit_ts"], df["cum_pnl"], color="#1f77b4", lw=1.2)
+    for label, path, color in series:
+        rows = []
+        with path.open(encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if line:
+                    rows.append(json.loads(line))
+        df = pd.DataFrame(rows)
+        ts_col = "exit_ts" if "exit_ts" in df.columns else "ts"
+        df[ts_col] = pd.to_datetime(df[ts_col], utc=True)
+        df = df.sort_values(ts_col)
+        df["cum_pnl"] = df["pnl_proxy"].cumsum()
+        ax.plot(df[ts_col], df["cum_pnl"], color=color, lw=1.2, label=label)
     ax.axhline(0, color="0.4", lw=0.8)
     ax.set_xlabel("Exit time (UTC)")
     ax.set_ylabel("Cumulative pnl_proxy (z-units)")
-    n = len(df)
-    mean_p = df["pnl_proxy"].mean()
-    final = df["cum_pnl"].iloc[-1]
-    ax.set_title(f"Jul31 cumulative PnL proxy (n={n:,}, mean={mean_p:.3f}, final={final:.1f})")
+    ax.set_title("Jul31 cumulative PnL proxy (|signal|≥0.9, ranked capacity, max_open=50)")
+    ax.legend(fontsize=8)
     fig.autofmt_xdate()
     out = OUT / "fig5_cum_pnl_proxy_jul31.png"
     fig.savefig(out, bbox_inches="tight")
