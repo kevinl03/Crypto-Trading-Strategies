@@ -37,7 +37,7 @@ Figure~\ref{fig:importance} shows the top~10 of the model's 68~features by Light
 \centering
 \includegraphics[width=\columnwidth]{figures/fig4_feature_importance_top20.png}
 \caption{Top~10 features by LightGBM split gain. Gain is overwhelmingly
-concentrated in lagged z-scores and spread terms; microstructure features
+concentrated in lagged z-scores and spread terms; rawer microstructure features
 appear only in the lower ranks.}
 \Description{Horizontal bar chart of the ten highest-gain features, ordered
 from largest at the top. The first bar, lagged z-score at lag one, reaches about
@@ -49,32 +49,65 @@ and Coinbase, cross-venue mid-price range, and Coinbase orderbook imbalance.}
 \label{fig:importance}
 \end{figure}
 
-The model is, to a first approximation, an autoregression on the recent z-score trajectory conditioned on asset and venue-pair identity, with microstructure features supplying a small correction. Lagged z-scores and spread dynamics dominate the ranking; microstructure and cross-venue dispersion features enter only in the bottom four positions. Only one of the ten highest-gain features is an orderbook imbalance term, and no funding-rate or open-interest feature appears in the top~10.
+Gain concentrates in features built \emph{before} training from live
+cross-exchange mids: lagged spreads and z-scores, plus \texttt{coin}/\texttt{pair}.
+Rawer ticker, trade-flow, and orderbook columns appear only at much lower gain.
+This motivates an ablation that isolates pre-training feature engineering from
+raw market inputs (next subsection).
 
-\subsection{Feature-Group Ablation}
+\subsection{Ablation: Pre-Training Feature Engineering vs.\ Raw Market Features}
 
-The important predictive block is the \textbf{AR baseline}: lagged z-scores and spreads, short momentum/acceleration, and \texttt{coin}/\texttt{pair} identity. To measure whether microstructure adds anything beyond that, we retrain under a nested leave-one-group-in design on the Jul~25--28 offline holdout with fixed published \texttt{LGBM\_PARAMS} and a shared boosting-round budget (49 rounds). Filtered metrics use the paper gate $|\hat{z}| \geq 0.9$ (Table~\ref{tab:tau_sensitivity}). Funding and open interest prune to 0 columns.
+The prediction target is $y_t = z_{t+1}$ ($H{=}1$). We ask whether
+\emph{transforming} the same live microstructure---mid prices into spreads,
+rolling $z$-scores, lags, and short momentum/acceleration---improves filtered
+skill relative to training on raw live columns alone.
+
+\paragraph{Engineered trajectory.}
+From venue mids we form pairwise spreads $S$ (bps) and rolling z-scores $z$,
+then construct lagged $S$ and $z$, plus short momentum and acceleration of those
+series (9 columns). This is a pre-training transform of collected market data,
+not a change to what the collector observes.
+
+\paragraph{Raw market features.}
+Ticker mids and bid--ask widths, L2 imbalance, trade volumes, and cross-venue
+aggregates (51 surviving columns)---the same session's live signals without that
+trajectory transform.
+
+\paragraph{Identity controls.}
+\texttt{coin} and \texttt{pair} are held fixed on both sides of the comparison.
+They are not the engineering question: \texttt{coin} selects which asset's
+dynamics apply; \texttt{pair} selects which two venues the cross-exchange
+dislocation (and mean reversion) lives on.
+
+We retrain LightGBM on the Jul~25--28 offline holdout under fixed published
+\texttt{LGBM\_PARAMS} and a shared boosting-round budget (49 rounds). Filtered
+metrics use $|\hat{z}| \geq 0.9$ (Table~\ref{tab:tau_sensitivity}).
 
 \begin{table}[t]
-\caption{Nested feature-group ablation (Jul~25--28 offline, paper gate
-$|\hat{z}|\geq 0.9$). $\Delta$R$^2_f$ vs AR baseline; microstructure adds
-${\sim}0.01$ R$^2$ or less. Funding/OI pruned.}
-\label{tab:logo_ablation}
+\caption{Transforming live microstructure vs raw columns (Jul~25--28 offline,
+paper gate $|\hat{z}|\geq 0.9$). Identity (\texttt{coin}/\texttt{pair}) held
+fixed where noted. Engineered+identity lifts DirAcc$_f$ by $+7.6$\,pp vs raw.}
+\label{tab:fe_vs_raw}
 \footnotesize
 \setlength{\tabcolsep}{3.2pt}
-\begin{tabular}{@{}lrrrrr@{}}
+\begin{tabular}{@{}lrrrr@{}}
 \toprule
-Variant & \# & R$^2$ & R$^2_f$ & DirAcc$_f$ & $\Delta$R$^2_f$ \\
+Variant & \# & R$^2$ & R$^2_f$ & DirAcc$_f$ \\
 \midrule
-AR (lags+mom+id)   & 11 & 0.132 & 0.534 & 85.5\% & --- \\
-+ ticker           & 42 & 0.133 & 0.522 & 85.1\% & $-$0.012 \\
-+ orderbook        & 45 & 0.132 & 0.519 & 85.2\% & $-$0.015 \\
-+ trade flow       & 48 & 0.132 & 0.522 & 85.1\% & $-$0.012 \\
-+ funding          & --- & --- & --- & --- & pruned \\
-+ open interest    & --- & --- & --- & --- & pruned \\
-+ cross / full     & 62 & 0.133 & 0.524 & 85.1\% & $-$0.010 \\
+Raw + identity            & 53 & 0.014 & 0.012 & 77.8\% \\
+Engineered + identity     & 11 & 0.132 & 0.535 & 85.4\% \\
+Engineered only           &  9 & 0.129 & 0.525 & 84.7\% \\
+Full (all surviving)      & 62 & 0.133 & 0.528 & 85.3\% \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The AR baseline attains the highest filtered R$^2$ (0.534). Adding ticker, orderbook, trade-flow, or cross-venue groups does \emph{not} help: each change is about $0.01$ R$^2$ and slightly negative versus AR. Leave-one-group-out matches this: dropping the baseline collapses filtered R$^2$ from 0.528 to 0.018, while dropping any microstructure family leaves filtered R$^2$ unchanged or slightly higher. The live microstructure panel remains useful as a dataset for other architectures; it is not required for the published LightGBM forecast at $\tau{=}0.9$.
+\paragraph{Result.}
+The gain comes from transforming the initial microstructure, not from seeing
+different data. With identity held fixed, the mid$\to$spread$\to z$ trajectory
+reaches DirAcc 85.4\% versus 77.8\% for raw ticker/OB/trade/cross columns
+alone---a \textbf{$+7.6$\,pp} lift in filtered directional accuracy---while
+filtered R$^2$ rises from 0.012 to 0.535. Engineered features without identity
+remain strong (DirAcc$_f$ 84.7\%); the full model does not beat
+engineered+identity. Under the paper gate, pre-training feature engineering on
+live mids is what moves next-snapshot $z$ prediction.
