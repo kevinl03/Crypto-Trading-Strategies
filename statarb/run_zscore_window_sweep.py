@@ -166,12 +166,8 @@ def feature_frame(df: pd.DataFrame) -> tuple[pd.DataFrame, np.ndarray]:
     return X, y
 
 
-def eval_reg(y, preds, label: str) -> dict:
-    mae = mean_absolute_error(y, preds)
-    rmse = float(np.sqrt(mean_squared_error(y, preds)))
-    r2 = float(r2_score(y, preds))
-    dir_acc = float(np.mean(np.sign(preds) == np.sign(y)))
-    mask = np.abs(preds) > 0.5
+def _tau_metrics(y, preds, tau: float) -> tuple[float, float, int]:
+    mask = np.abs(preds) >= tau
     n_tau = int(mask.sum())
     if n_tau > 0:
         dir_acc_tau = float(np.mean(np.sign(preds[mask]) == np.sign(y[mask])))
@@ -179,11 +175,22 @@ def eval_reg(y, preds, label: str) -> dict:
     else:
         dir_acc_tau = float("nan")
         r2_tau = float("nan")
+    return r2_tau, dir_acc_tau, n_tau
+
+
+def eval_reg(y, preds, label: str) -> dict:
+    mae = mean_absolute_error(y, preds)
+    rmse = float(np.sqrt(mean_squared_error(y, preds)))
+    r2 = float(r2_score(y, preds))
+    dir_acc = float(np.mean(np.sign(preds) == np.sign(y)))
+    r2_tau05, dir_acc_tau05, n_tau05 = _tau_metrics(y, preds, 0.5)
+    r2_tau09, dir_acc_tau09, n_tau09 = _tau_metrics(y, preds, 0.9)
     pnl = float(np.mean(np.sign(preds) * y))
     print(
         f"  {label:28s} n={len(y):,} R2={r2:.4f} DirAcc={dir_acc:.3%} "
-        f"R2@|p|>0.5={r2_tau:.4f} DirAcc@|p|>0.5={dir_acc_tau:.3%} "
-        f"PnL={pnl:.4f} (n_tau={n_tau:,})",
+        f"R2@|p|>=0.5={r2_tau05:.4f} DirAcc@|p|>=0.5={dir_acc_tau05:.3%} "
+        f"R2@|p|>=0.9={r2_tau09:.4f} DirAcc@|p|>=0.9={dir_acc_tau09:.3%} "
+        f"PnL={pnl:.4f} (n_tau0.5={n_tau05:,} n_tau0.9={n_tau09:,})",
         flush=True,
     )
     return {
@@ -192,11 +199,14 @@ def eval_reg(y, preds, label: str) -> dict:
         "rmse": rmse,
         "r2": r2,
         "dir_acc": dir_acc,
-        "r2_tau0.5": r2_tau,
-        "dir_acc_tau0.5": dir_acc_tau,
+        "r2_tau0.5": r2_tau05,
+        "dir_acc_tau0.5": dir_acc_tau05,
+        "r2_tau0.9": r2_tau09,
+        "dir_acc_tau0.9": dir_acc_tau09,
         "pnl_proxy": pnl,
         "n": int(len(y)),
-        "n_tau0.5": n_tau,
+        "n_tau0.5": n_tau05,
+        "n_tau0.9": n_tau09,
     }
 
 
@@ -298,8 +308,10 @@ def run_sweep(w_grid: list[int], *, min_periods_fixed: int | None = None) -> pd.
     for _, row in lgbm.iterrows():
         summary_lines.append(
             f"  W={int(row['zscore_window']):3d}  R2={row['r2']:.4f}  DirAcc={row['dir_acc']:.3%}  "
-            f"R2@|p|>0.5={row['r2_tau0.5']:.4f}  DirAcc@|p|>0.5={row['dir_acc_tau0.5']:.3%}  "
-            f"PnL={row['pnl_proxy']:.4f}  best_iter={int(row['best_iter'])}  n={int(row['n']):,}"
+            f"R2@|p|>=0.9={row.get('r2_tau0.9', float('nan')):.4f}  "
+            f"DirAcc@|p|>=0.9={row.get('dir_acc_tau0.9', float('nan')):.3%}  "
+            f"PnL={row['pnl_proxy']:.4f}  best_iter={int(row['best_iter'])}  "
+            f"n={int(row['n']):,}  n_tau0.9={int(row.get('n_tau0.9', 0)):,}"
         )
     best = lgbm.iloc[0]
     summary_lines.extend(

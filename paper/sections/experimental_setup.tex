@@ -5,40 +5,23 @@
 
 \subsection{Data Collection}
 
-We collect live microstructure data from centralized cryptocurrency exchanges using a custom collector that polls 9~signal families (orderbook, trades, ticker, funding, open interest, withdrawal status, exchange status, spread matrices, OHLCV) via REST API at approximately 60-second target cadence across 23~assets and up to 6~exchanges (Binance, Bybit, OKX, Coinbase, Kraken, MEXC). Under full signal load, the observed cadence is approximately 110~seconds per snapshot. Data collection protocol and signal schema are documented in the repository accompanying \datasetref.
+We collect live microstructure data from centralized cryptocurrency exchanges using a custom collector that polls 9~signal families (orderbook, trades, ticker, funding, open interest, withdrawal status, exchange status, spread matrices, OHLCV) via REST API at approximately 60-second target cadence across 23~assets and up to 6~exchanges (Binance, Bybit, OKX, Coinbase, Kraken, MEXC). Under full signal load, the observed cadence is approximately 110~seconds per snapshot. L2 orderbook imbalance, top-of-book sizes, and withdrawal/exchange status flags are not available from historical candle APIs and must be recorded live. Data collection protocol and signal schema are documented in the repository accompanying \datasetref.
 
 \subsection{Asset Universe}
 
 The 23-asset universe was selected for high cross-exchange spread volatility and sufficient liquidity across multiple venues, requiring listing on at least 3~of the 6~target exchanges. See the repository for the full asset list.
 
-\subsection{Train/Test Split}
+\subsection{Train / Test / Validation Split}\label{sec:splits}
 
-All collection windows before July~25, 2026 form the training set; July~25--28 forms the held-out test set. The split is strictly chronological with no shuffling. The training set contains approximately 2.9~million (coin, exchange-pair, snapshot) feature rows spanning multiple collection windows from June--July 2026. Cross-sectional rows within a snapshot are structurally dependent (they share the same market state), so this row count should not be interpreted as independent samples.
-
-\subsection{Live Paper-Trading Protocol}
-
-For live validation, we run independent paper-trading campaigns that process incoming collector data in real time with no access to future snapshots. Capacity is $\text{max\_open} = 50$. The paper confidence gate is $\tau{=}0.9$ (Section~\ref{sec:ablation}).
-
-\subsubsection{Campaign A: Jul~31}
+All evaluation uses the same chronological partition; later sections refer to these sets by name without restating dates.
 
 \begin{itemize}
-    \item \textbf{Model}: 68-feature prediction model (\texttt{statarb\_lgbm.txt}).
-    \item \textbf{Horizon}: $H = 1$ (predict next snapshot).
-    \item \textbf{Z-score window}: 300~snapshots.
-    \item \textbf{Duration}: approximately 8~hours of useful data (collector ran for 264~snapshots).
-    \item \textbf{Warmup}: predictions become active after $\text{MIN\_PERIODS} = 90$ snapshots (approximately 2.5--3~hours).
-    \item \textbf{Predictions scored}: 58,995 total; 2,026 rows with $|\hat{z}|\geq 0.9$.
+    \item \textbf{Training set.} Collection windows from June through mid-July~2026, strictly before the test cut. Approximately 2.9~million (coin, exchange-pair, snapshot) feature rows. Cross-sectional rows within a snapshot share market state and should not be treated as independent samples.
+    \item \textbf{Test set.} July~25--28, 2026. Approximately 1.7~million feature rows collected directly from CEX API endpoints and stored so we can score the trained model (roughly a 63/37 train/test row split, or ${\approx}1.7{:}1$). The split uses no shuffling.
+    \item \textbf{Validation set.} A sequential ${\approx}$72-hour live paper-trading campaign on August~4--7, 2026 (50{,}690 closed trades at the live gate; 1.01M scored predictions), run on real CEX feeds under the system's collection and decision latency. Capacity is $\text{max\_open} = 50$. The paper confidence gate is $\tau{=}0.9$ (Section~\ref{sec:ablation}); headline validation metrics use the post-hoc $|\hat{z}|\geq 0.9$ subset of this book unless noted.
 \end{itemize}
 
-\subsubsection{Campaign B: Aug~4--7 (\textasciitilde72h)}
-
-\begin{itemize}
-    \item \textbf{Model}: same 68-feature, $H{=}1$, $w{=}300$ policy as Campaign~A.
-    \item \textbf{Duration}: $\approx$72.9~hours of active trading (50,690 closed trades; 1.01M scored predictions).
-    \item \textbf{Role}: multi-day live stress test; primary $\tau{=}0.9$ metrics are the post-hoc paper-protocol subset of this book (Section~\ref{sec:ablation}).
-\end{itemize}
-
-Campaign~A is a short live stress test; Campaign~B extends the same live deployment settings over three days. We present them as complementary live evidence rather than a controlled factorial experiment.
+An earlier short live session under the same model settings ($H{=}1$, $w{=}300$) supplies the capacity-matched mechanical baseline comparison in Section~\ref{sec:results}; we treat it as part of the validation evidence rather than a separate dated campaign.
 
 \subsection{Baseline Definitions}
 
@@ -48,7 +31,7 @@ On every row where the model generates a prediction, we also record the naive fo
 
 \subsubsection{Mechanical z-score baselines}
 
-We replay two mechanical trading rules on the Jul~31 signal panel under the same capacity constraints ($\text{max\_open} = 50$), settlement proxy, and paper gate $\tau{=}0.9$ as the model:
+We replay two mechanical trading rules on the validation signal panel under the same capacity constraints ($\text{max\_open} = 50$), settlement proxy, and paper gate $\tau{=}0.9$ as the model:
 
 \begin{itemize}
     \item \textbf{Persistence}: enter when $|z_t| \geq 0.9$, direction $= \text{sign}(z_t)$.
