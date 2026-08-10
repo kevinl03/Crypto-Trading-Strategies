@@ -6,7 +6,15 @@
 \subsection{Selecting Window Length and Confidence Threshold}
 
 \paragraph{Window $w$.}
-Increasing $w$ enriches $(\hat{\mu}_w,\hat{\sigma}_w)$ but forces longer warmup before a valid $z$ exists and slows $\sigma$ adaptation. Offline spreads-only LightGBM sweeps on the Jul~25 holdout show test skill rising into a plateau near $w{\approx}560$--$720$, with only modest gains past the production choice $w{=}300$ (${\approx}{+}1$\,pp DirAcc and ${+}0.017$ R$^2$ at $w{=}720$ for ${\sim}2.4{\times}$ lookback). A $w{\times}\tau$ grid scored on the Jul~31 collector likewise does not favor larger $w$ at matched $\tau$. We therefore retain $w{=}300$.
+Increasing $w$ enriches $(\hat{\mu}_w,\hat{\sigma}_w)$ but forces longer warmup before a valid $z$ exists and slows $\sigma$ adaptation. Spreads-only LightGBM sweeps on the test set show skill rising into a plateau near $w{\approx}560$--$720$, with only modest gains past the production choice $w{=}300$ (${\approx}{+}1$\,pp DirAcc and ${+}0.017$ R$^2$ at $w{=}720$ for ${\sim}2.4{\times}$ lookback). Figure~\ref{fig:w_sensitivity} makes the trade-off explicit under the paper gate $|\hat{z}|\geq 0.9$: past $w{=}300$, further increases mainly buy longer context for marginal filtered DirAcc. We therefore retain $w{=}300$.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=\columnwidth]{figures/w_vs_r2_diracc.png}
+\caption{Z-score window $w$ vs test $R^2$ and directional accuracy under $|\hat{z}|\geq 0.9$. Past $w{=}300$, additional lookback mainly increases required context while DirAcc gains flatten.}
+\Description{Two-panel line chart of test R-squared and directional accuracy versus z-score window W. Curves for all predictions and for absolute prediction at least 0.9 both rise then plateau; a dashed vertical line marks W=300.}
+\label{fig:w_sensitivity}
+\end{figure}
 
 \paragraph{Threshold $\tau$.}
 Early live collection used a permissive gate $\tau{=}0.5$ to maximize coverage under $\text{max\_open}{=}50$. That choice is a starting point for selection, not the paper operating point: on Jul~31 signal rows it yields DirAcc 76.7\%, R$^2$ 0.347, mean z-proxy $+0.75$, and per-trade Sharpe only 0.67 ($n{=}8{,}775$). A fine sweep on the same panel ($w{=}300$) shows that raising $\tau$ monotonically improves DirAcc, R$^2$, mean z-proxy, and per-trade Sharpe $\mathrm{mean}(\mathrm{pnl\_proxy})/\mathrm{std}(\mathrm{pnl\_proxy})$ (Rf~$=0$). \textbf{Per-trade} Sharpe first reaches ${\geq}1$ at $\tau{=}0.9$ (Table~\ref{tab:tau_sensitivity}): DirAcc 84.9\%, R$^2$ 0.514, mean z-proxy $+1.20$, Sharpe 1.02 on $n{=}2{,}026$ rows---still a large book relative to $\tau{=}1.0$ ($n{=}1{,}426$), with mean $\texttt{pnl\_proxy}$ already high versus $\tau{=}0.5$. Neighboring points bound the choice: $\tau{=}0.85$ remains below Sharpe~$1$, while $\tau{=}1.0$ adds little Sharpe for another ${\sim}30\%$ coverage cut. The same $\tau{=}0.9$ cut on Campaign~B closes confirms the lift from the initial $\tau{=}0.5$ book at longer horizon (50{,}690${\to}$12{,}795; DirAcc 79.0\%${\to}$86.7\%; Sharpe/trade 0.75${\to}$1.08). We therefore fix $\tau{=}0.9$ as the paper protocol; headline results use this gate (Section~\ref{sec:limitations} notes when live fills are post-hoc filtered).
