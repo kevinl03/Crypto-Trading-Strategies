@@ -91,7 +91,7 @@ The prediction model uses 68~features in total.
 
 We train a single LightGBM~\cite{ke2017lightgbm} regression model on the pooled panel of all (coin, exchange-pair, snapshot) observations. The objective is squared error minimization on $y_t = z_{t+H}$.
 
-We deliberately choose tree ensembles over the DNN/LSTM architectures common in prior spread-forecasting work: the feature matrix is a heterogeneous tabular panel (lags, microstructure, and native categoricals) for which tree models are a strong default inductive bias. As a classical bagging control on the same train/test feature matrix, we also fit a Random Forest regressor~\cite{breiman2001random} (regularized leaf size analogous to LightGBM's minimum child samples). LightGBM is the model used for validation-campaign evaluation; the forest peer is scored on the test set (Section~\ref{sec:results}).
+We deliberately choose tree ensembles over the DNN/LSTM architectures common in prior spread-forecasting work: the feature matrix is a heterogeneous tabular panel (lags, microstructure, and native categoricals) for which tree models are a strong default inductive bias. As a classical Random Forest baseline on the same train/test feature matrix, we also fit a Random Forest regressor~\cite{breiman2001random} (regularized leaf size analogous to LightGBM's minimum child samples). LightGBM is the model used for validation-campaign evaluation; the Random Forest control is scored on the test set (Section~\ref{sec:results}).
 
 \subsection{Trading Policy}\label{sec:policy}
 

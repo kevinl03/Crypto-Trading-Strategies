@@ -1,7 +1,7 @@
 # Tree baselines for cross-exchange next-\(z\) forecasting (RF vs LightGBM)
 
 **Purpose:** Evidence notes for the paper — how to use Random Forest **without** turning the story into a weak “LightGBM beats RF” bake-off.  
-**Role of RF:** Classical bagging control on the **test** set (sanity that signal is not booster-specific).  
+**Role of RF:** Classical Random Forest baseline / control on the **test** set (sanity that signal is not booster-specific).  
 **Reported model:** LightGBM (live **validation** path).  
 **Strategic framing (reviewer-aware):** Emphasize the **problem setting**; deemphasize the particular learner. Position the work as a **simple but effective baseline** for a setting that has received little attention — not as an architecture paper whose main claim is GBDT ≫ RF.
 
@@ -25,7 +25,7 @@ Reviewers can dismiss a thin RF comparison as “insufficient baselines” *or* 
 
 1. **Understudied setting.** Same-asset **cross-exchange** spreads at ~1-minute cadence with **live L2 / trade-flow** features that candle APIs cannot reconstruct; mechanical \(|z_t|\) rules dominate prior crypto pairs work and miss venue/regime structure.
 2. **Hard evaluation.** Chronological train/test, live validation under real collection latency, capacity-matched mechanical peers, selective \(\tau\) gate, z-unit settlement.
-3. **Intentional tree/forest baseline class.** Prior supervised spread work often uses DNN/LSTM; we instead use **tabular tree ensembles** (LightGBM production head; Random Forest bagging control) suited to engineered lags and native categoricals — a different inductive bias, not a “future bake-off.”
+3. **Intentional tree/forest baseline class.** Prior supervised spread work often uses DNN/LSTM; we instead use **tabular tree ensembles** (LightGBM production head; Random Forest as a classical control baseline) suited to engineered lags and native categoricals — a different inductive bias, not a “future bake-off.”
 4. **Simple effective baseline.** A gated tree regressor already beats matched persistence on validation; RF on the test set tracks the same ranking → lift is largely **formulation + setting + features + gate**.
 5. **RF on the same OOS test set as LightGBM.** State that simply; do not digress into why a separate RF validation campaign was not run.
 
@@ -150,7 +150,7 @@ Mechanical baseline DirAcc / mean-PnL figures in Results are **validation-panel*
 **Good for**
 
 - Showing the **problem + features + gate** carry signal under more than one tree inductive bias.
-- A short Results / Ablation control so reviewers see a classical bagging peer.
+- A short Results / Ablation control so reviewers see a classical Random Forest baseline.
 - Teaching τ reporting hygiene (fire rate / \(n\) + matched rows when `|pred|` scales differ).
 
 **Not good for**
@@ -166,8 +166,8 @@ Mechanical baseline DirAcc / mean-PnL figures in Results are **validation-panel*
 | Paper place | Insert |
 |---|---|
 | **Abstract / Intro contributions** | Lead with **cross-exchange live next-\(z\)** setting + selective gate + live validation vs mechanical peers. Mention LightGBM as the **simple tree baseline**, not the invention. |
-| **§Methodology** | Trees as tabular inductive bias; RF bagging control scored on test; LGBM for validation. |
-| **§Experimental Setup** | RF under Baseline Definitions as classical bagging control on the same OOS **test** set as LightGBM. |
+| **§Methodology** | Trees as tabular inductive bias; RF control baseline scored on test; LGBM for validation. |
+| **§Experimental Setup** | RF under Baseline Definitions as a classical Random Forest baseline / control on the same OOS **test** set as LightGBM. |
 | **§Results — Test** | Compact LGBM vs RF vs naive table with **n**; favor LGBM on throughput / R². |
 | **§Ablation** | Prefer **boosting vs bagging** as a short robustness note, not a methods shootout. Do **not** put RF into the validation-only τ table. |
 | **§Discussion** | If asked “why not more models?”: contribution is the setting + protocol + released panel; tree baseline is intentionally simple; community can extend on the dataset release. |
@@ -214,7 +214,7 @@ Understudied setting (cross-ex live L2 next-z)
 
 **Contribution (preferred):**
 
-> We study next-snapshot forecasting of same-asset cross-exchange z-scores under live multi-venue microstructure—a setting poorly covered by mechanical \(|z_t|\) pairs rules—and show that a simple confidence-gated *tabular tree* baseline (LightGBM; Random Forest as a test-set bagging control), rather than the DNN/LSTM architectures common in prior spread work, already improves selective direction and z-unit settlement versus matched persistence in live validation, with public code and data for stronger models to beat.
+> We study next-snapshot forecasting of same-asset cross-exchange z-scores under live multi-venue microstructure—a setting poorly covered by mechanical \(|z_t|\) pairs rules—and show that a simple confidence-gated *tabular tree* baseline (LightGBM; Random Forest as a test-set control baseline), rather than the DNN/LSTM architectures common in prior spread work, already improves selective direction and z-unit settlement versus matched persistence in live validation, with public code and data for stronger models to beat.
 
 **RF footnote (secondary):**
 
