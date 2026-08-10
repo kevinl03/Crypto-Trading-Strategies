@@ -1,15 +1,24 @@
 # Stochastic Spread Modeling
 
-Cross-venue cryptocurrency statistical arbitrage using Ornstein–Uhlenbeck mean-reversion signals on high-frequency OHLCV data.
+**Learned Z-Score Forecasting for Cross-Exchange Cryptocurrency Spreads: A Gradient-Boosting Approach on Live Microstructure Data**
 
-Accompanying code for the paper:
-> **Stochastic Spread Modeling for Cross-Venue Cryptocurrency Trading: An Ornstein–Uhlenbeck Framework on High-Frequency OHLCV Data**
-> Kevin Litvin, Tania Pocrnjic — Simon Fraser University
-> *Submitted to ACM ICAIF 2026*
+Kevin Litvin, Tania Pocrnjic, Ke Li — Simon Fraser University
+*ICAIF '26 — 7th ACM International Conference on AI in Finance · Milan, Italy · November 14–17, 2026*
+
+[Paper (PDF)](paper/submissions/finals.pdf) · [Paper source](paper/gradient-boosting-cross-market-spread-prediction-public.tex) · [Dataset (Hugging Face)](https://huggingface.co/datasets/SFU-fintech-AI/statarb-crypto-research) · [Citation](#citation)
+
+<p align="center">
+  <img src="paper/figures/Visual-Architecture.png" width="700" alt="Figure 1: end-to-end paper protocol from live multi-venue inputs to a confidence-gated trade">
+</p>
+<p align="center"><sub><b>Figure 1.</b> End-to-end paper protocol: live multi-venue inputs → cross-exchange spread and rolling z-score (w=300) → 68-D features (AR lags dominant) → LightGBM forecast ẑ<sub>t+1</sub> (H=1) → confidence gate |ẑ|≥τ=0.9 → selective trade and t+1 settlement in z-units.</sub></p>
+
+## Abstract
+
+Identical cryptocurrencies often trade at different prices across exchanges. Most high-frequency pairs strategies still turn that gap into a trade with a simple rule: enter when the rolling z-score of the spread is large, and wait for mean reversion. We instead *forecast* the next z-score and show that a tree-based ML model can outperform those mechanical z-score rules under live cross-exchange trading. LightGBM forecasts the next-snapshot cross-exchange z-score $z_{t+1}$ from live multi-venue L2 and microstructure features, using a systematically-selected confidence filter ($|\hat{z}_{t+1}| \geq 0.9$) — the least restrictive threshold at which per-trade Sharpe reaches ≥1. On the live validation book under this filter, LightGBM achieves ~87% directional accuracy and R² of 0.599 across 12,795 closes, with an hourly portfolio Sharpe of 1.90 — a 15.4 percentage-point directional-accuracy improvement over mechanical z-score persistence at matched capacity. We publicly release the code (this repo) and the synchronized multi-exchange microstructure dataset on [Hugging Face](https://huggingface.co/datasets/SFU-fintech-AI/statarb-crypto-research).
 
 ## Overview
 
-The system models cross-exchange price spreads as Ornstein–Uhlenbeck processes, estimates mean-reversion parameters online, and generates trading signals when z-scores breach configurable thresholds. It supports 12 exchanges (Binance, Kraken, KuCoin, Bybit, OKX, Gate.io, etc.) via [ccxt](https://github.com/ccxt/ccxt) and runs on 1-minute OHLCV candles.
+The repo covers the full pipeline behind the paper: a live multi-venue collector computes cross-exchange spreads and rolling z-scores (mechanical OU/z-score mean-reversion baselines), engineers a 68-D live microstructure feature vector, and trains a LightGBM model to forecast the next-snapshot z-score. A confidence gate on the forecast selects high-conviction trades, which are evaluated against the mechanical baselines on live paper-trading data. It supports 12 exchanges (Binance, Kraken, KuCoin, Bybit, OKX, Gate.io, etc.) via [ccxt](https://github.com/ccxt/ccxt).
 
 ### Project Structure
 
@@ -129,11 +138,9 @@ Useful flags:
 
 Output is written under `data/statarb/<run_timestamp>/` and partitioned by UTC day per signal.
 
-#### Launching an unattended multi-day run (Windows)
+#### Unattended multi-day runs (Windows)
 
-For a run meant to survive the terminal/VS Code window closing (needed for
-anything longer than a few hours), launch it detached and hidden instead of
-running it directly in a foreground shell:
+For runs longer than a few hours, launch detached so it survives the terminal closing:
 
 ```powershell
 Start-Process -FilePath python -ArgumentList "-m","experiments.collect_statarb_data","--assets","volatile","--interval","60","--slow-every","10","--hours","60" `
@@ -142,45 +149,7 @@ Start-Process -FilePath python -ArgumentList "-m","experiments.collect_statarb_d
   -RedirectStandardError "data\statarb\collector_console_err.log"
 ```
 
-**Before launching a multi-day run, disable sleep/hibernate** — this was the
-single biggest cause of data gaps in earlier runs (Windows Kernel-Power event
-IDs 42/506/507 correlate exactly with collection stalls):
-
-```powershell
-powercfg /change standby-timeout-ac 0
-powercfg /change standby-timeout-dc 0
-powercfg /change hibernate-timeout-ac 0
-powercfg /change hibernate-timeout-dc 0
-```
-
-On a laptop, also set "when I close the lid, while plugged in" to **Do
-nothing** in Settings → Power. Note this does *not* override a critical-battery
-hibernate action — keep that safety net intact and plug the machine in for the
-duration of the run.
-
-**Verify it's alive after launching:**
-
-```powershell
-Get-Process python | Select-Object Id, StartTime
-Get-Content data\statarb\collector_console.log -Tail 10
-```
-
-#### Check Collector Bandwidth Without Stopping It (Windows PowerShell)
-
-```powershell
-# Find collector python processes and sample per-process I/O throughput.
-# This does not stop or restart the collector.
-Get-CimInstance Win32_Process |
-  Where-Object { $_.CommandLine -match 'collect_statarb_data' } |
-  Select-Object ProcessId, Name, CommandLine
-
-# Replace <PID> with the active collector PID from above.
-$pidValue = <PID>
-$instance = (Get-Counter '\Process(*)\ID Process').CounterSamples |
-  Where-Object { [int]$_.CookedValue -eq $pidValue } |
-  Select-Object -First 1 -ExpandProperty InstanceName
-Get-Counter "\Process($instance)\IO Other Bytes/sec" -SampleInterval 1 -MaxSamples 30
-```
+Also disable sleep/hibernate first (`powercfg /change standby-timeout-ac 0`, same for `-dc`, `hibernate-timeout-ac`, `hibernate-timeout-dc`) — Windows sleep was the single biggest cause of data gaps in earlier runs. Verify it's alive with `Get-Process python` and `Get-Content data\statarb\collector_console.log -Tail 10`.
 
 ### Benchmarks
 
@@ -201,6 +170,18 @@ Sample results (AMD Ryzen 7, Python 3.13):
 
 ```bash
 pytest tests/
+```
+
+## Citation
+
+```bibtex
+@inproceedings{litvin2026learned,
+  title     = {Learned Z-Score Forecasting for Cross-Exchange Cryptocurrency Spreads: A Gradient-Boosting Approach on Live Microstructure Data},
+  author    = {Litvin, Kevin and Pocrnjic, Tania and Li, Ke},
+  booktitle = {Proceedings of the 7th ACM International Conference on AI in Finance (ICAIF '26)},
+  year      = {2026},
+  address   = {Milan, Italy}
+}
 ```
 
 ## License
