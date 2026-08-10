@@ -1,11 +1,20 @@
 # Stochastic Spread Modeling
 
-Cross-venue cryptocurrency statistical arbitrage using Ornstein–Uhlenbeck mean-reversion signals on high-frequency OHLCV data.
+**Stochastic Spread Modeling for Cross-Venue Cryptocurrency Trading: An Ornstein–Uhlenbeck Framework on High-Frequency OHLCV Data**
 
-Accompanying code for the paper:
-> **Stochastic Spread Modeling for Cross-Venue Cryptocurrency Trading: An Ornstein–Uhlenbeck Framework on High-Frequency OHLCV Data**
-> Kevin Litvin, Tania Pocrnjic — Simon Fraser University
-> *Submitted to ACM ICAIF 2026*
+Kevin Litvin, Tania Pocrnjic — Simon Fraser University
+*ICAIF '26 — 7th ACM International Conference on AI in Finance · Milan, Italy · November 2026*
+
+[Paper source](paper/stochastic-cross-venue-ohlcv-trading.tex) · [Citation](#citation)
+
+<p align="center">
+  <img src="paper/figures/Visual-Architecture.png" width="700" alt="System architecture: cross-exchange spread forecast to high-confidence trade">
+</p>
+<p align="center"><sub><b>Figure 1.</b> End-to-end pipeline: multi-venue data ingestion → spread/rolling z-score computation → 68-D feature vector → LightGBM forecast → confidence-gated trade execution.</sub></p>
+
+## Abstract
+
+Cross-exchange price deviations in cryptocurrency markets have been widely documented, yet few studies build and evaluate systematic trading strategies that exploit them. We model the price spread of identical assets across centralized exchanges as an Ornstein–Uhlenbeck (OU) process and trade when deviations exceed a calibrated threshold. Across 30 days of 1-minute OHLCV data (5 assets, 7 exchanges, 50 exchange-pair–model combinations), OU-based mean-reversion is profitable exactly when an asset's cross-exchange spread volatility exceeds the round-trip fee (WIF, PEPE, CRV) and uniformly unprofitable otherwise (DOGE, SOL). The effect traces back to structural price latency on specific exchanges (e.g. a 38-minute lag on Crypto.com for CRV). The OU model consistently beats a rolling z-score baseline on Sharpe ratio and win rate.
 
 ## Overview
 
@@ -129,11 +138,9 @@ Useful flags:
 
 Output is written under `data/statarb/<run_timestamp>/` and partitioned by UTC day per signal.
 
-#### Launching an unattended multi-day run (Windows)
+#### Unattended multi-day runs (Windows)
 
-For a run meant to survive the terminal/VS Code window closing (needed for
-anything longer than a few hours), launch it detached and hidden instead of
-running it directly in a foreground shell:
+For runs longer than a few hours, launch detached so it survives the terminal closing:
 
 ```powershell
 Start-Process -FilePath python -ArgumentList "-m","experiments.collect_statarb_data","--assets","volatile","--interval","60","--slow-every","10","--hours","60" `
@@ -142,45 +149,7 @@ Start-Process -FilePath python -ArgumentList "-m","experiments.collect_statarb_d
   -RedirectStandardError "data\statarb\collector_console_err.log"
 ```
 
-**Before launching a multi-day run, disable sleep/hibernate** — this was the
-single biggest cause of data gaps in earlier runs (Windows Kernel-Power event
-IDs 42/506/507 correlate exactly with collection stalls):
-
-```powershell
-powercfg /change standby-timeout-ac 0
-powercfg /change standby-timeout-dc 0
-powercfg /change hibernate-timeout-ac 0
-powercfg /change hibernate-timeout-dc 0
-```
-
-On a laptop, also set "when I close the lid, while plugged in" to **Do
-nothing** in Settings → Power. Note this does *not* override a critical-battery
-hibernate action — keep that safety net intact and plug the machine in for the
-duration of the run.
-
-**Verify it's alive after launching:**
-
-```powershell
-Get-Process python | Select-Object Id, StartTime
-Get-Content data\statarb\collector_console.log -Tail 10
-```
-
-#### Check Collector Bandwidth Without Stopping It (Windows PowerShell)
-
-```powershell
-# Find collector python processes and sample per-process I/O throughput.
-# This does not stop or restart the collector.
-Get-CimInstance Win32_Process |
-  Where-Object { $_.CommandLine -match 'collect_statarb_data' } |
-  Select-Object ProcessId, Name, CommandLine
-
-# Replace <PID> with the active collector PID from above.
-$pidValue = <PID>
-$instance = (Get-Counter '\Process(*)\ID Process').CounterSamples |
-  Where-Object { [int]$_.CookedValue -eq $pidValue } |
-  Select-Object -First 1 -ExpandProperty InstanceName
-Get-Counter "\Process($instance)\IO Other Bytes/sec" -SampleInterval 1 -MaxSamples 30
-```
+Also disable sleep/hibernate first (`powercfg /change standby-timeout-ac 0`, same for `-dc`, `hibernate-timeout-ac`, `hibernate-timeout-dc`) — Windows sleep was the single biggest cause of data gaps in earlier runs. Verify it's alive with `Get-Process python` and `Get-Content data\statarb\collector_console.log -Tail 10`.
 
 ### Benchmarks
 
@@ -201,6 +170,18 @@ Sample results (AMD Ryzen 7, Python 3.13):
 
 ```bash
 pytest tests/
+```
+
+## Citation
+
+```bibtex
+@inproceedings{litvin2026stochastic,
+  title     = {Stochastic Spread Modeling for Cross-Venue Cryptocurrency Trading: An Ornstein--Uhlenbeck Framework on High-Frequency OHLCV Data},
+  author    = {Litvin, Kevin and Pocrnjic, Tania},
+  booktitle = {Proceedings of the 7th ACM International Conference on AI in Finance (ICAIF '26)},
+  year      = {2026},
+  address   = {Milan, Italy}
+}
 ```
 
 ## License
