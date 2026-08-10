@@ -1,7 +1,9 @@
 # Random Forest vs LightGBM (paper protocol)
 
-Classical **bagging** tabular baseline on the same LOGO **train / test** feature frames as LightGBM (`sec:splits`).
-RF is a literature peer — not a live replacement. Production / **validation** head remains LightGBM.
+Classical **bagging** control on the same LOGO **train / test** frames as LightGBM (`sec:splits`).
+**Paper stance:** RF is robustness evidence that a simple tree baseline is not booster-specific — not a “LGBM beats RF” contribution. Lead with the understudied cross-exchange live next-\(z\) setting; deploy LightGBM for validation / ops.
+
+See `docs/lgbm_vs_rf_justification.md` (framing advice + matched-row analysis).
 
 ## Protocol
 

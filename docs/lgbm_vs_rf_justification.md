@@ -1,23 +1,39 @@
-# Why LightGBM over Random Forest (tabular baseline)
+# Tree baselines for cross-exchange next-\(z\) forecasting (RF vs LightGBM)
 
-**Purpose:** Justify keeping **LightGBM** as the production / paper-trading head after fitting a classical **Random Forest** peer on the paper **test** split.  
-**Role of RF:** Literature / classical bagging baseline (tree-family control) — not a live replacement.  
-**Evidence:** `statarb/outputs_rf/` · runner `statarb/run_rf_zscore_baseline.py` · branch `feat/rf-zscore-baseline`.  
-**Split vocabulary:** matches Experimental Setup (`sec:splits`) — dates stated once; elsewhere use **train / test / validation** only.
+**Purpose:** Evidence notes for the paper — how to use Random Forest **without** turning the story into a weak “LightGBM beats RF” bake-off.  
+**Role of RF:** Classical bagging control on the **test** set (sanity that signal is not booster-specific).  
+**Deployed head:** LightGBM (live **validation** path).  
+**Strategic framing (reviewer-aware):** Emphasize the **problem setting**; deemphasize the particular learner. Position the work as a **simple but effective baseline** for a setting that has received little attention — not as an architecture paper whose main claim is GBDT ≫ RF.
+
+**Split vocabulary:** Experimental Setup (`sec:splits`) — dates once; elsewhere **train / test / validation** only.
 
 | Set | Definition (paper) | Role for RF |
 |---|---|---|
 | **Training** | June → mid-July 2026, before the Jul 25 cut (~2.9M feature rows in paper text; LOGO cache may be larger) | Fit RF here only |
-| **Test** | July 25–28, 2026 (~1.7M rows; CEX API–collected, chronological) | **Primary RF vs LGBM architecture table** |
-| **Validation** | ~72h live paper campaign Aug 4–7, 2026 (`max_open=50`) | Live LGBM book / τ table; RF not live-traded |
+| **Test** | July 25–28, 2026 (~1.7M rows; CEX API–collected, chronological) | RF vs LGBM peer table (secondary) |
+| **Validation** | ~72h live paper campaign Aug 4–7, 2026 (`max_open=50`) | Primary live claim (LGBM vs mechanical); RF not live-traded |
 
-Paper gate: \(\tau{=}0.9\) (chosen on **validation** closes; Table 5 in the paper is validation-only). \(W{=}300\) retained (diminishing returns past that under \(\tau{=}0.9\)).
+Paper gate: \(\tau{=}0.9\) (chosen on **validation** closes; τ table is validation-only). \(W{=}300\) retained (diminishing returns past that under \(\tau{=}0.9\)).
+
+---
+
+## Framing advice (read before citing RF in the paper)
+
+Reviewers can dismiss a thin RF comparison as “insufficient baselines.” Do **not** lead with method novelty. Lead with:
+
+1. **Understudied setting.** Same-asset **cross-exchange** spreads at ~1-minute cadence with **live L2 / trade-flow** features that candle APIs cannot reconstruct; mechanical \(|z_t|\) rules dominate prior crypto pairs work and miss venue/regime structure.
+2. **Hard evaluation.** Chronological train/test, live validation under real collection latency, capacity-matched mechanical peers, selective \(\tau\) gate, z-unit settlement.
+3. **Simple effective baseline.** A single tabular tree panel model + \(|\hat z|\ge\tau\) already beats matched persistence on validation; RF on the test set tracks the same ranking signal — i.e. the lift is largely from **formulation + setting + features + gate**, not from an exotic architecture.
+
+Use RF to show **robustness of the baseline class** (bagging ≈ boosting on ranking), then keep LightGBM for ops / calibration / live throughput. Avoid claiming “we introduce a superior ML method.”
 
 ---
 
 ## Verdict (paste-ready)
 
-On the shared LOGO **test** feature matrix, RF and LightGBM learn **nearly the same ranking signal** (`corr(pred_RF, pred_LGBM) ≈ 0.98`). LightGBM remains the deployed choice because, at the paper confidence gate `|pred| ≥ 0.9`, it delivers **~2× more trades** at **similar DirAcc**, **higher R²**, and **higher total `pnl_proxy` mass**, and it alone has the **validation** live path. RF’s slightly higher own-gate DirAcc is a **selection artifact** of a compressed `|pred|` scale, not a skill win on matched rows.
+**Problem-first:** Live next-snapshot forecasting of cross-exchange \(z_{t+1}\) with microstructure that is not recoverable from OHLCV is a sparsely studied setting; a simple confidence-gated tree regressor is already an effective baseline against mechanical \(|z_t|\) rules under live validation.
+
+**Method-second (test set):** On the shared LOGO test matrix, RF and LightGBM learn nearly the same ranking (`corr ≈ 0.98`). LightGBM remains the deployed head for better \(\tau{=}0.9\) **throughput / R²** and the validation live path. RF’s slightly higher own-gate DirAcc is a **selection artifact** of compressed `|pred|`, not a skill win on matched rows — so do not market “LGBM wins the tree bake-off” as a contribution.
 
 ---
 
@@ -92,7 +108,9 @@ So “RF DirAcc 86% vs LGBM 85% at τ=0.9” ≠ better model; it means “RF ra
 
 ---
 
-## 4. Why we still choose LightGBM
+## 4. Why LightGBM is the *deployed* head (ops, not the paper claim)
+
+Keep these points for Methods / reproducibility — **not** as the abstract contribution.
 
 | Axis | Winner | Evidence |
 |---|---|---|
@@ -100,67 +118,74 @@ So “RF DirAcc 86% vs LGBM 85% at τ=0.9” ≠ better model; it means “RF ra
 | **Calibration / R² on gated & all rows** | **LGBM** | Higher R² own-gate and matched-row; all-rows R² 0.133 vs 0.126 |
 | **Total proxy throughput (test)** | **LGBM** | `mean×n` at τ=0.9 ≈ 77k vs ≈ 43k |
 | **Matched-row DirAcc** | Tie | Identical on LGBM’s τ=0.9 mask |
-| **Validation / live deployment** | **LGBM** | Only LGBM has the Aug 4–7 validation book and paper τ table; RF has no live book |
-| **Ops / artifact** | **LGBM** | ~1.2 MB text booster, native categoricals, fast retrain loop; RF joblib ~180 MB, heavier RAM fit |
-| **Classical baseline honesty** | RF useful | Shows GBDT is not “winning by being the only tree model” — bagging peer tracks the same signal |
+| **Validation / live deployment** | **LGBM** | Only LGBM has the Aug 4–7 validation book and paper τ table |
+| **Ops / artifact** | **LGBM** | ~1.2 MB text booster, native categoricals; RF joblib ~180 MB |
+| **What RF shows** | Shared signal | Bagging tracks boosting → lift is not “GBDT magic” |
 
-**Decision rule used:** Prefer the head that maximizes **deployable high-confidence throughput** (n × quality) under a fixed absolute abstention gate, not the model that maximizes DirAcc on its own sparsest slice.
+**Paper claim hierarchy:** (1) setting + live microstructure + next-\(z\) formulation vs mechanical rules on **validation**; (2) optional test-set note that RF agrees → simple tree baseline is robust; (3) LGBM chosen for live ops.
 
 ---
 
-## 5. Validation set (paper) — what RF does *not* claim
+## 5. Validation set (paper) — primary evidence (not RF)
 
-Paper **validation** = Aug 4–7 ~72h live campaign. The paper’s τ sensitivity table is **validation-only** (\(\tau \in \{0.5, 0.75, 0.9, 1.0\}\) with \(n\)); headline validation at \(\tau{=}0.9\): \(n{=}12{,}795\), DirAcc 86.7%, R² 0.599, mean pnl \(+1.37\).
+Paper **validation** = Aug 4–7 ~72h live campaign. The paper’s τ sensitivity table is **validation-only**; headline at \(\tau{=}0.9\): \(n{=}12{,}795\), DirAcc 86.7%, R² 0.599, mean pnl \(+1.37\).
 
 | Model | Set | Filter | n | DirAcc | R² | mean pnl |
 |---|---|---|---:|---:|---:|---:|
 | LightGBM (live book) | validation | `|ẑ|≥0.9` | 12,795 | 86.7% | 0.599 | +1.37 |
 | Random Forest | validation | — | — | — | — | *not live-scored* |
 
-Mechanical baseline DirAcc / mean-PnL figures in Results are also **validation-panel** capacity-matched replays — keep RF out of that live mechanical story.
+Mechanical baseline DirAcc / mean-PnL figures in Results are **validation-panel** capacity-matched replays — the right peer for the contribution. Keep RF out of that story.
 
 ---
 
-## 6. What RF *is* good for in the paper
+## 6. What RF is good for (and what it is not)
 
-- Classical **bagging** peer under the same train→test feature matrix (tree-family control next to mechanical \(z_t\)).
-- Sanity check that the 60+ feature matrix carries signal under bagging as well as boosting.
-- Cautionary example for **τ reporting**: always show fire rate / \(n\) and a matched-row column when models differ in `|pred|` scale.
-- Optional deep peer (LSTM) remains a separate architecture track; do not conflate with RF.
+**Good for**
+
+- Showing the **problem + features + gate** carry signal under more than one tree inductive bias.
+- A short Ablation / appendix control so reviewers see a classical bagging peer.
+- Teaching τ reporting hygiene (fire rate / \(n\) + matched rows when `|pred|` scales differ).
+
+**Not good for**
+
+- Carrying the paper’s novelty (“our method beats RF”).
+- Substituting for stronger future peers (calibrated RF, HistGBM, linear, sequence models) if a reviewer demands a fuller bake-off — answer by restating setting-first contributions and releasing data for others to beat the baseline.
 
 ---
 
-## 7. Where to integrate in the paper (aligned with current main)
-
-Keep the **primary claim** unchanged: learned forecast beats **mechanical** `|z_t|` rules on the **validation** panel. Add RF only as a **within-family tabular control** on the **test** set.
+## 7. Where to integrate (aligned with current main + reviewer advice)
 
 | Paper place | Insert |
 |---|---|
-| **§Methodology (`sec:lgbm`)** | After LGBM hyperparams: one paragraph — sklearn RF on the same feature matrix / train–test split as classical bagging peer; production remains LGBM; note averaging → compressed `\|pred\|`. |
-| **§Experimental Setup (`Baseline Definitions`)** | New subsubsection **Tree ensemble baseline (Random Forest)** — scored on **test**; same metrics; report own-gate **and** matched-row. |
-| **§Results — Test-set evaluation** | Extend `tab:test` or add a small LGBM vs RF vs naive table (all-rows + τ=0.9, with **n**). One sentence: own-gate DirAcc can favor RF via fire rate; matched-row DirAcc ties, LGBM R² higher. |
-| **§Ablation / Model Tuning** | Best home for depth: **Boosting vs bagging** — fire-rate + matched-row; do **not** put RF into the validation-only τ table (Table 5). |
-| **§Discussion / limitations** | RF is a **test**-set peer, not validation-live; LOGO 62/68 feature caveat if those numbers are cited. |
-| **Do not** | Relabel RF results as “offline / Campaign A–B / Jul 31”; do not replace validation mechanical baseline figures with RF. |
+| **Abstract / Intro contributions** | Lead with **cross-exchange live next-\(z\)** setting + selective gate + live validation vs mechanical peers. Mention LightGBM as the **simple deployed baseline**, not the invention. |
+| **§Methodology** | LightGBM as practical tabular regressor for the panel; optional one-liner that RF yields similar test ranking (cite this doc / appendix). |
+| **§Experimental Setup** | RF under Baseline Definitions as optional classical bagging control on **test**. |
+| **§Results — Test** | At most a compact LGBM vs RF vs naive row with **n**; sentence: rankings agree; LGBM preferred for gate calibration / live path. |
+| **§Ablation** | Prefer **boosting vs bagging** as a short robustness note, not a methods shootout. Do **not** put RF into the validation-only τ table. |
+| **§Discussion** | If asked “why not more models?”: contribution is the setting + protocol + released panel; tree baseline is intentionally simple; community can extend on the dataset release. |
+| **Do not** | Lead Results with RF; inflate “LGBM ≫ RF”; use offline/Campaign/Jul 31 labels. |
 
 **Narrative ladder**
 
 ```text
-Mechanical |z_t| on validation  →  “need a learned forecast?”     (primary live claim)
-Naive z_t on model rows         →  “more than persistence?”
-RF (bagging) on test            →  “just any tree?”               (new)
-LightGBM (boosting)             →  deployed head + validation
+Understudied setting (cross-ex live L2 next-z)
+  → mechanical |z_t| fails / underuses structure     (validation, primary)
+  → simple gated tree baseline works                 (LGBM live)
+  → RF on test ≈ same ranking                        (robustness, secondary)
+  → release data/code so others beat this baseline
 ```
 
 ---
 
 ## 8. Caveats (Methods / footnote)
 
-1. LOGO cache is **62 features**; production booster lists **68** (six Coinbase volume lags missing in cache — filled as NaN for LGBM score). Both models see the same frame.
-2. RF used `max_samples=1e6` bootstrap draws for RAM/wall-clock; still full-panel `X` for fitting.
-3. **Validation** headline remains the live LGBM book; RF was not re-traded live.
-4. Own-gate RF τ=0.9 mean pnl can look high; pair it with \(n\) and matched-row tables (§2).
-5. Paper train-size text (~2.9M) may differ from LOGO cache row count (~4.95M) depending on which windows were pooled — always cite the LOGO cache when reporting these RF numbers.
+1. LOGO cache is **62 features**; production booster lists **68** (six Coinbase volume lags missing — NaN-filled for LGBM). Same frame for both.
+2. RF used `max_samples=1e6` bootstrap draws; full-panel `X` still held for fit.
+3. **Validation** headline is live LGBM only; RF not re-traded live.
+4. Own-gate RF τ=0.9 mean pnl can look high; always pair with \(n\) and matched-row tables (§2).
+5. Paper train-size text (~2.9M) may differ from LOGO cache (~4.95M) — cite LOGO when reporting these RF numbers.
+6. A single RF peer will not satisfy every reviewer; treat it as **robustness**, and keep the contribution **setting-first**.
 
 ---
 
@@ -177,6 +202,12 @@ LightGBM (boosting)             →  deployed head + validation
 
 ---
 
-## Paper one-liner
+## Paper one-liners
 
-> On the paper test set, a sklearn Random Forest tracks LightGBM predictions almost one-to-one, but LightGBM’s residual boosting yields a less compressed confidence scale—roughly doubling `|pred|≥0.9` trade count at matched DirAcc with higher R²—so we retain LightGBM as the live validation head and treat RF as the classical bagging baseline.
+**Contribution (preferred):**
+
+> We study next-snapshot forecasting of same-asset cross-exchange z-scores under live multi-venue microstructure—a setting poorly covered by mechanical \(|z_t|\) pairs rules—and show that a simple confidence-gated tabular tree baseline already improves selective direction and z-unit settlement versus matched persistence in live validation, with public code and data for stronger models to beat.
+
+**RF footnote (secondary):**
+
+> On the test matrix, a Random Forest tracks LightGBM’s ranking almost one-to-one; we deploy LightGBM for calibration and live throughput, and treat RF as a classical bagging control rather than a competing contribution.
